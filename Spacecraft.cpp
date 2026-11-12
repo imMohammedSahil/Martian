@@ -43,9 +43,36 @@ void renderEnduranceShip() {
     glRotatef(26.0f, 1.0f, 0.0f, 0.0f);
     glRotatef(14.0f, 0.0f, 0.0f, 1.0f);
 
-    // In Scene 1 scale shot, render as an authentic miniature dot spacecraft (Interstellar scale)
-    float shipScale = (seqTime < 15.0f) ? 0.042f : 0.28f;
-    glScalef(shipScale, shipScale, shipScale);
+    // In Scene 1: Authentic pinpoint speck spacecraft with blinking beacon (matches Interstellar reference)
+    if (seqTime < 26.0f) {
+        glDisable(GL_LIGHTING);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+
+        // Core solid white dot
+        glPointSize(3.5f);
+        glBegin(GL_POINTS);
+            float strobe = 0.85f + 0.15f * sinf(totalTime * 8.0f);
+            glColor4f(1.0f, 0.98f, 0.94f, strobe);
+            glVertex3f(0.0f, 0.0f, 0.0f);
+        glEnd();
+
+        // Subtle soft red beacon halo
+        glPointSize(6.0f);
+        glBegin(GL_POINTS);
+            float redBlink = (fmodf(totalTime * 1.5f, 1.0f) < 0.25f) ? 0.9f : 0.2f;
+            glColor4f(1.0f, 0.32f, 0.20f, redBlink);
+            glVertex3f(0.0f, 0.0f, 0.0f);
+        glEnd();
+
+        glPointSize(1.0f);
+        glDisable(GL_BLEND);
+        glEnable(GL_LIGHTING);
+        glPopMatrix();
+        return;
+    }
+
+    glScalef(0.28f, 0.28f, 0.28f);
 
     // Spinning Ring Frame
     glPushMatrix();

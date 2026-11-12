@@ -33,14 +33,14 @@ float totalTime        = 0.0f;
 float lastClockTime    = 0.0f;
 bool  isPaused         = false;
 
-// Sun direction & lighting constants
-const float SUN_DIR_X =  0.70f;
-const float SUN_DIR_Y =  0.14f;
-const float SUN_DIR_Z = -0.70f;
-GLfloat lightSunPos[4]      = { 60.0f, 12.0f, -60.0f, 1.0f };
-GLfloat lightSunAmbient[4]  = { 0.012f, 0.015f, 0.025f, 1.0f };
-GLfloat lightSunDiffuse[4]  = { 1.40f, 1.32f, 1.18f, 1.0f };
-GLfloat lightSunSpecular[4] = { 0.70f, 0.68f, 0.65f, 1.0f };
+// Sun illuminating Mars from the left-front (matches Interstellar reference)
+const float SUN_DIR_X = -0.78f;
+const float SUN_DIR_Y =  0.22f;
+const float SUN_DIR_Z =  0.58f;
+GLfloat lightSunPos[4]      = { -75.0f, 22.0f, 55.0f, 1.0f };
+GLfloat lightSunAmbient[4]  = { 0.015f, 0.018f, 0.025f, 1.0f };
+GLfloat lightSunDiffuse[4]  = { 1.55f, 1.48f, 1.38f, 1.0f };
+GLfloat lightSunSpecular[4] = { 0.50f, 0.48f, 0.45f, 1.0f };
 
 // ============================================================================
 // MAIN RENDER LOOP
@@ -82,9 +82,11 @@ void display() {
         renderRangerLander();
     }
 
-    // 5. Particles & Speed Streaks
+    // 5. Particles & Speed Streaks (only active during atmospheric entry)
     renderParticles();
-    renderSpeedDustStreaks(eyeX, eyeY, eyeZ);
+    if (seqTime > 30.0f) {
+        renderSpeedDustStreaks(eyeX, eyeY, eyeZ);
+    }
 
     // 6. 2D Post: Anamorphic Lens Flare, 2.39:1 Letterbox Bars, Title & Fades
     renderCinemaPost(flareX, flareY, flareInFront, sunVisibility);
