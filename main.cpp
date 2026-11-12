@@ -66,23 +66,25 @@ void display() {
     // 1. Stellar Skybox
     renderStarfield();
 
-    // 2. Solar Disc & 2D Projection for Anamorphic Flare
+    // 2. Solar Disc & Flares (only after opening void)
     float flareX = 0.0f, flareY = 0.0f, flareZ = 0.0f;
     bool flareInFront = false;
-    renderSunDisc3D(flareX, flareY, flareZ, flareInFront);
-    float sunVisibility = computeSunMarsOcclusion(eyeX, eyeY, eyeZ);
-
-    // 3. Mars, Atmosphere & Phobos
-    renderMarsAndAtmosphere();
-    renderPhobos();
-
-    // 4. Spacecraft
-    renderEnduranceShip();
-    if (rangerDetached) {
-        renderRangerLander();
+    float sunVisibility = 0.0f;
+    if (seqTime >= 6.0f) {
+        renderSunDisc3D(flareX, flareY, flareZ, flareInFront);
+        sunVisibility = computeSunMarsOcclusion(eyeX, eyeY, eyeZ);
     }
 
-    // 5. Particles & Speed Streaks (only active during atmospheric entry)
+    // 3. Mars & Atmosphere (reveals smoothly at 6.0s)
+    if (seqTime >= 5.8f) {
+        renderMarsAndAtmosphere();
+        renderEnduranceShip();
+        if (rangerDetached) {
+            renderRangerLander();
+        }
+    }
+
+    // 4. Particles & Speed Streaks (only active during atmospheric entry)
     renderParticles();
     if (seqTime > 30.0f) {
         renderSpeedDustStreaks(eyeX, eyeY, eyeZ);
