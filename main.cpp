@@ -33,13 +33,13 @@ float totalTime        = 0.0f;
 float lastClockTime    = 0.0f;
 bool  isPaused         = false;
 
-// Sun illuminating Mars from the left-front (matches Interstellar reference)
-const float SUN_DIR_X = -0.78f;
-const float SUN_DIR_Y =  0.22f;
-const float SUN_DIR_Z =  0.58f;
-GLfloat lightSunPos[4]      = { -75.0f, 22.0f, 55.0f, 1.0f };
-GLfloat lightSunAmbient[4]  = { 0.015f, 0.018f, 0.025f, 1.0f };
-GLfloat lightSunDiffuse[4]  = { 1.55f, 1.48f, 1.38f, 1.0f };
+// Sun illuminating the camera-facing surface of Mars (Interstellar framing)
+const float SUN_DIR_X =  0.45f;
+const float SUN_DIR_Y = -0.22f;
+const float SUN_DIR_Z = -0.86f;
+GLfloat lightSunPos[4]      = { -35.0f, 20.0f, 65.0f, 1.0f };
+GLfloat lightSunAmbient[4]  = { 0.02f, 0.02f, 0.02f, 1.0f };
+GLfloat lightSunDiffuse[4]  = { 1.60f, 1.50f, 1.40f, 1.0f };
 GLfloat lightSunSpecular[4] = { 0.50f, 0.48f, 0.45f, 1.0f };
 
 // ============================================================================

@@ -10,11 +10,11 @@
 // ============================================================================
 
 void updateScene1(float dt) {
-    // Spacecraft positioned directly in front of the brightly sunlit Martian face
+    // Spacecraft positioned directly in front of the sunlit orange Martian face
     float t = seqTime / 26.0f;
-    endPosX = lerpf(-1.52f, -1.35f, t);
-    endPosY = lerpf( 0.32f,  0.22f, t);
-    endPosZ = lerpf( 2.90f,  2.65f, t);
+    endPosX = lerpf(-1.20f, -0.95f, t);
+    endPosY = lerpf( 0.18f,  0.10f, t);
+    endPosZ = lerpf( 2.70f,  2.45f, t);
     endTanX = 0.65f; endTanY = -0.15f; endTanZ = -0.74f;
 
     // Ranger docked safely to Endurance in Scene 1
