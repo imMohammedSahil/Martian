@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="Martian" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/Martian" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="./" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+					<Add option="-DFREEGLUT_STATIC" />
+				</Compiler>
+				<Linker>
+					<Add option="-static" />
+					<Add library="freeglut_static" />
+					<Add library="opengl32" />
+					<Add library="glu32" />
+					<Add library="winmm" />
+					<Add library="gdi32" />
+				</Linker>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/Martian" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="./" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-DFREEGLUT_STATIC" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add option="-static" />
+					<Add library="freeglut_static" />
+					<Add library="opengl32" />
+					<Add library="glu32" />
+					<Add library="winmm" />
+					<Add library="gdi32" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add directory="include" />
+		</Compiler>
+		<Linker>
+			<Add directory="lib" />
+		</Linker>
+		<Unit filename="Common.h" />
+		<Unit filename="AudioEngine.h" />
+		<Unit filename="AudioEngine.cpp" />
+		<Unit filename="Starfield.h" />
+		<Unit filename="Starfield.cpp" />
+		<Unit filename="Planet.h" />
+		<Unit filename="Planet.cpp" />
+		<Unit filename="Spacecraft.h" />
+		<Unit filename="Spacecraft.cpp" />
+		<Unit filename="PostProcess.h" />
+		<Unit filename="PostProcess.cpp" />
+		<Unit filename="SceneDirector.h" />
+		<Unit filename="SceneDirector.cpp" />
+		<Unit filename="Scene1.cpp" />
+		<Unit filename="main.cpp">
+			<Option compilerVar="CPP" />
+		</Unit>
+		<Extensions>
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
