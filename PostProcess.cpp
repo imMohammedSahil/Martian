@@ -211,8 +211,9 @@ void renderCinemaPost(float flareX, float flareY, bool flareInFront, float flare
     if (seqTime < 1.5f) {
         fadeAlpha = 1.0f - smoothstep(0.0f, 1.5f, seqTime);
     }
-    if (seqTime > 24.5f) {
-        fadeAlpha = std::max(fadeAlpha, smoothstep(24.5f, 26.0f, seqTime));
+    // Only fade at the very end of the loop
+    if (seqTime > 25.2f) {
+        fadeAlpha = std::max(fadeAlpha, smoothstep(25.2f, 26.0f, seqTime));
     }
 
     if (fadeAlpha > 0.005f) {

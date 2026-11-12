@@ -12,9 +12,9 @@
 void updateScene1(float dt) {
     // Spacecraft positioned directly in front of the sunlit orange Martian face
     float t = seqTime / 26.0f;
-    endPosX = lerpf(-1.20f, -0.95f, t);
-    endPosY = lerpf( 0.18f,  0.10f, t);
-    endPosZ = lerpf( 2.70f,  2.45f, t);
+    endPosX = lerpf(-1.65f, -1.45f, t);
+    endPosY = lerpf( 0.22f,  0.15f, t);
+    endPosZ = lerpf( 3.35f,  3.05f, t);
     endTanX = 0.65f; endTanY = -0.15f; endTanZ = -0.74f;
 
     // Ranger docked safely to Endurance in Scene 1
@@ -39,39 +39,38 @@ void computeCameraScene1(float& eyeX, float& eyeY, float& eyeZ,
 
     if (seqTime < 6.0f) {
         // Phase 1: Pure deep-black space void (looking away into deep cosmic darkness)
-        // Mars and the Sun are 100% out of frame
         float t = seqTime / 6.0f;
         float e = smoothstep(0.0f, 1.0f, t);
-        eyeX = lerpf(-2.90f, -2.80f, e);
-        eyeY = lerpf( 0.52f,  0.50f, e);
-        eyeZ = lerpf( 5.90f,  5.80f, e);
+        eyeX = lerpf(-3.90f, -3.80f, e);
+        eyeY = lerpf( 0.55f,  0.50f, e);
+        eyeZ = lerpf( 7.80f,  7.60f, e);
 
-        targetX = lerpf(15.00f, 14.00f, e); // looking into pure black starfield (+X)
-        targetY = lerpf( 0.52f,  0.50f, e);
-        targetZ = lerpf( 6.00f,  5.80f, e);
+        targetX = lerpf(18.00f, 16.50f, e); // looking into pure black starfield (+X)
+        targetY = lerpf( 0.55f,  0.50f, e);
+        targetZ = lerpf( 7.80f,  7.60f, e);
     } else if (seqTime < 15.0f) {
-        // Phase 2: Ultra-slow cinematic pan bringing sunlit Mars into frame (9 seconds)
+        // Phase 2: Ultra-slow cinematic pan bringing sunlit Mars fully into frame (9 seconds)
         float t = (seqTime - 6.0f) / 9.0f;
         float e = smoothstep(0.0f, 1.0f, t);
 
-        eyeX = lerpf(-2.80f, -2.75f, e);
-        eyeY = lerpf( 0.50f,  0.48f, e);
-        eyeZ = lerpf( 5.80f,  5.70f, e);
+        eyeX = lerpf(-3.80f, -3.75f, e);
+        eyeY = lerpf( 0.50f,  0.45f, e);
+        eyeZ = lerpf( 7.60f,  7.50f, e);
 
-        targetX = lerpf(14.00f, 0.15f, e); // smoothly pivots from void to Mars
-        targetY = lerpf( 0.50f, 0.05f, e);
-        targetZ = lerpf( 5.80f, 0.00f, e);
+        targetX = lerpf(16.50f, 0.20f, e);
+        targetY = lerpf( 0.50f, -0.05f, e);
+        targetZ = lerpf( 7.60f, 0.00f, e);
     } else {
-        // Phase 3: The Interstellar Scale Shot holds on sunlit Mars with tiny dot spacecraft
+        // Phase 3: The Interstellar Scale Shot holds (Full Mars disc framed without clipping)
         float t = (seqTime - 15.0f) / 11.0f;
         float e = smoothstep(0.0f, 1.0f, t);
 
-        eyeX = lerpf(-2.75f, -2.90f, e);
-        eyeY = lerpf( 0.48f,  0.52f, e);
-        eyeZ = lerpf( 5.70f,  5.55f, e);
+        eyeX = lerpf(-3.75f, -3.95f, e);
+        eyeY = lerpf( 0.45f,  0.50f, e);
+        eyeZ = lerpf( 7.50f,  7.35f, e);
 
-        targetX = lerpf(0.15f, 0.20f, e);
-        targetY = lerpf(0.05f, 0.07f, e);
+        targetX = lerpf(0.20f, 0.25f, e);
+        targetY = lerpf(-0.05f, -0.03f, e);
         targetZ = lerpf(0.00f, 0.02f, e);
     }
 }

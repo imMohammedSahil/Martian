@@ -121,10 +121,11 @@ void renderMarsAndAtmosphere() {
     if (hasTexture) {
         glEnable(GL_TEXTURE_2D);
         glBindTexture(GL_TEXTURE_2D, marsTextureID);
+        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     }
 
-    GLfloat marsDiffuse[]  = { 1.40f, 1.30f, 1.20f, 1.0f };
-    GLfloat marsAmbient[]  = { 0.05f, 0.04f, 0.04f, 1.0f };
+    GLfloat marsDiffuse[]  = { 1.55f, 1.40f, 1.30f, 1.0f };
+    GLfloat marsAmbient[]  = { 0.14f, 0.09f, 0.07f, 1.0f };
     GLfloat marsSpecular[] = { 0.08f, 0.06f, 0.04f, 1.0f };
     GLfloat marsShine[]    = { 6.0f };
     glMaterialfv(GL_FRONT, GL_DIFFUSE, marsDiffuse);
