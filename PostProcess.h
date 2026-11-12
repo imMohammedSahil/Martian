@@ -3,6 +3,7 @@
 
 #include "Common.h"
 
+void initSolarAssets();
 void renderSunDisc3D(float& outWinX, float& outWinY, float& outWinZ, bool& outInFront);
 void renderCinemaPost(float flareX, float flareY, bool flareInFront, float flareVisibility);
 

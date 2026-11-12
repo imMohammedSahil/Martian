@@ -1,14 +1,34 @@
 #include "PostProcess.h"
 #include "Common.h"
+#include "stb_image.h"
+
+static GLuint sunTextureID = 0;
+static bool   hasSunTexture = false;
+
+void initSolarAssets() {
+    int w, h, channels;
+    unsigned char* data = stbi_load("sun_flare.png", &w, &h, &channels, 4);
+    if (!data) return;
+
+    glGenTextures(1, &sunTextureID);
+    glBindTexture(GL_TEXTURE_2D, sunTextureID);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    stbi_image_free(data);
+    hasSunTexture = true;
+}
 
 void renderSunDisc3D(float& outWinX, float& outWinY, float& outWinZ, bool& outInFront) {
     glDisable(GL_LIGHTING);
     glPushMatrix();
     glTranslatef(lightSunPos[0], lightSunPos[1], lightSunPos[2]);
 
-    // Blazing pure white solar disc
+    // Blazing pure white solar disc (realistic size for Mars orbit, 1.52 AU)
     glColor3f(1.0f, 0.99f, 0.96f);
-    glutSolidSphere(1.25f, 20, 16);
+    glutSolidSphere(0.85f, 20, 16);
 
     // Screen-space 2D coordinate extraction
     GLdouble model[16], proj[16];
@@ -30,6 +50,9 @@ void renderSunDisc3D(float& outWinX, float& outWinY, float& outWinZ, bool& outIn
 
 static void renderAnamorphicFlare2D(float winX, float winY, float visibility) {
     if (visibility <= 0.01f) return;
+    // Don't render flare if Sun is far off-screen
+    if (winX < -150.0f || winX > (float)windowWidth + 150.0f) return;
+    if (winY < -150.0f || winY > (float)windowHeight + 150.0f) return;
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);

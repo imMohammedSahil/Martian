@@ -38,38 +38,39 @@ void computeCameraScene1(float& eyeX, float& eyeY, float& eyeZ,
     upX = 0.0f; upY = 1.0f; upZ = 0.0f;
 
     if (seqTime < 6.0f) {
-        // Phase 1: Pure deep-black space void (camera aimed up into cosmic dark, Mars off-screen)
+        // Phase 1: Pure deep-black space void (looking away into deep cosmic darkness)
+        // Mars and the Sun are 100% out of frame
         float t = seqTime / 6.0f;
         float e = smoothstep(0.0f, 1.0f, t);
-        eyeX = lerpf(-3.40f, -3.20f, e);
-        eyeY = lerpf( 0.70f,  0.60f, e);
-        eyeZ = lerpf( 6.40f,  6.20f, e);
+        eyeX = lerpf(-2.90f, -2.80f, e);
+        eyeY = lerpf( 0.52f,  0.50f, e);
+        eyeZ = lerpf( 5.90f,  5.80f, e);
 
-        targetX = lerpf(-3.40f, -3.20f, e);
-        targetY = lerpf(16.00f, 14.50f, e); // looking high up into black void
-        targetZ = lerpf( 6.40f,  6.20f, e);
+        targetX = lerpf(15.00f, 14.00f, e); // looking into pure black starfield (+X)
+        targetY = lerpf( 0.52f,  0.50f, e);
+        targetZ = lerpf( 6.00f,  5.80f, e);
     } else if (seqTime < 15.0f) {
-        // Phase 2: Ultra-slow cinematic tilt down bringing sunlit Mars into frame (9 seconds)
+        // Phase 2: Ultra-slow cinematic pan bringing sunlit Mars into frame (9 seconds)
         float t = (seqTime - 6.0f) / 9.0f;
         float e = smoothstep(0.0f, 1.0f, t);
 
-        eyeX = lerpf(-3.20f, -3.10f, e);
-        eyeY = lerpf( 0.60f,  0.55f, e);
-        eyeZ = lerpf( 6.20f,  6.10f, e);
+        eyeX = lerpf(-2.80f, -2.75f, e);
+        eyeY = lerpf( 0.50f,  0.48f, e);
+        eyeZ = lerpf( 5.80f,  5.70f, e);
 
-        targetX = lerpf(-3.20f, 0.20f, e);
-        targetY = lerpf(14.50f, 0.05f, e);
-        targetZ = lerpf( 6.20f, 0.00f, e);
+        targetX = lerpf(14.00f, 0.15f, e); // smoothly pivots from void to Mars
+        targetY = lerpf( 0.50f, 0.05f, e);
+        targetZ = lerpf( 5.80f, 0.00f, e);
     } else {
         // Phase 3: The Interstellar Scale Shot holds on sunlit Mars with tiny dot spacecraft
         float t = (seqTime - 15.0f) / 11.0f;
         float e = smoothstep(0.0f, 1.0f, t);
 
-        eyeX = lerpf(-3.10f, -3.25f, e);
-        eyeY = lerpf( 0.55f,  0.58f, e);
-        eyeZ = lerpf( 6.10f,  5.95f, e);
+        eyeX = lerpf(-2.75f, -2.90f, e);
+        eyeY = lerpf( 0.48f,  0.52f, e);
+        eyeZ = lerpf( 5.70f,  5.55f, e);
 
-        targetX = lerpf(0.20f, 0.25f, e);
+        targetX = lerpf(0.15f, 0.20f, e);
         targetY = lerpf(0.05f, 0.07f, e);
         targetZ = lerpf(0.00f, 0.02f, e);
     }
