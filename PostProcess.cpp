@@ -133,28 +133,46 @@ void renderCinemaPost(float flareX, float flareY, bool flareInFront, float flare
         glVertex2f(0.0f, (float)windowHeight);
     glEnd();
 
-    // 3. Sleek Title Card: "M A R T I A N" (16.5s - 23.5s)
+    // 3. Sleek Bold Title Card: "M A R T I A N" (16.5s - 23.5s)
     if (seqTime >= 16.5f && seqTime <= 23.5f) {
         float titleAlpha = smoothstep(16.5f, 18.2f, seqTime) * (1.0f - smoothstep(21.5f, 23.5f, seqTime));
         if (titleAlpha > 0.01f) {
-            const char* title = "M  A  R  T  I  A  N";
-            float scale = (windowWidth / 1280.0f) * 0.36f;
+            const char* title = "M   A   R   T   I   A   N";
+            float scale = (windowWidth / 1280.0f) * 0.26f;
+            
+            // Accurate width calculation (handling spaces correctly in FreeGLUT)
             float strWidth = 0.0f;
             for (const char* p = title; *p; ++p) {
-                strWidth += glutStrokeWidth(GLUT_STROKE_ROMAN, *p);
+                if (*p == ' ') {
+                    strWidth += 105.0f;
+                } else {
+                    strWidth += (float)glutStrokeWidth(GLUT_STROKE_ROMAN, *p);
+                }
             }
             float startX = (windowWidth - strWidth * scale) * 0.5f;
-            float startY = windowHeight * 0.5f - 18.0f * scale;
+            float startY = windowHeight * 0.5f - 14.0f * scale;
 
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             glEnable(GL_LINE_SMOOTH);
-            glLineWidth(2.4f);
 
+            // Glow / Shadow pass (Bold & Cinematic)
+            glLineWidth(4.5f);
             glPushMatrix();
             glTranslatef(startX, startY, 0.0f);
             glScalef(scale, scale, 1.0f);
-            glColor4f(0.96f, 0.98f, 1.00f, titleAlpha * 0.94f);
+            glColor4f(0.0f, 0.0f, 0.0f, titleAlpha * 0.70f);
+            for (const char* p = title; *p; ++p) {
+                glutStrokeCharacter(GLUT_STROKE_ROMAN, *p);
+            }
+            glPopMatrix();
+
+            // Crisp Core pass
+            glLineWidth(2.4f);
+            glPushMatrix();
+            glTranslatef(startX, startY, 0.0f);
+            glScalef(scale, scale, 1.0f);
+            glColor4f(0.98f, 0.99f, 1.00f, titleAlpha * 0.95f);
             for (const char* p = title; *p; ++p) {
                 glutStrokeCharacter(GLUT_STROKE_ROMAN, *p);
             }
