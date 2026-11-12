@@ -133,9 +133,9 @@ void renderCinemaPost(float flareX, float flareY, bool flareInFront, float flare
         glVertex2f(0.0f, (float)windowHeight);
     glEnd();
 
-    // 3. Sleek Title Card: "M A R T I A N" (8.2s - 13.5s)
-    if (seqTime >= 8.2f && seqTime <= 13.5f) {
-        float titleAlpha = smoothstep(8.2f, 9.6f, seqTime) * (1.0f - smoothstep(11.8f, 13.5f, seqTime));
+    // 3. Sleek Title Card: "M A R T I A N" (16.5s - 23.5s)
+    if (seqTime >= 16.5f && seqTime <= 23.5f) {
+        float titleAlpha = smoothstep(16.5f, 18.2f, seqTime) * (1.0f - smoothstep(21.5f, 23.5f, seqTime));
         if (titleAlpha > 0.01f) {
             const char* title = "M  A  R  T  I  A  N";
             float scale = (windowWidth / 1280.0f) * 0.36f;
@@ -167,11 +167,11 @@ void renderCinemaPost(float flareX, float flareY, bool flareInFront, float flare
 
     // 4. Theatrical Transitions & Fades
     float fadeAlpha = 0.0f;
-    if (seqTime < 1.0f) {
-        fadeAlpha = 1.0f - smoothstep(0.0f, 1.0f, seqTime);
+    if (seqTime < 1.5f) {
+        fadeAlpha = 1.0f - smoothstep(0.0f, 1.5f, seqTime);
     }
-    if (seqTime > 13.8f) {
-        fadeAlpha = std::max(fadeAlpha, smoothstep(13.8f, 15.0f, seqTime));
+    if (seqTime > 24.5f) {
+        fadeAlpha = std::max(fadeAlpha, smoothstep(24.5f, 26.0f, seqTime));
     }
 
     if (fadeAlpha > 0.005f) {
