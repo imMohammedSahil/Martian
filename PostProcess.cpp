@@ -240,7 +240,7 @@ void renderCinemaPost(float flareX, float flareY, bool flareInFront, float flare
                 glPushMatrix();
                 glTranslatef(startX, startY, 0.0f);
                 glScalef(scale, scale, 1.0f);
-                glColor4f(1.0f, 1.0f, 1.0f, titleAlpha);
+                glColor4f(0.05f, 0.05f, 0.05f, titleAlpha);
                 for (const char* p = title; *p; ++p) {
                     glutStrokeCharacter(GLUT_STROKE_ROMAN, *p);
                 }
