@@ -43,21 +43,21 @@ void renderEnduranceShip() {
     glRotatef(26.0f, 1.0f, 0.0f, 0.0f);
     glRotatef(14.0f, 0.0f, 0.0f, 1.0f);
 
-    // Beacon glint keeps distant ship visible as a twinkling pinpoint speck
-    if (seqTime < 21.0f) {
+    // Small pinpoint dot beacon during Shot 2 & early Shot 3 (0.0s - 19.0s)
+    if (seqTime < 19.0f) {
         glDisable(GL_LIGHTING);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
-        float dotAlpha = clampf((21.0f - seqTime) / 4.0f, 0.0f, 1.0f);
+        float dotAlpha = (seqTime < 15.0f) ? 1.0f : (1.0f - smoothstep(15.0f, 19.0f, seqTime));
         float strobe = 0.85f + 0.15f * sinf(totalTime * 8.0f);
-        glPointSize(4.5f);
+        glPointSize(3.5f);
         glBegin(GL_POINTS);
             glColor4f(1.0f, 0.98f, 0.94f, strobe * dotAlpha);
             glVertex3f(0.0f, 0.0f, 0.0f);
         glEnd();
 
-        glPointSize(8.0f);
+        glPointSize(6.0f);
         glBegin(GL_POINTS);
             float redBlink = (fmodf(totalTime * 1.5f, 1.0f) < 0.25f) ? 0.95f : 0.25f;
             glColor4f(1.0f, 0.32f, 0.20f, redBlink * dotAlpha);
@@ -69,8 +69,16 @@ void renderEnduranceShip() {
         glEnable(GL_LIGHTING);
     }
 
-    // Always render the full 3D spinning Endurance ship (scales and reveals gradually on every frame)
-    glScalef(0.40f, 0.40f, 0.40f);
+    // Dynamic gradual scale: tiny microscopic dot in Shot 2, smoothly expanding during the zoom
+    float shipScale = 0.38f;
+    if (seqTime < 14.0f) {
+        shipScale = 0.02f; // Tiny dot scale
+    } else if (seqTime < 23.0f) {
+        float t = (seqTime - 14.0f) / 9.0f;
+        float e = smoothstep(0.0f, 1.0f, t);
+        shipScale = lerpf(0.02f, 0.38f, e); // Smooth frame-by-frame enlargement
+    }
+    glScalef(shipScale, shipScale, shipScale);
 
     // Spinning Ring Frame
     glPushMatrix();
