@@ -420,48 +420,62 @@ void renderEnduranceShip() {
         glPopMatrix();
     }
 
-    // Shot 1 (35.0s - 39.0s): Small rectangular craft emerges out from behind the central hub
+    // Shot 1 (35.0s - 39.0s): Authentic 3D Ranger unlatches out from behind the central hub
     if (seqTime >= 35.0f && seqTime < 39.0f) {
         float u = (seqTime - 35.0f) / 4.0f;
         float smoothU = smoothstep(0.0f, 1.0f, u);
 
+        loadRangerModel();
+
         glPushMatrix();
         // Slides out backwards (-Z) from behind the central hub
-        float detachZ = lerpf(0.02f, -1.15f, smoothU);
-        float dropY   = lerpf(0.0f, -0.22f, smoothU);
+        float detachZ = lerpf(0.02f, -1.25f, smoothU);
+        float dropY   = lerpf(-0.02f, -0.26f, smoothU);
         glTranslatef(0.0f, dropY, detachZ);
-        glRotatef(lerpf(0.0f, -16.0f, smoothU), 1.0f, 0.0f, 0.0f);
+        glRotatef(lerpf(0.0f, -18.0f, smoothU), 1.0f, 0.0f, 0.0f);
 
-        GLfloat podWhite[] = { 0.92f, 0.94f, 0.96f, 1.0f };
-        GLfloat podDark[]  = { 0.16f, 0.18f, 0.22f, 1.0f };
-        GLfloat zeroEmit[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+        // Exact proportional scale relative to Endurance hub
+        float hubRangerScale = 0.22f;
+        glScalef(hubRangerScale, hubRangerScale, hubRangerScale);
 
-        // Sleek rectangular body
-        glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, podWhite);
-        drawBox(0.08f, 0.038f, 0.20f);
-
-        // Dark thermal underside
-        glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, podDark);
-        glPushMatrix();
-        glTranslatef(0.0f, -0.012f, 0.0f);
-        drawBox(0.082f, 0.016f, 0.202f);
-        glPopMatrix();
-
-        // Dark canopy strip on top
-        glPushMatrix();
-        glTranslatef(0.0f, 0.018f, 0.04f);
-        drawBox(0.045f, 0.012f, 0.07f);
-        glPopMatrix();
-
-        // Tiny RCS / thruster glint at rear
-        if (u > 0.15f && u < 0.90f) {
-            GLfloat rcsBlue[] = { 0.3f, 0.75f, 1.0f, 1.0f };
-            glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, rcsBlue);
+        if (rangerLoaded && rangerList) {
+            glCallList(rangerList);
+        } else {
+            GLfloat podWhite[] = { 0.92f, 0.94f, 0.96f, 1.0f };
+            GLfloat podDark[]  = { 0.16f, 0.18f, 0.22f, 1.0f };
+            glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, podWhite);
+            drawBox(0.36f, 0.14f, 0.90f);
+            glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, podDark);
             glPushMatrix();
-            glTranslatef(0.0f, 0.0f, -0.11f);
-            glutSolidSphere(0.016f, 8, 6);
+            glTranslatef(0.0f, -0.05f, 0.0f);
+            drawBox(0.38f, 0.06f, 0.92f);
             glPopMatrix();
-            glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, zeroEmit);
+        }
+
+        // Cold-gas RCS separation thruster puffs & engine pilot glow
+        if (u > 0.12f && u < 0.85f) {
+            glDisable(GL_LIGHTING);
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+
+            glLineWidth(2.0f);
+            glColor4f(0.85f, 0.95f, 1.0f, 0.80f);
+            glBegin(GL_LINES);
+                glVertex3f(-0.55f, 0.0f, 0.2f); glVertex3f(-1.1f, 0.0f, 0.1f);
+                glVertex3f( 0.55f, 0.0f, 0.2f); glVertex3f( 1.1f, 0.0f, 0.1f);
+            glEnd();
+
+            glColor4f(0.35f, 0.75f, 1.0f, 0.85f);
+            for (float side = -0.32f; side <= 0.35f; side += 0.64f) {
+                glPushMatrix();
+                glTranslatef(side, 0.0f, -0.95f);
+                glutSolidSphere(0.08f, 8, 6);
+                glPopMatrix();
+            }
+
+            glLineWidth(1.0f);
+            glDisable(GL_BLEND);
+            glEnable(GL_LIGHTING);
         }
 
         glPopMatrix();
