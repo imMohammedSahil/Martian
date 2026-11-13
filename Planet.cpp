@@ -100,13 +100,14 @@ static void renderTexturedSphere(float radius, int slices, int stacks) {
             float sinLon = sinf(lon);
             float u      = (float)j / slices;
 
-            glNormal3f(cosLon * cosf(lat1), sinf(lat1), sinLon * cosf(lat1));
-            glTexCoord2f(u, v1);
-            glVertex3f(cosLon * yr1, y1, sinLon * yr1);
-
+            // Emit bottom vertex then top vertex (Counter-Clockwise outward winding)
             glNormal3f(cosLon * cosf(lat0), sinf(lat0), sinLon * cosf(lat0));
             glTexCoord2f(u, v0);
             glVertex3f(cosLon * yr0, y0, sinLon * yr0);
+
+            glNormal3f(cosLon * cosf(lat1), sinf(lat1), sinLon * cosf(lat1));
+            glTexCoord2f(u, v1);
+            glVertex3f(cosLon * yr1, y1, sinLon * yr1);
         }
         glEnd();
     }
@@ -115,6 +116,7 @@ static void renderTexturedSphere(float radius, int slices, int stacks) {
 void renderMarsAndAtmosphere() {
     // 1. Mars Body (25.19 deg tilt + spin)
     glPushMatrix();
+    glDisable(GL_CULL_FACE); // Guarantee front face is never culled
     glRotatef(25.19f, 0.0f, 0.0f, 1.0f);
     glRotatef(marsSpinAngle, 0.0f, 1.0f, 0.0f);
 
@@ -124,20 +126,21 @@ void renderMarsAndAtmosphere() {
         glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     }
 
-    GLfloat marsDiffuse[]  = { 1.75f, 1.58f, 1.45f, 1.0f };
-    GLfloat marsAmbient[]  = { 0.24f, 0.18f, 0.15f, 1.0f };
+    GLfloat marsDiffuse[]  = { 1.85f, 1.65f, 1.50f, 1.0f };
+    GLfloat marsAmbient[]  = { 0.35f, 0.28f, 0.22f, 1.0f };
     GLfloat marsSpecular[] = { 0.12f, 0.09f, 0.06f, 1.0f };
     GLfloat marsShine[]    = { 6.0f };
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, marsDiffuse);
-    glMaterialfv(GL_FRONT, GL_AMBIENT, marsAmbient);
-    glMaterialfv(GL_FRONT, GL_SPECULAR, marsSpecular);
-    glMaterialfv(GL_FRONT, GL_SHININESS, marsShine);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, marsDiffuse);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, marsAmbient);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, marsSpecular);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, marsShine);
 
     renderTexturedSphere(MARS_RADIUS, MARS_SLICES, MARS_STACKS);
 
     if (hasTexture) {
         glDisable(GL_TEXTURE_2D);
     }
+    glEnable(GL_CULL_FACE);
     glPopMatrix();
 
     // 2. Sun-Weighted Dual-Layer Martian Atmospheric Scattering

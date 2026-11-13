@@ -38,8 +38,8 @@ const float SUN_DIR_X = -0.38f;
 const float SUN_DIR_Y =  0.22f;
 const float SUN_DIR_Z =  0.90f;
 GLfloat lightSunPos[4]      = { -18.0f, 12.0f, 44.0f, 0.0f }; // Intense directional light directly illuminating Mars
-GLfloat lightSunAmbient[4]  = { 0.08f, 0.08f, 0.08f, 1.0f };
-GLfloat lightSunDiffuse[4]  = { 1.85f, 1.72f, 1.60f, 1.0f };
+GLfloat lightSunAmbient[4]  = { 0.25f, 0.25f, 0.25f, 1.0f };
+GLfloat lightSunDiffuse[4]  = { 2.10f, 1.95f, 1.80f, 1.0f };
 GLfloat lightSunSpecular[4] = { 0.55f, 0.52f, 0.48f, 1.0f };
 
 // ============================================================================
