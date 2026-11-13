@@ -33,7 +33,7 @@ const int   MARS_SLICES         = 112;
 const int   MARS_STACKS         = 72;
 const int   NUM_STARS           = 4200;
 const int   NUM_DUST_STREAKS    = 90;
-const float SEQUENCE_DURATION   = 55.0f; // Scene 1 (35s) + Scene 2 (20s)
+const float SEQUENCE_DURATION   = 56.0f; // Scene 1 (35s) + Scene 2 (21s)
 
 // ============================================================================
 // DATA STRUCTURES

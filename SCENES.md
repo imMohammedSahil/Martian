@@ -9,11 +9,18 @@
 
 ---
 
-## Scene 2: Lander Undocking & Hypersonic Atmospheric Entry [COMPLETED]
-* **Duration:** 20.0s (`35.0s – 55.0s`).
-* **Phase 1 (35.0s – 42.0s / Separation):** Hull-mounted camera tracks authentic 3D Ranger detaching from Endurance hub, cold-gas RCS thruster puffs, pitch-down maneuver.
-* **Phase 2 (42.0s – 48.0s / Retro Burn):** Twin main thrusters ignite with dual electric-blue/cyan ion plumes, retrograde de-orbit burn toward Mars.
-* **Phase 3 (48.0s – 55.0s / Hypersonic Entry):** Exterior orbital chase; incandescent orange heatshield, plasma bow shock wave, trailing flame embers, buffeting IMAX camera shake.
+## Scene 2: The Departure & Trans-Martian Injection [STORYBOARD-ACCURATE]
+* **Duration:** 21.0s (`35.0s – 56.0s`).
+* **Shot 1 (35.0s – 39.0s / Backside Emergence):**
+  * `MARTIAN` title text fades away over Endurance.
+  * Ranger detaches and emerges out from the backside of the Endurance hub with RCS separation.
+* **Shot 2 (39.0s – 46.0s / Blackout & Side Profile Cruise):**
+  * Sudden hard blackout cut.
+  * Side-profile shot: Mars curved horizon on the right. Ranger on the left flying forward toward Mars (`going ->`) with twin rear thrusters blazing.
+* **Shot 3 (46.0s – 56.0s / Receding to Dot):**
+  * Ranger continues deeper toward the Martian curvature.
+  * Shrinks from full spacecraft down to a tiny pinpoint dot (`•`) against the colossal red planet backdrop.
+  * Slow fade to black at 56.0s.
 
 ---
 

@@ -594,6 +594,31 @@ void renderRangerLander() {
         glEnable(GL_LIGHTING);
     }
 
+    // 4. Distance Beacon Dot: When receding into the distance (Shot 3), ensure crisp visible speck
+    if (seqTime >= 46.0f) {
+        glDisable(GL_LIGHTING);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+
+        float strobe = 0.85f + 0.15f * sinf(totalTime * 12.0f);
+        glPointSize(3.5f);
+        glBegin(GL_POINTS);
+            glColor4f(1.0f, 0.98f, 0.92f, strobe);
+            glVertex3f(0.0f, 0.0f, 0.0f);
+        glEnd();
+
+        glPointSize(5.0f);
+        glBegin(GL_POINTS);
+            float redBlink = (fmodf(totalTime * 2.0f, 1.0f) < 0.25f) ? 0.95f : 0.20f;
+            glColor4f(1.0f, 0.35f, 0.20f, redBlink);
+            glVertex3f(0.0f, 0.0f, 0.0f);
+        glEnd();
+
+        glPointSize(1.0f);
+        glDisable(GL_BLEND);
+        glEnable(GL_LIGHTING);
+    }
+
     glPopMatrix();
 }
 

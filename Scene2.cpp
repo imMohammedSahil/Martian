@@ -5,17 +5,19 @@
 #include <cmath>
 
 // ============================================================================
-// SCENE 2: LANDER UNDOCKING, DE-ORBIT BURN & HYPERSONIC ENTRY (EXTERIOR)
+// SCENE 2: STORYBOARD IMPLEMENTATION
 // ============================================================================
-// Phase 1 (35.0s - 42.0s): Undocking from Endurance, cold-gas RCS puffs, pitch
-// Phase 2 (42.0s - 48.0s): De-orbit retro burn with dual electric-blue ion plumes
-// Phase 3 (48.0s - 55.0s): Hypersonic entry, incandescent heatshield & plasma cone
+// Shot 1 (35.0s - 39.0s): Title fades, Ranger emerges from backside of Endurance
+// Shot 2 (39.0s - 46.0s): Sudden blackout cut -> Side profile, Mars on right,
+//                        Ranger on left flying toward Mars with rear engines firing
+// Shot 3 (46.0s - 56.0s): "It keeps going on" -> Ranger recedes into the distance
+//                        becoming a tiny dot (speck) against the giant Mars curve
 // ============================================================================
 
 void updateScene2(float dt) {
     rangerDetached = true;
 
-    // Base orbital position of Endurance
+    // Endurance stays in low Mars orbit
     endPosX = 0.0f;
     endPosY = -0.60f;
     endPosZ = 2.45f;
@@ -23,94 +25,106 @@ void updateScene2(float dt) {
 
     float t = seqTime;
 
-    if (t < 42.0f) {
-        // PHASE 1: UNDOCKING & SEPARATION (35.0s - 42.0s)
-        float u = (t - 35.0f) / 7.0f;
+    if (t < 39.0f) {
+        // SHOT 1: BACKSIDE EMERGENCE (35.0s - 39.0s)
+        // Ranger unlatches and flies out from the rear/underneath the Endurance hub
+        float u = (t - 35.0f) / 4.0f;
         float smoothU = smoothstep(0.0f, 1.0f, u);
 
-        rangerPosX = 0.0f;
-        rangerPosY = lerpf(-0.60f, -0.95f, smoothU);
-        rangerPosZ = lerpf(2.45f, 2.60f, smoothU);
+        rangerPosX = lerpf(0.0f, -0.15f, smoothU);
+        rangerPosY = lerpf(-0.60f, -0.88f, smoothU); // drops down out from hub
+        rangerPosZ = lerpf(2.45f, 2.18f, smoothU);  // emerges towards backside
 
-        rangerDirX = 0.0f;
-        rangerDirY = lerpf(0.0f, -0.42f, smoothU);
-        rangerDirZ = lerpf(1.0f, 0.90f, smoothU);
+        // Heading away and slightly downward
+        rangerDirX = -0.15f;
+        rangerDirY = -0.45f;
+        rangerDirZ = -0.88f;
         normalize3(rangerDirX, rangerDirY, rangerDirZ);
 
-        rangerPitchExtra = lerpf(0.0f, -24.0f, smoothU);
-        rangerRollAngle  = lerpf(0.0f, 8.0f, smoothU);
+        rangerPitchExtra = lerpf(0.0f, -18.0f, smoothU);
+        rangerRollAngle  = lerpf(0.0f, 10.0f, smoothU);
 
-        rcsActive = (t >= 35.5f && t <= 39.5f) ? 1.0f : 0.0f;
+        rcsActive = (t >= 35.5f && t <= 38.5f) ? 1.0f : 0.0f;
         mainBurnActive = 0.0f;
         heatshieldThermal = 0.0f;
 
-        if (rcsActive > 0.0f && (rand() % 3 == 0)) {
+        if (rcsActive > 0.0f && (rand() % 2 == 0)) {
             float side = (rand() % 2 == 0) ? -1.0f : 1.0f;
-            spawnParticle(rangerPosX + side * 0.15f, rangerPosY + 0.02f, rangerPosZ - 0.1f,
-                          side * 0.4f, 0.1f, -0.2f, 0.6f, 2.2f, 0.85f, 0.95f, 1.0f, true);
+            spawnParticle(rangerPosX + side * 0.12f, rangerPosY, rangerPosZ,
+                          side * 0.3f, -0.1f, 0.2f, 0.5f, 2.0f, 0.85f, 0.95f, 1.0f, true);
         }
     }
-    else if (t < 48.0f) {
-        // PHASE 2: DE-ORBIT RETRO BURN (42.0s - 48.0s)
-        float u = (t - 42.0f) / 6.0f;
+    else if (t < 46.0f) {
+        // SHOT 2: SIDE PROFILE CRUISE (39.0s - 46.0s)
+        // Mars curve on right, Ranger on left traveling rightward toward Mars
+        float u = (t - 39.0f) / 7.0f;
         float smoothU = smoothstep(0.0f, 1.0f, u);
 
-        rangerPosX = lerpf(0.0f, 0.08f, smoothU);
-        rangerPosY = lerpf(-0.95f, -1.45f, smoothU);
-        rangerPosZ = lerpf(2.60f, 2.30f, smoothU);
+        // Ranger flies from left to right toward the Martian horizon
+        rangerPosX = lerpf(-1.20f, -0.10f, smoothU);
+        rangerPosY = lerpf(-0.65f, -0.72f, smoothU);
+        rangerPosZ = lerpf(1.90f, 1.45f, smoothU);
 
-        rangerDirX = 0.05f;
-        rangerDirY = lerpf(-0.42f, -0.68f, smoothU);
-        rangerDirZ = lerpf(0.90f, 0.73f, smoothU);
+        // Directed toward Mars horizon (rightward and forward)
+        rangerDirX = 0.85f;
+        rangerDirY = -0.08f;
+        rangerDirZ = -0.52f;
         normalize3(rangerDirX, rangerDirY, rangerDirZ);
 
-        rangerPitchExtra = -26.0f;
-        rangerRollAngle  = 8.0f + 4.0f * sinf(u * 3.14159f);
+        rangerPitchExtra = -4.0f;
+        rangerRollAngle  = 5.0f;
 
         rcsActive = 0.0f;
-        mainBurnActive = (t >= 42.4f && t <= 47.6f) ? 1.0f : 0.0f;
-        heatshieldThermal = smoothstep(46.0f, 48.0f, t) * 0.25f;
+        mainBurnActive = (t >= 39.2f) ? 1.0f : 0.0f;
+        heatshieldThermal = 0.0f;
 
+        // Twin main propulsion trail particles
         if (mainBurnActive > 0.0f) {
-            for (int k = 0; k < 3; ++k) {
-                float side = (k % 2 == 0) ? -0.08f : 0.08f;
-                spawnParticle(rangerPosX + side + randRange(-0.01f, 0.01f),
-                              rangerPosY + 0.01f + randRange(-0.01f, 0.01f),
-                              rangerPosZ - 0.28f - randRange(0.0f, 0.05f),
-                              randRange(-0.05f, 0.05f), -0.2f, -0.8f,
-                              0.5f, randRange(2.5f, 4.5f),
-                              0.4f, 0.75f, 1.0f, true);
+            float exX = rangerPosX - rangerDirX * 0.35f;
+            float exY = rangerPosY - rangerDirY * 0.35f;
+            float exZ = rangerPosZ - rangerDirZ * 0.35f;
+            for (int k = 0; k < 2; ++k) {
+                spawnParticle(exX + randRange(-0.02f, 0.02f),
+                              exY + randRange(-0.02f, 0.02f),
+                              exZ + randRange(-0.02f, 0.02f),
+                              -rangerDirX * 1.5f + randRange(-0.1f, 0.1f),
+                              -rangerDirY * 1.5f + randRange(-0.05f, 0.05f),
+                              -rangerDirZ * 1.5f + randRange(-0.1f, 0.1f),
+                              0.4f, randRange(2.5f, 4.0f),
+                              0.35f, 0.75f, 1.0f, true);
             }
         }
     }
     else {
-        // PHASE 3: HYPERSONIC ENTRY & PLASMA FIRE (48.0s - 55.0s)
-        float u = (t - 48.0f) / 7.0f;
+        // SHOT 3: RECEDING INTO DISTANCE (46.0s - 56.0s)
+        // "It keeps going on -> small dot it becomes"
+        float u = (t - 46.0f) / 10.0f;
 
-        rangerPosX = 0.08f + u * 0.08f;
-        rangerPosY = lerpf(-1.45f, -2.15f, u);
-        rangerPosZ = lerpf(2.30f, 1.95f, u);
+        // Ranger flies deep into the Martian atmosphere / curvature
+        rangerPosX = lerpf(-0.10f, 1.65f, u);
+        rangerPosY = lerpf(-0.72f, -0.85f, u);
+        rangerPosZ = lerpf(1.45f, 0.20f, u);
 
-        rangerDirX = 0.08f;
-        rangerDirY = -0.76f;
-        rangerDirZ = 0.65f;
+        rangerDirX = 0.88f;
+        rangerDirY = -0.06f;
+        rangerDirZ = -0.47f;
         normalize3(rangerDirX, rangerDirY, rangerDirZ);
 
-        rangerPitchExtra = -28.0f + 1.5f * sinf(t * 18.0f); // aerodynamic buffeting
-        rangerRollAngle  = 12.0f + 1.2f * cosf(t * 15.0f);
+        rangerPitchExtra = -5.0f;
+        rangerRollAngle  = 4.0f;
 
         rcsActive = 0.0f;
-        mainBurnActive = 0.0f;
-        heatshieldThermal = lerpf(0.25f, 1.0f, smoothstep(48.0f, 52.0f, t));
+        mainBurnActive = 1.0f; // continuous cruise burn
+        heatshieldThermal = smoothstep(49.0f, 54.0f, t) * 0.40f;
 
-        // Flaming embers streaming into wake
-        for (int k = 0; k < 5; ++k) {
-            spawnParticle(rangerPosX + randRange(-0.15f, 0.15f),
-                          rangerPosY - 0.06f + randRange(-0.04f, 0.02f),
-                          rangerPosZ + randRange(-0.1f, 0.2f),
-                          randRange(-0.1f, 0.1f), 0.3f, -1.2f,
-                          0.45f, randRange(3.0f, 6.0f),
-                          1.0f, randRange(0.35f, 0.75f), 0.15f, true);
+        // Faint wake trail
+        if (rand() % 2 == 0) {
+            float exX = rangerPosX - rangerDirX * 0.35f;
+            float exY = rangerPosY;
+            float exZ = rangerPosZ - rangerDirZ * 0.35f;
+            spawnParticle(exX, exY, exZ,
+                          -rangerDirX * 1.2f, 0.0f, -rangerDirZ * 1.2f,
+                          0.35f, 2.2f, 0.4f, 0.8f, 1.0f, true);
         }
     }
 
@@ -135,42 +149,42 @@ void computeCameraScene2(float& eyeX, float& eyeY, float& eyeZ,
     upX = 0.0f; upY = 1.0f; upZ = 0.0f;
     float t = seqTime;
 
-    if (t < 42.0f) {
-        // Phase 1 (35.0s - 42.0s): Docking Hub Separation View
-        float u = (t - 35.0f) / 7.0f;
-        eyeX = lerpf(0.0f, -0.28f, u);
-        eyeY = lerpf(-0.52f, -0.72f, u);
-        eyeZ = lerpf(2.88f, 3.08f, u);
+    if (t < 39.0f) {
+        // SHOT 1 (35.0s - 39.0s): Match Scene 1 hero position
+        // Looking at the Endurance as Ranger drops out behind it
+        float u = (t - 35.0f) / 4.0f;
+        eyeX = lerpf(0.0f, 0.05f, u);
+        eyeY = lerpf(-0.60f, -0.55f, u);
+        eyeZ = lerpf(2.92f, 2.96f, u);
 
-        targetX = rangerPosX * 0.6f;
-        targetY = rangerPosY;
-        targetZ = rangerPosZ;
+        targetX = 0.0f;
+        targetY = -0.60f;
+        targetZ = 2.45f;
     }
-    else if (t < 48.0f) {
-        // Phase 2 (42.0s - 48.0s): Dynamic Retro Burn 3/4 Orbit Chase
-        float u = (t - 42.0f) / 6.0f;
-        eyeX = lerpf(0.38f, 0.52f, u);
-        eyeY = lerpf(-0.80f, -1.22f, u);
-        eyeZ = lerpf(2.95f, 2.70f, u);
+    else if (t < 46.0f) {
+        // SHOT 2 (39.0s - 46.0s): Side Profile Shot (Panel 2)
+        // Camera positioned to view Mars curve on the right, Ranger on the left
+        float u = (t - 39.0f) / 7.0f;
+        eyeX = lerpf(-1.85f, -1.65f, u);
+        eyeY = lerpf(-0.55f, -0.58f, u);
+        eyeZ = lerpf(3.40f, 3.25f, u);
 
-        targetX = rangerPosX;
-        targetY = rangerPosY;
-        targetZ = rangerPosZ;
+        // Framed so Mars curvature occupies the right and flight path centers
+        targetX = lerpf(-0.25f, 0.15f, u);
+        targetY = -0.68f;
+        targetZ = 1.60f;
     }
     else {
-        // Phase 3 (48.0s - 55.0s): External Hypersonic Plasma Chase with IMAX shake
-        float u = (t - 48.0f) / 7.0f;
+        // SHOT 3 (46.0s - 56.0s): The Great Martian Expanse (Panel 3)
+        // Camera holds cinematic master framing as Ranger shrinks into a tiny dot
+        float u = (t - 46.0f) / 10.0f;
+        eyeX = lerpf(-1.65f, -1.45f, u);
+        eyeY = lerpf(-0.58f, -0.50f, u);
+        eyeZ = lerpf(3.25f, 3.40f, u);
 
-        float shake = smoothstep(48.0f, 51.0f, t) * 0.012f;
-        float sx = sinf(t * 35.0f) * shake;
-        float sy = cosf(t * 42.0f) * shake;
-
-        eyeX = lerpf(-0.45f, -0.58f, u) + sx;
-        eyeY = lerpf(-1.40f, -2.05f, u) + sy;
-        eyeZ = lerpf(2.65f, 2.30f, u);
-
-        targetX = rangerPosX + sx * 0.5f;
-        targetY = rangerPosY + sy * 0.5f;
-        targetZ = rangerPosZ;
+        // Center on the vast Martian horizon
+        targetX = 0.65f;
+        targetY = -0.60f;
+        targetZ = 0.85f;
     }
 }
