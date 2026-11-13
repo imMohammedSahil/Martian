@@ -56,23 +56,23 @@ void updateScene2(float dt) {
     }
     else if (t < 46.0f) {
         // SHOT 2: SIDE PROFILE CRUISE (39.0s - 46.0s)
-        // Mars curve on right, Ranger on left traveling rightward toward Mars
+        // Mars curve on TOP-RIGHT, Ranger on left traveling rightward toward Mars
         float u = (t - 39.0f) / 7.0f;
         float smoothU = smoothstep(0.0f, 1.0f, u);
 
         // Ranger flies from left to right toward the Martian horizon
-        rangerPosX = lerpf(-1.20f, -0.10f, smoothU);
-        rangerPosY = lerpf(-0.65f, -0.72f, smoothU);
-        rangerPosZ = lerpf(1.90f, 1.45f, smoothU);
+        rangerPosX = lerpf(-2.15f, -0.75f, smoothU);
+        rangerPosY = lerpf(-0.62f, -0.52f, smoothU);
+        rangerPosZ = lerpf( 1.95f,  1.05f, smoothU);
 
         // Directed toward Mars horizon (rightward and forward)
-        rangerDirX = 0.85f;
-        rangerDirY = -0.08f;
-        rangerDirZ = -0.52f;
+        rangerDirX = 0.84f;
+        rangerDirY = 0.06f;
+        rangerDirZ = -0.54f;
         normalize3(rangerDirX, rangerDirY, rangerDirZ);
 
-        rangerPitchExtra = -4.0f;
-        rangerRollAngle  = 5.0f;
+        rangerPitchExtra = -3.0f;
+        rangerRollAngle  = 4.0f;
 
         rcsActive = 0.0f;
         mainBurnActive = (t >= 39.2f) ? 1.0f : 0.0f;
@@ -87,9 +87,9 @@ void updateScene2(float dt) {
                 spawnParticle(exX + randRange(-0.02f, 0.02f),
                               exY + randRange(-0.02f, 0.02f),
                               exZ + randRange(-0.02f, 0.02f),
-                              -rangerDirX * 1.5f + randRange(-0.1f, 0.1f),
-                              -rangerDirY * 1.5f + randRange(-0.05f, 0.05f),
-                              -rangerDirZ * 1.5f + randRange(-0.1f, 0.1f),
+                              -rangerDirX * 1.5f + randRange(-0.08f, 0.08f),
+                              -rangerDirY * 1.5f + randRange(-0.04f, 0.04f),
+                              -rangerDirZ * 1.5f + randRange(-0.08f, 0.08f),
                               0.4f, randRange(2.5f, 4.0f),
                               0.35f, 0.75f, 1.0f, true);
             }
@@ -101,21 +101,21 @@ void updateScene2(float dt) {
         float u = (t - 46.0f) / 10.0f;
 
         // Ranger flies deep into the Martian atmosphere / curvature
-        rangerPosX = lerpf(-0.10f, 1.65f, u);
-        rangerPosY = lerpf(-0.72f, -0.85f, u);
-        rangerPosZ = lerpf(1.45f, 0.20f, u);
+        rangerPosX = lerpf(-0.75f,  0.70f, u);
+        rangerPosY = lerpf(-0.52f, -0.38f, u);
+        rangerPosZ = lerpf( 1.05f,  0.15f, u);
 
-        rangerDirX = 0.88f;
-        rangerDirY = -0.06f;
-        rangerDirZ = -0.47f;
+        rangerDirX = 0.84f;
+        rangerDirY = 0.06f;
+        rangerDirZ = -0.54f;
         normalize3(rangerDirX, rangerDirY, rangerDirZ);
 
-        rangerPitchExtra = -5.0f;
-        rangerRollAngle  = 4.0f;
+        rangerPitchExtra = -3.0f;
+        rangerRollAngle  = 3.0f;
 
         rcsActive = 0.0f;
         mainBurnActive = 1.0f; // continuous cruise burn
-        heatshieldThermal = smoothstep(49.0f, 54.0f, t) * 0.40f;
+        heatshieldThermal = smoothstep(49.0f, 54.0f, t) * 0.35f;
 
         // Faint wake trail
         if (rand() % 2 == 0) {
@@ -163,28 +163,26 @@ void computeCameraScene2(float& eyeX, float& eyeY, float& eyeZ,
     }
     else if (t < 46.0f) {
         // SHOT 2 (39.0s - 46.0s): Side Profile Shot (Panel 2)
-        // Camera positioned to view Mars curve on the right, Ranger on the left
+        // Mars curve on TOP-RIGHT, Ranger on the left
         float u = (t - 39.0f) / 7.0f;
-        eyeX = lerpf(-1.85f, -1.65f, u);
-        eyeY = lerpf(-0.55f, -0.58f, u);
-        eyeZ = lerpf(3.40f, 3.25f, u);
+        eyeX = lerpf(-1.00f, -0.85f, u);
+        eyeY = lerpf(-0.85f, -0.80f, u);
+        eyeZ = lerpf( 3.55f,  3.40f, u);
 
-        // Framed so Mars curvature occupies the right and flight path centers
-        targetX = lerpf(-0.25f, 0.15f, u);
-        targetY = -0.68f;
-        targetZ = 1.60f;
+        targetX = lerpf(-1.75f, -1.40f, u);
+        targetY = -0.65f;
+        targetZ = 1.85f;
     }
     else {
         // SHOT 3 (46.0s - 56.0s): The Great Martian Expanse (Panel 3)
-        // Camera holds cinematic master framing as Ranger shrinks into a tiny dot
+        // Camera holds wide as Ranger shrinks into a tiny dot near the top-right Mars curve
         float u = (t - 46.0f) / 10.0f;
-        eyeX = lerpf(-1.65f, -1.45f, u);
-        eyeY = lerpf(-0.58f, -0.50f, u);
-        eyeZ = lerpf(3.25f, 3.40f, u);
+        eyeX = lerpf(-0.85f, -0.70f, u);
+        eyeY = lerpf(-0.80f, -0.75f, u);
+        eyeZ = lerpf( 3.40f,  3.45f, u);
 
-        // Center on the vast Martian horizon
-        targetX = 0.65f;
+        targetX = lerpf(-1.40f, -1.05f, u);
         targetY = -0.60f;
-        targetZ = 0.85f;
+        targetZ = 1.80f;
     }
 }
