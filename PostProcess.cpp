@@ -155,9 +155,9 @@ void renderCinemaPost(float flareX, float flareY, bool flareInFront, float flare
     // Top Letterbox Bar
     glRectf(0.0f, (float)windowHeight - barH, (float)windowWidth, (float)windowHeight);
 
-    // 3. Panel 4 Storyboard Title Card: "M A R T I A N" (20.0s - 27.5s)
-    if (seqTime >= 20.0f && seqTime <= 27.5f) {
-        float titleAlpha = smoothstep(20.0f, 21.5f, seqTime) * (1.0f - smoothstep(26.2f, 27.5f, seqTime));
+    // 3. Panel 4 Storyboard Title Card: "M A R T I A N" (26.0s - 34.0s)
+    if (seqTime >= 26.0f && seqTime <= 34.0f) {
+        float titleAlpha = smoothstep(26.0f, 27.5f, seqTime) * (1.0f - smoothstep(32.8f, 34.0f, seqTime));
         if (titleAlpha > 0.01f) {
             const char* title = "M   A   R   T   I   A   N";
             float scale = (windowWidth / 1280.0f) * 0.28f;
@@ -211,8 +211,8 @@ void renderCinemaPost(float flareX, float flareY, bool flareInFront, float flare
         fadeAlpha = 1.0f - smoothstep(0.0f, 1.5f, seqTime);
     }
     // Fade at the very end of sequence loop
-    if (seqTime > 27.0f) {
-        fadeAlpha = std::max(fadeAlpha, smoothstep(27.0f, 28.0f, seqTime));
+    if (seqTime > 34.0f) {
+        fadeAlpha = std::max(fadeAlpha, smoothstep(34.0f, 35.0f, seqTime));
     }
 
     if (fadeAlpha > 0.005f) {

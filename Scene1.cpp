@@ -17,24 +17,24 @@ struct CamKey {
 };
 
 static const CamKey CAM_KEYS[] = {
-    // Shot 1: Deep cosmic void
+    // Shot 1 (0.0s - 4.5s): Deep cosmic void
     {  0.0f, -4.50f,  0.00f, 9.50f,  18.00f,  0.00f, 9.50f },
     {  4.5f, -4.50f,  0.00f, 9.50f,  18.00f,  0.00f, 9.50f },
-    // Shot 2: Full centered Mars disc
-    { 10.5f, -2.20f,  0.00f, 9.20f,   0.00f,  0.00f, 0.00f },
-    // Shot 3: Smooth descent toward southern Mars, tracking Endurance above the surface
-    { 17.0f,  0.00f, -0.65f, 6.50f,   0.00f, -0.85f, 3.20f },
-    // Shot 4: Continuous push right to spinning Endurance (growing gradually frame-by-frame)
-    { 23.0f,  0.00f, -0.85f, 4.80f,   0.00f, -0.85f, 3.20f },
-    { 28.0f,  0.00f, -0.85f, 4.75f,   0.00f, -0.85f, 3.20f }
+    // Shot 2 (4.5s - 14.5s): Ultra-slow glide bringing full Mars disc into frame
+    { 14.5f, -2.20f,  0.00f, 9.20f,   0.00f,  0.00f, 0.00f },
+    // Shot 3 (14.5s - 24.5s): Ultra-slow descent into low orbit where Mars expands to cover whole screen
+    { 24.5f,  0.00f, -0.45f, 4.80f,   0.00f, -0.60f, 2.65f },
+    // Shot 4 (24.5s - 35.0s): Heroic close push right to spinning Endurance with Mars backdrop covering whole screen
+    { 30.0f,  0.00f, -0.60f, 3.85f,   0.00f, -0.60f, 2.65f },
+    { 35.0f,  0.00f, -0.60f, 3.80f,   0.00f, -0.60f, 2.65f }
 };
 static const int NUM_CAM_KEYS = sizeof(CAM_KEYS) / sizeof(CAM_KEYS[0]);
 
 void updateScene1(float dt) {
-    // Endurance stationed in stable orbit at southern hemisphere (outside Mars surface Z=2.03)
+    // Endurance in low Martian orbit (Z = 2.65) where Mars completely covers the screen behind it
     endPosX = 0.0f;
-    endPosY = -0.85f;
-    endPosZ = 3.20f;
+    endPosY = -0.60f;
+    endPosZ = 2.65f;
     endTanX = 0.0f; endTanY = 0.0f; endTanZ = 1.0f;
 
     rangerDetached = false;
