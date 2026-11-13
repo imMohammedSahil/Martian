@@ -22,18 +22,18 @@ static const CamKey CAM_KEYS[] = {
     {  4.5f, -4.50f,  0.00f, 9.50f,  18.00f,  0.00f, 9.50f },
     // Shot 2: Full centered Mars disc
     { 10.5f, -2.20f,  0.00f, 9.20f,   0.00f,  0.00f, 0.00f },
-    // Shot 3: Smooth descent toward bottom side of Mars + centered micro-craft dot
-    { 17.5f,  0.00f, -1.25f, 3.45f,   0.00f, -0.65f, 0.00f },
-    // Shot 4: Continuous push right to spinning Endurance at bottom side inside title
-    { 23.0f,  0.00f, -0.90f, 2.70f,   0.00f, -0.90f, 1.50f },
-    { 28.0f,  0.00f, -0.90f, 2.65f,   0.00f, -0.90f, 1.50f }
+    // Shot 3: Smooth descent toward southern Mars, locking camera target onto Endurance
+    { 17.0f,  0.00f, -0.65f, 4.30f,   0.00f, -0.85f, 1.50f },
+    // Shot 4: Continuous push right to spinning Endurance (growing gradually frame-by-frame)
+    { 23.0f,  0.00f, -0.85f, 2.70f,   0.00f, -0.85f, 1.50f },
+    { 28.0f,  0.00f, -0.85f, 2.65f,   0.00f, -0.85f, 1.50f }
 };
 static const int NUM_CAM_KEYS = sizeof(CAM_KEYS) / sizeof(CAM_KEYS[0]);
 
 void updateScene1(float dt) {
-    // Stationed at bottom hemisphere of Mars
+    // Endurance stationed in stable orbit at southern hemisphere
     endPosX = 0.0f;
-    endPosY = -0.90f;
+    endPosY = -0.85f;
     endPosZ = 1.50f;
     endTanX = 0.0f; endTanY = 0.0f; endTanZ = 1.0f;
 
