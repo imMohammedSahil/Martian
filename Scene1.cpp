@@ -18,24 +18,22 @@ struct CamKey {
 
 static const CamKey CAM_KEYS[] = {
     // Shot 1: Deep cosmic void
-    {  0.0f, -4.50f, 0.00f, 9.50f,  18.00f, 0.00f, 9.50f },
-    {  4.5f, -4.50f, 0.00f, 9.50f,  18.00f, 0.00f, 9.50f },
-    // Shot 2: Full centered Mars disc with cinema margins (zero clipping on bars)
-    { 10.5f, -2.20f, 0.00f, 9.20f,   0.00f, 0.00f, 0.00f },
-    // Shot 3: Horizon bowl + centered micro-craft dot
-    { 17.5f,  0.00f, 1.75f, 3.45f,   0.00f, 0.72f, 0.00f },
-    // Shot 4: Continuous push right to spinning Endurance inside title
-    { 23.0f,  0.00f, 1.15f, 2.70f,   0.00f, 1.15f, 1.50f },
-    { 28.0f,  0.00f, 1.15f, 2.65f,   0.00f, 1.15f, 1.50f }
+    {  0.0f, -4.50f,  0.00f, 9.50f,  18.00f,  0.00f, 9.50f },
+    {  4.5f, -4.50f,  0.00f, 9.50f,  18.00f,  0.00f, 9.50f },
+    // Shot 2: Full centered Mars disc
+    { 10.5f, -2.20f,  0.00f, 9.20f,   0.00f,  0.00f, 0.00f },
+    // Shot 3: Smooth descent toward bottom side of Mars + centered micro-craft dot
+    { 17.5f,  0.00f, -1.25f, 3.45f,   0.00f, -0.65f, 0.00f },
+    // Shot 4: Continuous push right to spinning Endurance at bottom side inside title
+    { 23.0f,  0.00f, -0.90f, 2.70f,   0.00f, -0.90f, 1.50f },
+    { 28.0f,  0.00f, -0.90f, 2.65f,   0.00f, -0.90f, 1.50f }
 };
 static const int NUM_CAM_KEYS = sizeof(CAM_KEYS) / sizeof(CAM_KEYS[0]);
 
 void updateScene1(float dt) {
-    // Spacecraft is stationed in stable high orbit:
-    // In Shot 3, the camera views it from afar as a pinpoint dot.
-    // In Shot 4, the camera smoothly flies directly up to it.
+    // Stationed at bottom hemisphere of Mars
     endPosX = 0.0f;
-    endPosY = 1.15f;
+    endPosY = -0.90f;
     endPosZ = 1.50f;
     endTanX = 0.0f; endTanY = 0.0f; endTanZ = 1.0f;
 
