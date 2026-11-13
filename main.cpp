@@ -202,19 +202,27 @@ void initOpenGL() {
 // MAIN ENTRY
 // ============================================================================
 int main(int argc, char** argv) {
+    // Prevent Windows DPI scaling from pushing the bottom of the window below the monitor
+    typedef BOOL (WINAPI *SetProcessDPIAwareFn)();
+    HMODULE hUser32 = LoadLibraryA("user32.dll");
+    if (hUser32) {
+        SetProcessDPIAwareFn setDPIAware = (SetProcessDPIAwareFn)GetProcAddress(hUser32, "SetProcessDPIAware");
+        if (setDPIAware) setDPIAware();
+        FreeLibrary(hUser32);
+    }
+
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
 
-    // Launch directly in Fullscreen Theater Mode
-    glutGameModeString("1920x1080:32@60");
-    if (glutGameModeGet(GLUT_GAME_MODE_POSSIBLE)) {
-        glutEnterGameMode();
-    } else {
-        glutInitWindowSize(WINDOW_INIT_WIDTH, WINDOW_INIT_HEIGHT);
-        glutInitWindowPosition(50, 50);
-        glutCreateWindow("MARTIAN");
-        glutFullScreen();
-    }
+    int scrW = GetSystemMetrics(SM_CXSCREEN);
+    int scrH = GetSystemMetrics(SM_CYSCREEN);
+    if (scrW <= 0) scrW = WINDOW_INIT_WIDTH;
+    if (scrH <= 0) scrH = WINDOW_INIT_HEIGHT;
+
+    glutInitWindowSize(scrW, scrH);
+    glutInitWindowPosition(0, 0);
+    glutCreateWindow("MARTIAN");
+    glutFullScreen();
 
     glutSetCursor(GLUT_CURSOR_NONE);
 

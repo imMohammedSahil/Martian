@@ -144,7 +144,7 @@ void renderCinemaPost(float flareX, float flareY, bool flareInFront, float flare
 
     // 2. 2.39:1 Widescreen Cinema Letterbox Bars (Top & Bottom)
     float barH = (windowHeight - ((float)windowWidth / 2.39f)) * 0.5f;
-    if (barH < windowHeight * 0.125f) barH = windowHeight * 0.125f;
+    if (barH < windowHeight * 0.135f) barH = windowHeight * 0.135f;
 
     glDisable(GL_BLEND);
     glColor3f(0.0f, 0.0f, 0.0f);
