@@ -18,10 +18,10 @@ struct CamKey {
 
 static const CamKey CAM_KEYS[] = {
     // Shot 1: Deep cosmic void
-    {  0.0f, -3.80f, 0.00f, 7.60f,  18.00f, 0.00f, 7.60f },
-    {  4.5f, -3.80f, 0.00f, 7.60f,  18.00f, 0.00f, 7.60f },
-    // Shot 2: Full centered Mars disc
-    { 10.5f, -1.80f, 0.50f, 6.20f,   0.00f, 0.00f, 0.00f },
+    {  0.0f, -4.50f, 0.00f, 9.50f,  18.00f, 0.00f, 9.50f },
+    {  4.5f, -4.50f, 0.00f, 9.50f,  18.00f, 0.00f, 9.50f },
+    // Shot 2: Full centered Mars disc with cinema margins (zero clipping on bars)
+    { 10.5f, -2.20f, 0.00f, 9.20f,   0.00f, 0.00f, 0.00f },
     // Shot 3: Horizon bowl + centered micro-craft dot
     { 17.5f,  0.00f, 1.75f, 3.45f,   0.00f, 0.72f, 0.00f },
     // Shot 4: Continuous push right to spinning Endurance inside title
