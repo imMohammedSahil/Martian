@@ -176,13 +176,13 @@ void renderEnduranceShip() {
 
         float dotAlpha = (seqTime < 13.0f) ? 1.0f : (1.0f - smoothstep(13.0f, 18.0f, seqTime));
         float strobe = 0.85f + 0.15f * sinf(totalTime * 8.0f);
-        glPointSize(3.5f);
+        glPointSize(2.4f);
         glBegin(GL_POINTS);
             glColor4f(1.0f, 0.98f, 0.94f, strobe * dotAlpha);
             glVertex3f(0.0f, 0.0f, 0.0f);
         glEnd();
 
-        glPointSize(6.0f);
+        glPointSize(3.8f);
         glBegin(GL_POINTS);
             float redBlink = (fmodf(totalTime * 1.5f, 1.0f) < 0.25f) ? 0.95f : 0.25f;
             glColor4f(1.0f, 0.32f, 0.20f, redBlink * dotAlpha);
@@ -194,8 +194,15 @@ void renderEnduranceShip() {
         glEnable(GL_LIGHTING);
     }
 
-    // Authentic physical scale of Endurance in 3D orbit (constant rigid body, no artificial swelling)
-    const float shipScale = 0.135f;
+    // Microscopic scale in Shot 2, smoothly enlarging only during the camera's physical descent in Shot 3
+    float shipScale = 0.135f;
+    if (seqTime < 13.0f) {
+        shipScale = 0.008f; // Microscopic dot in Shot 2
+    } else if (seqTime < 22.0f) {
+        float t = (seqTime - 13.0f) / 9.0f;
+        float e = smoothstep(0.0f, 1.0f, t);
+        shipScale = lerpf(0.008f, 0.135f, e); // Matches camera descent into low orbit
+    }
     glScalef(shipScale, shipScale, shipScale);
 
     // Spinning Ring Frame
