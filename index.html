@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interstellar Mars Cinematic Preview - 60 FPS Realtime</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+  <div class="cinematic-bars top-bar"></div>
+  <div class="cinematic-bars bottom-bar"></div>
+
+  <div id="hud">
+    <div class="badge">Interstellar Sequence • 60 FPS</div>
+    <div class="title">MARS APPROACH // 01</div>
+    <div class="info" id="act-label">ACT I: COSMIC ESTABLISHING SHOT</div>
+  </div>
+
+  <div id="canvas-container"></div>
+
+  <div id="controls-dock">
+    <button class="ctrl-btn" id="play-btn">❚❚ PAUSE</button>
+    <button class="ctrl-btn" id="restart-btn">↺ RESTART</button>
+    <div class="timeline-container">
+      <input type="range" id="timeline" class="timeline-slider" min="0" max="8" step="0.01" value="0">
+      <span class="time-readout" id="time-display">0.0s</span>
+    </div>
+    <button class="ctrl-btn" id="cam-mode-btn">FREE CAM</button>
+  </div>
+
+  <!-- Modular Component Architecture -->
+  <script type="module" src="main.js"></script>
+</body>
+</html>

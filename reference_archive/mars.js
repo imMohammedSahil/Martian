@@ -12,11 +12,12 @@ export function createMars(THREE, radius = 10.0) {
 
   const marsMat = new THREE.MeshStandardMaterial({
     map: marsTexture,
-    roughness: 0.85,
+    roughness: 0.70,
     metalness: 0.02
   });
 
   const marsMesh = new THREE.Mesh(marsGeo, marsMat);
+  marsMesh.rotation.y = 2.1; // Face radiant, sunlit Tharsis & Olympus Mons toward camera
   marsGroup.add(marsMesh);
 
   return {

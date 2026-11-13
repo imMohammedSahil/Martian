@@ -42,7 +42,7 @@ void updateSceneDirector(float dt) {
     if (ringSpinAngle >= 360.0f) ringSpinAngle -= 360.0f;
 
     // Currently in Scene 1 (Scenes 2-5 will branch here as we build them)
-    if (seqTime < 15.0f) {
+    if (seqTime <= SEQUENCE_DURATION) {
         updateScene1(dt);
     }
 }
@@ -53,7 +53,7 @@ void computeCinematicCamera(float& eyeX, float& eyeY, float& eyeZ,
     upX = 0.0f; upY = 1.0f; upZ = 0.0f;
 
     // Currently in Scene 1
-    if (seqTime < 15.0f) {
+    if (seqTime <= SEQUENCE_DURATION) {
         computeCameraScene1(eyeX, eyeY, eyeZ, targetX, targetY, targetZ, upX, upY, upZ);
     }
 }

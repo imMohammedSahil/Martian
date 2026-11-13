@@ -21,15 +21,15 @@ renderer.toneMappingExposure = 1.35;
 container.appendChild(renderer.domElement);
 
 // Ambient space fill
-const ambient = new THREE.AmbientLight(0x181210, 0.7);
+const ambient = new THREE.AmbientLight(0x40322d, 1.2);
 scene.add(ambient);
 
 // 2. Mars at World Origin (0, 0, 0)
 const mars = createMars(THREE, 10.0);
 scene.add(mars.group);
 
-// 3. Sun in Standard Coordinates: Left (-X), Slightly Up (+Y), and Deep in Space (-Z)
-const sunPos = new THREE.Vector3(-36.0, 12.0, -25.0);
+// 3. Sun in Standard Coordinates: Front-Left (-X), Up (+Y), and in front (+Z) illuminating Mars
+const sunPos = new THREE.Vector3(-24.0, 14.0, 48.0);
 const sun = createSun(THREE, sunPos);
 sun.light.target = mars.group;
 scene.add(sun.group);

@@ -6,7 +6,7 @@
 
 GLuint marsTextureID = 0;
 bool   hasTexture    = false;
-float  marsSpinAngle = 28.0f;
+float  marsSpinAngle = 315.0f;
 float  phobosAngle   = 0.8f;
 
 static void createProceduralMarsTexture() {
@@ -124,9 +124,9 @@ void renderMarsAndAtmosphere() {
         glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     }
 
-    GLfloat marsDiffuse[]  = { 1.55f, 1.40f, 1.30f, 1.0f };
-    GLfloat marsAmbient[]  = { 0.14f, 0.09f, 0.07f, 1.0f };
-    GLfloat marsSpecular[] = { 0.08f, 0.06f, 0.04f, 1.0f };
+    GLfloat marsDiffuse[]  = { 1.75f, 1.58f, 1.45f, 1.0f };
+    GLfloat marsAmbient[]  = { 0.24f, 0.18f, 0.15f, 1.0f };
+    GLfloat marsSpecular[] = { 0.12f, 0.09f, 0.06f, 1.0f };
     GLfloat marsShine[]    = { 6.0f };
     glMaterialfv(GL_FRONT, GL_DIFFUSE, marsDiffuse);
     glMaterialfv(GL_FRONT, GL_AMBIENT, marsAmbient);
