@@ -70,7 +70,7 @@ void renderEnduranceShip() {
     }
 
     // Always render the full 3D spinning Endurance ship (scales and reveals gradually on every frame)
-    glScalef(0.35f, 0.35f, 0.35f);
+    glScalef(0.40f, 0.40f, 0.40f);
 
     // Spinning Ring Frame
     glPushMatrix();
