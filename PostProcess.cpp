@@ -156,18 +156,18 @@ void renderCinemaPost(float flareX, float flareY, bool flareInFront, float flare
         glVertex2f(0.0f, (float)windowHeight);
     glEnd();
 
-    // 3. Sleek Bold Title Card: "M A R T I A N" (16.5s - 23.5s)
-    if (seqTime >= 16.5f && seqTime <= 23.5f) {
-        float titleAlpha = smoothstep(16.5f, 18.2f, seqTime) * (1.0f - smoothstep(21.5f, 23.5f, seqTime));
+    // 3. Panel 4 Storyboard Title Card: "M A R T I A N" (20.0s - 27.5s)
+    if (seqTime >= 20.0f && seqTime <= 27.5f) {
+        float titleAlpha = smoothstep(20.0f, 21.5f, seqTime) * (1.0f - smoothstep(26.2f, 27.5f, seqTime));
         if (titleAlpha > 0.01f) {
             const char* title = "M   A   R   T   I   A   N";
-            float scale = (windowWidth / 1280.0f) * 0.26f;
+            float scale = (windowWidth / 1280.0f) * 0.28f;
             
             // Accurate width calculation (handling spaces correctly in FreeGLUT)
             float strWidth = 0.0f;
             for (const char* p = title; *p; ++p) {
                 if (*p == ' ') {
-                    strWidth += 105.0f;
+                    strWidth += 110.0f;
                 } else {
                     strWidth += (float)glutStrokeWidth(GLUT_STROKE_ROMAN, *p);
                 }
@@ -180,18 +180,18 @@ void renderCinemaPost(float flareX, float flareY, bool flareInFront, float flare
             glEnable(GL_LINE_SMOOTH);
 
             // Glow / Shadow pass (Bold & Cinematic)
-            glLineWidth(4.5f);
+            glLineWidth(5.0f);
             glPushMatrix();
             glTranslatef(startX, startY, 0.0f);
             glScalef(scale, scale, 1.0f);
-            glColor4f(0.0f, 0.0f, 0.0f, titleAlpha * 0.70f);
+            glColor4f(0.0f, 0.0f, 0.0f, titleAlpha * 0.75f);
             for (const char* p = title; *p; ++p) {
                 glutStrokeCharacter(GLUT_STROKE_ROMAN, *p);
             }
             glPopMatrix();
 
             // Crisp Core pass
-            glLineWidth(2.4f);
+            glLineWidth(2.6f);
             glPushMatrix();
             glTranslatef(startX, startY, 0.0f);
             glScalef(scale, scale, 1.0f);
@@ -211,9 +211,9 @@ void renderCinemaPost(float flareX, float flareY, bool flareInFront, float flare
     if (seqTime < 1.5f) {
         fadeAlpha = 1.0f - smoothstep(0.0f, 1.5f, seqTime);
     }
-    // Only fade at the very end of the loop
-    if (seqTime > 25.2f) {
-        fadeAlpha = std::max(fadeAlpha, smoothstep(25.2f, 26.0f, seqTime));
+    // Fade at the very end of sequence loop
+    if (seqTime > 27.0f) {
+        fadeAlpha = std::max(fadeAlpha, smoothstep(27.0f, 28.0f, seqTime));
     }
 
     if (fadeAlpha > 0.005f) {

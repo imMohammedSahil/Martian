@@ -43,14 +43,14 @@ void renderEnduranceShip() {
     glRotatef(26.0f, 1.0f, 0.0f, 0.0f);
     glRotatef(14.0f, 0.0f, 0.0f, 1.0f);
 
-    // In Scene 1: Authentic pinpoint speck spacecraft with blinking beacon (matches Interstellar reference)
-    if (seqTime < 26.0f) {
+    // Panel 3 (0.0s - 20.0s): Authentic pinpoint speck dot with blinking beacon (Interstellar scale)
+    if (seqTime < 20.0f) {
         glDisable(GL_LIGHTING);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
         // Core solid white dot
-        glPointSize(3.5f);
+        glPointSize(3.8f);
         glBegin(GL_POINTS);
             float strobe = 0.85f + 0.15f * sinf(totalTime * 8.0f);
             glColor4f(1.0f, 0.98f, 0.94f, strobe);
@@ -58,9 +58,9 @@ void renderEnduranceShip() {
         glEnd();
 
         // Subtle soft red beacon halo
-        glPointSize(6.0f);
+        glPointSize(6.5f);
         glBegin(GL_POINTS);
-            float redBlink = (fmodf(totalTime * 1.5f, 1.0f) < 0.25f) ? 0.9f : 0.2f;
+            float redBlink = (fmodf(totalTime * 1.5f, 1.0f) < 0.25f) ? 0.95f : 0.25f;
             glColor4f(1.0f, 0.32f, 0.20f, redBlink);
             glVertex3f(0.0f, 0.0f, 0.0f);
         glEnd();
@@ -72,7 +72,8 @@ void renderEnduranceShip() {
         return;
     }
 
-    glScalef(0.28f, 0.28f, 0.28f);
+    // Panel 4 (20.0s - 28.0s): Heroic detailed 3D spinning Endurance ship
+    glScalef(0.48f, 0.48f, 0.48f);
 
     // Spinning Ring Frame
     glPushMatrix();

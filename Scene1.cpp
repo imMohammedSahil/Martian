@@ -2,20 +2,35 @@
 #include "Common.h"
 
 // ============================================================================
-// SCENE 1: THE COSMIC VOID & SLOW MARS REVEAL (INTERSTELLAR SCALE SHOT)
+// SCENE 1: 4-PANEL STORYBOARD CHOREOGRAPHY
 // ============================================================================
-// - 0.0s - 3.5s: Deep cosmic space void (pitch black, Mars off-screen)
-// - 3.5s - 7.5s: Mars glides majestically into the screen
-// - 7.5s - 15.0s: The Interstellar scale shot (massive Mars, tiny dot craft in front)
+// - Panel 1 (0.0s -  5.0s): Void black space with faint stars
+// - Panel 2 (5.0s - 11.5s): Smooth glide to reveal full sunlit Mars disc
+// - Panel 3 (11.5s - 19.5s): Interstellar horizon bowl scale shot with micro craft dot
+// - Panel 4 (19.5s - 28.0s): Detailed 3D spinning Endurance centered inside "M A R T I A N"
 // ============================================================================
 
 void updateScene1(float dt) {
-    // Spacecraft positioned directly in front of the sunlit orange Martian face
-    float t = seqTime / 26.0f;
-    endPosX = lerpf(-1.65f, -1.45f, t);
-    endPosY = lerpf( 0.22f,  0.15f, t);
-    endPosZ = lerpf( 3.35f,  3.05f, t);
-    endTanX = 0.65f; endTanY = -0.15f; endTanZ = -0.74f;
+    if (seqTime < 11.5f) {
+        // Panels 1 & 2: Craft is off-screen / dormant in distance
+        endPosX = 0.0f;
+        endPosY = 1.15f;
+        endPosZ = 1.50f;
+    } else if (seqTime < 19.5f) {
+        // Panel 3: Interstellar scale pinpoint dot centered in Mars horizon bowl
+        float t = (seqTime - 11.5f) / 8.0f;
+        endPosX = lerpf(-0.05f, 0.05f, t);
+        endPosY = lerpf( 1.18f, 1.12f, t);
+        endPosZ = 1.50f;
+    } else {
+        // Panel 4: Heroic 3D Endurance dead-center in front of camera
+        float t = (seqTime - 19.5f) / 8.5f;
+        float e = smoothstep(0.0f, 1.0f, t);
+        endPosX = 0.0f;
+        endPosY = lerpf(-0.02f, 0.02f, e);
+        endPosZ = 3.60f;
+    }
+    endTanX = 0.0f; endTanY = 0.0f; endTanZ = 1.0f;
 
     // Ranger docked safely to Endurance in Scene 1
     rangerDetached = false;
@@ -37,41 +52,53 @@ void computeCameraScene1(float& eyeX, float& eyeY, float& eyeZ,
                         float& upX, float& upY, float& upZ) {
     upX = 0.0f; upY = 1.0f; upZ = 0.0f;
 
-    if (seqTime < 6.0f) {
-        // Phase 1: Pure deep-black space void (looking away into deep cosmic darkness)
-        float t = seqTime / 6.0f;
+    if (seqTime < 5.0f) {
+        // Panel 1: Pure deep-black cosmic void (looking away into deep space starfield)
+        float t = seqTime / 5.0f;
         float e = smoothstep(0.0f, 1.0f, t);
         eyeX = lerpf(-3.90f, -3.80f, e);
-        eyeY = lerpf( 0.55f,  0.50f, e);
-        eyeZ = lerpf( 7.80f,  7.60f, e);
-
-        targetX = lerpf(18.00f, 16.50f, e); // looking into pure black starfield (+X)
-        targetY = lerpf( 0.55f,  0.50f, e);
-        targetZ = lerpf( 7.80f,  7.60f, e);
-    } else if (seqTime < 15.0f) {
-        // Phase 2: Ultra-slow cinematic pan bringing sunlit Mars fully into frame (9 seconds)
-        float t = (seqTime - 6.0f) / 9.0f;
-        float e = smoothstep(0.0f, 1.0f, t);
-
-        eyeX = lerpf(-3.80f, -3.75f, e);
-        eyeY = lerpf( 0.50f,  0.00f, e);
+        eyeY = lerpf( 0.00f,  0.00f, e);
         eyeZ = lerpf( 7.60f,  7.50f, e);
 
-        targetX = lerpf(16.50f, 0.00f, e);
-        targetY = lerpf( 0.50f, 0.00f, e);
-        targetZ = lerpf( 7.60f, 0.00f, e);
-    } else {
-        // Phase 3: The Interstellar Scale Shot holds (Full Mars disc framed dead-center)
-        float t = (seqTime - 15.0f) / 11.0f;
+        targetX = lerpf(18.00f, 16.50f, e); // looking into starfield (+X)
+        targetY = 0.00f;
+        targetZ = lerpf( 7.60f,  7.50f, e);
+    } else if (seqTime < 11.5f) {
+        // Panel 2: Glided smoothly to Mars (camera pans from void to full center Mars disc)
+        float t = (seqTime - 5.0f) / 6.5f;
         float e = smoothstep(0.0f, 1.0f, t);
 
-        eyeX = lerpf(-3.75f, -3.85f, e);
-        eyeY = lerpf( 0.00f,  0.00f, e);
-        eyeZ = lerpf( 7.50f,  7.40f, e);
+        eyeX = lerpf(-3.80f, -3.85f, e);
+        eyeY = 0.00f;
+        eyeZ = lerpf( 7.50f,  7.30f, e);
+
+        targetX = lerpf(16.50f, 0.00f, e);
+        targetY = 0.00f;
+        targetZ = 0.00f;
+    } else if (seqTime < 19.5f) {
+        // Panel 3: Interstellar scale shot (Mars lower curved bowl + micro craft dot centered)
+        float t = (seqTime - 11.5f) / 8.0f;
+        float e = smoothstep(0.0f, 1.0f, t);
+
+        eyeX = lerpf(0.00f, 0.04f, e);
+        eyeY = lerpf(1.80f, 1.76f, e);
+        eyeZ = lerpf(3.50f, 3.45f, e);
+
+        targetX = 0.00f;
+        targetY = 0.75f;
+        targetZ = 0.00f;
+    } else {
+        // Panel 4: Heroic close-up on spinning Endurance centered inside "M A R T I A N"
+        float t = (seqTime - 19.5f) / 8.5f;
+        float e = smoothstep(0.0f, 1.0f, t);
+
+        eyeX = lerpf(0.00f, 0.03f, e);
+        eyeY = 0.00f;
+        eyeZ = lerpf(5.20f, 5.10f, e);
 
         targetX = 0.00f;
         targetY = 0.00f;
-        targetZ = 0.00f;
+        targetZ = 3.60f; // looking directly at Endurance
     }
 }
 
