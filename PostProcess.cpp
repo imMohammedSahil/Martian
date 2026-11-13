@@ -201,8 +201,9 @@ void renderCinemaPost(float flareX, float flareY, bool flareInFront, float flare
                 glEnable(GL_TEXTURE_2D);
                 glBindTexture(GL_TEXTURE_2D, titleTextureID);
 
-                float titleW = (float)windowWidth * 0.78f;
-                float titleH = titleW * (512.0f / 2048.0f);
+                // Colossal, bold cinematic proportion (covers 92% of screen width)
+                float titleW = (float)windowWidth * 0.92f;
+                float titleH = titleW * (640.0f / 2560.0f);
                 float cx = (float)windowWidth * 0.5f;
                 float cy = (float)windowHeight * 0.5f;
 
