@@ -4,6 +4,39 @@
 
 static GLuint sunTextureID = 0;
 static bool   hasSunTexture = false;
+static GLuint titleTextureID = 0;
+static bool   hasTitleTexture = false;
+static bool   titleLoadAttempted = false;
+
+static void loadTitleTexture() {
+    if (titleLoadAttempted) return;
+    titleLoadAttempted = true;
+
+    const char* paths[] = {
+        "martian_title.png",
+        "../martian_title.png",
+        "bin/Release/martian_title.png",
+        "bin/Debug/martian_title.png",
+        "C:/Holidays/Martian/martian_title.png"
+    };
+    unsigned char* data = NULL;
+    int w = 0, h = 0, channels = 0;
+    for (int i = 0; i < 5; ++i) {
+        data = stbi_load(paths[i], &w, &h, &channels, 4);
+        if (data) break;
+    }
+    if (!data) return;
+
+    glGenTextures(1, &titleTextureID);
+    glBindTexture(GL_TEXTURE_2D, titleTextureID);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    stbi_image_free(data);
+    hasTitleTexture = true;
+}
 
 void initSolarAssets() {
     int w, h, channels;
@@ -160,49 +193,59 @@ void renderCinemaPost(float flareX, float flareY, bool flareInFront, float flare
     if (seqTime >= 27.0f && seqTime <= 34.5f) {
         float titleAlpha = smoothstep(27.0f, 28.5f, seqTime) * (1.0f - smoothstep(33.0f, 34.5f, seqTime));
         if (titleAlpha > 0.01f) {
-            const char* title = "M   A   R   T   I   A   N";
-            float scale = (windowWidth / 1280.0f) * 0.28f;
-            
-            // Accurate width calculation (handling spaces correctly in FreeGLUT)
-            float strWidth = 0.0f;
-            for (const char* p = title; *p; ++p) {
-                if (*p == ' ') {
-                    strWidth += 110.0f;
-                } else {
-                    strWidth += (float)glutStrokeWidth(GLUT_STROKE_ROMAN, *p);
+            loadTitleTexture();
+            if (hasTitleTexture && titleTextureID) {
+                // High-resolution geometric sans-serif title (Century Gothic Bold - 78% screen width)
+                glEnable(GL_BLEND);
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                glEnable(GL_TEXTURE_2D);
+                glBindTexture(GL_TEXTURE_2D, titleTextureID);
+
+                float titleW = (float)windowWidth * 0.78f;
+                float titleH = titleW * (512.0f / 2048.0f);
+                float cx = (float)windowWidth * 0.5f;
+                float cy = (float)windowHeight * 0.5f;
+
+                float x0 = cx - titleW * 0.5f;
+                float x1 = cx + titleW * 0.5f;
+                float y0 = cy - titleH * 0.5f;
+                float y1 = cy + titleH * 0.5f;
+
+                glColor4f(1.0f, 1.0f, 1.0f, titleAlpha);
+                glBegin(GL_QUADS);
+                    glTexCoord2f(0.0f, 1.0f); glVertex2f(x0, y0);
+                    glTexCoord2f(1.0f, 1.0f); glVertex2f(x1, y0);
+                    glTexCoord2f(1.0f, 0.0f); glVertex2f(x1, y1);
+                    glTexCoord2f(0.0f, 0.0f); glVertex2f(x0, y1);
+                glEnd();
+
+                glDisable(GL_TEXTURE_2D);
+                glDisable(GL_BLEND);
+            } else {
+                // Vector fallback
+                const char* title = "M   A   R   T   I   A   N";
+                float scale = (windowWidth / 1280.0f) * 0.42f;
+                float strWidth = 0.0f;
+                for (const char* p = title; *p; ++p) {
+                    if (*p == ' ') strWidth += 110.0f;
+                    else strWidth += (float)glutStrokeWidth(GLUT_STROKE_ROMAN, *p);
                 }
+                float startX = (windowWidth - strWidth * scale) * 0.5f;
+                float startY = windowHeight * 0.5f - 14.0f * scale;
+
+                glEnable(GL_BLEND);
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                glLineWidth(4.0f);
+                glPushMatrix();
+                glTranslatef(startX, startY, 0.0f);
+                glScalef(scale, scale, 1.0f);
+                glColor4f(1.0f, 1.0f, 1.0f, titleAlpha);
+                for (const char* p = title; *p; ++p) {
+                    glutStrokeCharacter(GLUT_STROKE_ROMAN, *p);
+                }
+                glPopMatrix();
+                glDisable(GL_BLEND);
             }
-            float startX = (windowWidth - strWidth * scale) * 0.5f;
-            float startY = windowHeight * 0.5f - 14.0f * scale;
-
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glEnable(GL_LINE_SMOOTH);
-
-            // Glow / Shadow pass (Bold & Cinematic)
-            glLineWidth(5.0f);
-            glPushMatrix();
-            glTranslatef(startX, startY, 0.0f);
-            glScalef(scale, scale, 1.0f);
-            glColor4f(0.0f, 0.0f, 0.0f, titleAlpha * 0.75f);
-            for (const char* p = title; *p; ++p) {
-                glutStrokeCharacter(GLUT_STROKE_ROMAN, *p);
-            }
-            glPopMatrix();
-
-            // Crisp Core pass
-            glLineWidth(2.6f);
-            glPushMatrix();
-            glTranslatef(startX, startY, 0.0f);
-            glScalef(scale, scale, 1.0f);
-            glColor4f(0.98f, 0.99f, 1.00f, titleAlpha * 0.95f);
-            for (const char* p = title; *p; ++p) {
-                glutStrokeCharacter(GLUT_STROKE_ROMAN, *p);
-            }
-            glPopMatrix();
-
-            glDisable(GL_LINE_SMOOTH);
-            glDisable(GL_BLEND);
         }
     }
 
