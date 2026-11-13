@@ -43,7 +43,7 @@ void renderEnduranceShip() {
     glRotatef(26.0f, 1.0f, 0.0f, 0.0f);
     glRotatef(14.0f, 0.0f, 0.0f, 1.0f);
 
-    // Panel 3 (0.0s - 20.0s): Authentic pinpoint speck dot with blinking beacon (Interstellar scale)
+    // Shot 3 (0.0s - 20.0s): Authentic pinpoint speck dot with blinking beacon (Interstellar scale)
     if (seqTime < 20.0f) {
         glDisable(GL_LIGHTING);
         glEnable(GL_BLEND);
@@ -72,8 +72,8 @@ void renderEnduranceShip() {
         return;
     }
 
-    // Panel 4 (20.0s - 28.0s): Heroic detailed 3D spinning Endurance ship
-    glScalef(0.48f, 0.48f, 0.48f);
+    // Shot 4 (20.0s - 28.0s): Heroic detailed 3D spinning Endurance ship
+    glScalef(0.32f, 0.32f, 0.32f);
 
     // Spinning Ring Frame
     glPushMatrix();
