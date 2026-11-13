@@ -142,6 +142,18 @@ void keyboard(unsigned char key, int x, int y) {
         isPaused = !isPaused;
     } else if (key == 'r' || key == 'R') { // Replay Scene from start
         seqTime = 0.0f;
+    } else if (key == 'f' || key == 'F' || key == '.' || key == '>') { // Fast-Forward 5s
+        seqTime = clampf(seqTime + 5.0f, 0.0f, SEQUENCE_DURATION - 0.1f);
+    } else if (key == 'b' || key == 'B' || key == ',' || key == '<') { // Rewind 5s
+        seqTime = clampf(seqTime - 5.0f, 0.0f, SEQUENCE_DURATION - 0.1f);
+    }
+}
+
+void specialKeys(int key, int x, int y) {
+    if (key == GLUT_KEY_RIGHT) { // Arrow Right: Forward 5s
+        seqTime = clampf(seqTime + 5.0f, 0.0f, SEQUENCE_DURATION - 0.1f);
+    } else if (key == GLUT_KEY_LEFT) { // Arrow Left: Backward 5s
+        seqTime = clampf(seqTime - 5.0f, 0.0f, SEQUENCE_DURATION - 0.1f);
     }
 }
 
@@ -217,6 +229,7 @@ int main(int argc, char** argv) {
     glutDisplayFunc(display);
     glutReshapeFunc(reshape);
     glutKeyboardFunc(keyboard);
+    glutSpecialFunc(specialKeys);
     glutTimerFunc(16, timer, 0);
 
     glutMainLoop();

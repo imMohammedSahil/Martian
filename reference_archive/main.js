@@ -128,6 +128,17 @@ window.addEventListener('mousemove', (e) => {
 
 window.addEventListener('mouseup', () => isDragging = false);
 
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === 'f' || e.key === 'F') {
+    currentTime = Math.min(duration, currentTime + 5.0);
+  } else if (e.key === 'ArrowLeft' || e.key === 'b' || e.key === 'B') {
+    currentTime = Math.max(0.0, currentTime - 5.0);
+  } else if (e.code === 'Space') {
+    isPlaying = !isPlaying;
+    playBtn.textContent = isPlaying ? "❚❚ PAUSE" : "▶ PLAY";
+  }
+});
+
 // 6. Animation Loop
 const clock = new THREE.Clock();
 

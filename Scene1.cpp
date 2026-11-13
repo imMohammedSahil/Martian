@@ -54,24 +54,24 @@ void computeCameraScene1(float& eyeX, float& eyeY, float& eyeZ,
         float e = smoothstep(0.0f, 1.0f, t);
 
         eyeX = lerpf(-3.80f, -3.75f, e);
-        eyeY = lerpf( 0.50f,  0.45f, e);
+        eyeY = lerpf( 0.50f,  0.00f, e);
         eyeZ = lerpf( 7.60f,  7.50f, e);
 
-        targetX = lerpf(16.50f, 0.20f, e);
-        targetY = lerpf( 0.50f, -0.05f, e);
+        targetX = lerpf(16.50f, 0.00f, e);
+        targetY = lerpf( 0.50f, 0.00f, e);
         targetZ = lerpf( 7.60f, 0.00f, e);
     } else {
-        // Phase 3: The Interstellar Scale Shot holds (Full Mars disc framed without clipping)
+        // Phase 3: The Interstellar Scale Shot holds (Full Mars disc framed dead-center)
         float t = (seqTime - 15.0f) / 11.0f;
         float e = smoothstep(0.0f, 1.0f, t);
 
-        eyeX = lerpf(-3.75f, -3.95f, e);
-        eyeY = lerpf( 0.45f,  0.50f, e);
-        eyeZ = lerpf( 7.50f,  7.35f, e);
+        eyeX = lerpf(-3.75f, -3.85f, e);
+        eyeY = lerpf( 0.00f,  0.00f, e);
+        eyeZ = lerpf( 7.50f,  7.40f, e);
 
-        targetX = lerpf(0.20f, 0.25f, e);
-        targetY = lerpf(-0.05f, -0.03f, e);
-        targetZ = lerpf(0.00f, 0.02f, e);
+        targetX = 0.00f;
+        targetY = 0.00f;
+        targetZ = 0.00f;
     }
 }
 
