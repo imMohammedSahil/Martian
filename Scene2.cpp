@@ -56,14 +56,13 @@ void updateScene2(float dt) {
     }
     else if (t < 46.0f) {
         // SHOT 2: DIAGONAL DESCENT TOWARD MARS (39.0s - 46.0s)
-        // Starts close & big at top-left, cruises diagonally down-right toward Mars horizon
-        // Stays strictly in upper atmosphere (altitude > 2.26, Mars radius is 2.20)
+        // Mars curve on far right, Ranger starts top-left in deep space
         float u = (t - 39.0f) / 7.0f;
         float smoothU = smoothstep(0.0f, 1.0f, u);
 
-        rangerPosX = lerpf(-2.50f, -0.60f, smoothU);
-        rangerPosY = lerpf( 1.40f,  0.28f, smoothU);
-        rangerPosZ = lerpf( 3.10f,  2.48f, smoothU);
+        rangerPosX = lerpf(-3.00f, -0.80f, smoothU);
+        rangerPosY = lerpf( 1.45f,  0.22f, smoothU);
+        rangerPosZ = lerpf( 3.10f,  2.45f, smoothU);
 
         // Direction along diagonal descent path (downwards and rightwards toward Mars)
         rangerDirX =  0.86f;
@@ -97,13 +96,13 @@ void updateScene2(float dt) {
     }
     else {
         // SHOT 3: CROSSING HORIZON & SHRINKING TO PINPOINT DOT (46.0s - 56.0s)
-        // Crosses over the curved Martian limb into the upper atmosphere (alt ~0.11 above surface)
+        // Crosses over the curved Martian limb into the upper atmosphere
         // Shrinks from small craft down to a tiny dot over the red Martian landscape
         float u = (t - 46.0f) / 10.0f;
 
-        rangerPosX = lerpf(-0.60f,  0.65f, u);
-        rangerPosY = lerpf( 0.28f, -0.32f, u);
-        rangerPosZ = lerpf( 2.48f,  2.24f, u);
+        rangerPosX = lerpf(-0.80f,  0.45f, u);
+        rangerPosY = lerpf( 0.22f, -0.32f, u);
+        rangerPosZ = lerpf( 2.45f,  2.22f, u);
 
         rangerDirX =  0.86f;
         rangerDirY = -0.47f;
@@ -161,27 +160,25 @@ void computeCameraScene2(float& eyeX, float& eyeY, float& eyeZ,
         targetZ = 2.45f;
     }
     else if (t < 46.0f) {
-        // SHOT 2 (39.0s - 46.0s): Diagonal Descent Profile Shot
-        // Mars curve occupies bottom-right, Ranger enters top-left
+        // SHOT 2 (39.0s - 46.0s): Mars sent further to the right edge
         float u = (t - 39.0f) / 7.0f;
-        eyeX = lerpf(-1.60f, -1.50f, u);
+        eyeX = lerpf(-2.15f, -2.05f, u);
         eyeY = lerpf( 0.90f,  0.85f, u);
-        eyeZ = lerpf( 4.00f,  3.90f, u);
+        eyeZ = lerpf( 4.05f,  3.95f, u);
 
-        targetX = lerpf(-0.80f, -0.65f, u);
+        targetX = lerpf(-1.35f, -1.20f, u);
         targetY = -0.20f;
-        targetZ = 0.80f;
+        targetZ = 0.85f;
     }
     else {
-        // SHOT 3 (46.0s - 56.0s): Receding Over Mars Surface
-        // Camera holds wide as Ranger shrinks into a tiny dot descending over the Martian surface
+        // SHOT 3 (46.0s - 56.0s): Receding Over Mars Surface on the right
         float u = (t - 46.0f) / 10.0f;
-        eyeX = lerpf(-1.50f, -1.40f, u);
+        eyeX = lerpf(-2.05f, -1.95f, u);
         eyeY = lerpf( 0.85f,  0.80f, u);
-        eyeZ = lerpf( 3.90f,  3.95f, u);
+        eyeZ = lerpf( 3.95f,  4.00f, u);
 
-        targetX = lerpf(-0.65f, -0.40f, u);
+        targetX = lerpf(-1.20f, -0.95f, u);
         targetY = -0.25f;
-        targetZ = 0.75f;
+        targetZ = 0.80f;
     }
 }
