@@ -1,5 +1,8 @@
 #include "Spacecraft.h"
 #include "Common.h"
+#include "stb_image.h"
+#include <cstdio>
+#include <cstdint>
 
 std::vector<Particle>   particles;
 std::vector<DustStreak> dustStreaks;
@@ -8,6 +11,128 @@ float enduranceOrbitT  = 0.0f;
 float ringSpinAngle    = 0.0f;
 float endPosX = 0.0f, endPosY = 0.0f, endPosZ = 0.0f;
 float endTanX = 0.0f, endTanY = 0.0f, endTanZ = 1.0f;
+
+struct EnduVert {
+    float x, y, z;
+    float nx, ny, nz;
+    float u, v;
+    float r, g, b;
+};
+
+static GLuint enduranceList = 0;
+static GLuint enduranceTexID = 0;
+static bool enduranceLoaded = false;
+static bool enduranceLoadFailed = false;
+
+static void loadEnduranceModel() {
+    if (enduranceLoaded || enduranceLoadFailed) return;
+
+    // 1. Load authentic master texture
+    const char* texPaths[] = {
+        "endurance_diffuse.jpg",
+        "../endurance_diffuse.jpg",
+        "bin/Release/endurance_diffuse.jpg",
+        "bin/Debug/endurance_diffuse.jpg",
+        "C:/Holidays/Martian/endurance_diffuse.jpg",
+        "C:/Holidays/Martian/Endurance from SketchLab/textures/A-MasterColour.jpeg"
+    };
+    unsigned char* texData = NULL;
+    int tw = 0, th = 0, tch = 0;
+    for (int i = 0; i < 6; ++i) {
+        texData = stbi_load(texPaths[i], &tw, &th, &tch, 3);
+        if (texData) break;
+    }
+
+    if (texData) {
+        glGenTextures(1, &enduranceTexID);
+        glBindTexture(GL_TEXTURE_2D, enduranceTexID);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGB, tw, th, GL_RGB, GL_UNSIGNED_BYTE, texData);
+        stbi_image_free(texData);
+    }
+
+    // 2. Load binary geometry
+    const char* binPaths[] = {
+        "endurance.bin",
+        "../endurance.bin",
+        "bin/Release/endurance.bin",
+        "bin/Debug/endurance.bin",
+        "C:/Holidays/Martian/endurance.bin"
+    };
+    FILE* fp = NULL;
+    for (int i = 0; i < 5; ++i) {
+        fp = fopen(binPaths[i], "rb");
+        if (fp) break;
+    }
+
+    if (!fp) {
+        enduranceLoadFailed = true;
+        return;
+    }
+
+    char magic[4];
+    uint32_t numVerts = 0;
+    if (fread(magic, 1, 4, fp) != 4 || memcmp(magic, "ENDU", 4) != 0 ||
+        fread(&numVerts, sizeof(uint32_t), 1, fp) != 1 || numVerts == 0) {
+        fclose(fp);
+        enduranceLoadFailed = true;
+        return;
+    }
+
+    std::vector<EnduVert> verts(numVerts);
+    size_t readCount = fread(&verts[0], sizeof(EnduVert), numVerts, fp);
+    fclose(fp);
+
+    if (readCount != numVerts) {
+        enduranceLoadFailed = true;
+        return;
+    }
+
+    // Compile into GPU display list
+    enduranceList = glGenLists(1);
+    glNewList(enduranceList, GL_COMPILE);
+
+    if (enduranceTexID) {
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, enduranceTexID);
+        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    }
+
+    glEnable(GL_COLOR_MATERIAL);
+    glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+
+    GLfloat spec[] = { 0.75f, 0.75f, 0.82f, 1.0f };
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec);
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 54.0f);
+
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_NORMAL_ARRAY);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    glEnableClientState(GL_COLOR_ARRAY);
+
+    glVertexPointer(3, GL_FLOAT, sizeof(EnduVert), &verts[0].x);
+    glNormalPointer(GL_FLOAT, sizeof(EnduVert), &verts[0].nx);
+    glTexCoordPointer(2, GL_FLOAT, sizeof(EnduVert), &verts[0].u);
+    glColorPointer(3, GL_FLOAT, sizeof(EnduVert), &verts[0].r);
+
+    glDrawArrays(GL_TRIANGLES, 0, (GLsizei)numVerts);
+
+    glDisableClientState(GL_COLOR_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+    glDisableClientState(GL_NORMAL_ARRAY);
+    glDisableClientState(GL_VERTEX_ARRAY);
+
+    glDisable(GL_COLOR_MATERIAL);
+    if (enduranceTexID) {
+        glDisable(GL_TEXTURE_2D);
+    }
+
+    glEndList();
+    enduranceLoaded = true;
+}
 
 float rangerPosX = 0.0f, rangerPosY = 0.0f, rangerPosZ = 0.0f;
 float rangerDirX = 0.0f, rangerDirY = 0.0f, rangerDirZ = 1.0f;
@@ -71,12 +196,12 @@ void renderEnduranceShip() {
 
     // Dynamic gradual scale: tiny microscopic dot in Shot 2, smoothly expanding during the ultra-slow zoom
     float shipScale = 0.38f;
-    if (seqTime < 15.0f) {
-        shipScale = 0.02f; // Tiny dot scale
+    if (seqTime < 14.5f) {
+        shipScale = 0.015f; // Tiny dot scale
     } else if (seqTime < 28.0f) {
-        float t = (seqTime - 15.0f) / 13.0f;
+        float t = (seqTime - 14.5f) / 13.5f;
         float e = smoothstep(0.0f, 1.0f, t);
-        shipScale = lerpf(0.02f, 0.38f, e); // Ultra-slow continuous enlargement
+        shipScale = lerpf(0.015f, 0.38f, e); // Ultra-slow continuous enlargement
     }
     glScalef(shipScale, shipScale, shipScale);
 
@@ -84,87 +209,100 @@ void renderEnduranceShip() {
     glPushMatrix();
     glRotatef(ringSpinAngle, 0.0f, 0.0f, 1.0f);
 
-    GLfloat hullWhite[] = { 0.86f, 0.88f, 0.92f, 1.0f };
-    GLfloat hullDark[]  = { 0.20f, 0.22f, 0.26f, 1.0f };
-    GLfloat hullSpec[]  = { 0.75f, 0.75f, 0.80f, 1.0f };
-    GLfloat hullShine[] = { 48.0f };
-    GLfloat zeroEmit[]  = { 0.0f, 0.0f, 0.0f, 1.0f };
+    if (!enduranceLoaded && !enduranceLoadFailed) {
+        loadEnduranceModel();
+    }
 
-    glMaterialfv(GL_FRONT, GL_SPECULAR, hullSpec);
-    glMaterialfv(GL_FRONT, GL_SHININESS, hullShine);
-    glMaterialfv(GL_FRONT, GL_EMISSION, zeroEmit);
+    if (enduranceLoaded && enduranceList) {
+        glCallList(enduranceList);
 
-    const int NUM_MODULES = 12;
-    const float RING_R    = 1.15f;
-
-    // 12 Endurance Ring Modules + Connecting Ring Trusses
-    for (int i = 0; i < NUM_MODULES; ++i) {
-        float angDeg = i * (360.0f / NUM_MODULES);
-        glPushMatrix();
-        glRotatef(angDeg, 0.0f, 0.0f, 1.0f);
-        glTranslatef(RING_R, 0.0f, 0.0f);
-
-        // Main pressurized module body
-        glMaterialfv(GL_FRONT, GL_DIFFUSE, hullWhite);
-        drawBox(0.24f, 0.36f, 0.26f);
-
-        // Dark thermal radiator / carbon trim plates
-        glMaterialfv(GL_FRONT, GL_DIFFUSE, hullDark);
-        glPushMatrix();
-        glTranslatef(0.11f, 0.0f, 0.0f);
-        drawBox(0.05f, 0.32f, 0.22f);
-        glPopMatrix();
-
-        // Connecting tubular perimeter truss to adjacent module
-        glPushMatrix();
-        glTranslatef(0.0f, 0.30f, 0.0f);
-        glRotatef(15.0f, 0.0f, 0.0f, 1.0f);
-        drawBox(0.06f, 0.28f, 0.06f);
-        glPopMatrix();
-
-        // Cabin Viewport Slits (warm amber/white glow)
-        GLfloat windowGlow[] = { 0.95f, 0.88f, 0.65f, 1.0f };
-        glMaterialfv(GL_FRONT, GL_EMISSION, windowGlow);
-        glPushMatrix();
-        glTranslatef(-0.115f, 0.0f, 0.04f);
-        drawBox(0.02f, 0.16f, 0.04f);
-        glPopMatrix();
-        glMaterialfv(GL_FRONT, GL_EMISSION, zeroEmit);
-
-        // Strobe Navigation Beacons (alternating red / green / white)
-        if (i % 3 == 0) {
-            float blink = (fmodf(totalTime * 2.2f + i * 0.5f, 1.0f) < 0.22f) ? 1.0f : 0.0f;
-            if (blink > 0.0f) {
-                GLfloat beaconColor[] = { 1.0f, 0.25f, 0.20f, 1.0f };
-                glMaterialfv(GL_FRONT, GL_EMISSION, beaconColor);
-                glPushMatrix();
-                glTranslatef(0.13f, 0.16f, 0.12f);
-                glutSolidSphere(0.022f, 8, 6);
-                glPopMatrix();
-                glMaterialfv(GL_FRONT, GL_EMISSION, zeroEmit);
+        // Subtle navigation strobe beacons along the perimeter
+        for (int i = 0; i < 12; ++i) {
+            if (i % 3 == 0) {
+                float blink = (fmodf(totalTime * 2.2f + i * 0.5f, 1.0f) < 0.22f) ? 1.0f : 0.0f;
+                if (blink > 0.0f) {
+                    float ang = i * (3.14159265f * 2.0f / 12.0f);
+                    GLfloat beaconColor[] = { 1.0f, 0.25f, 0.20f, 1.0f };
+                    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, beaconColor);
+                    glPushMatrix();
+                    glTranslatef(cosf(ang) * 0.98f, sinf(ang) * 0.98f, 0.06f);
+                    glutSolidSphere(0.018f, 8, 6);
+                    glPopMatrix();
+                    GLfloat zeroEmit[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+                    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, zeroEmit);
+                }
             }
         }
-        glPopMatrix();
-    }
+    } else {
+        GLfloat hullWhite[] = { 0.86f, 0.88f, 0.92f, 1.0f };
+        GLfloat hullDark[]  = { 0.20f, 0.22f, 0.26f, 1.0f };
+        GLfloat hullSpec[]  = { 0.75f, 0.75f, 0.80f, 1.0f };
+        GLfloat hullShine[] = { 48.0f };
+        GLfloat zeroEmit[]  = { 0.0f, 0.0f, 0.0f, 1.0f };
 
-    // 4 Radial Spokes to Central Hub
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, hullDark);
-    for (int s = 0; s < 4; ++s) {
+        glMaterialfv(GL_FRONT, GL_SPECULAR, hullSpec);
+        glMaterialfv(GL_FRONT, GL_SHININESS, hullShine);
+        glMaterialfv(GL_FRONT, GL_EMISSION, zeroEmit);
+
+        const int NUM_MODULES = 12;
+        const float RING_R    = 1.15f;
+
+        // 12 Endurance Ring Modules + Connecting Ring Trusses
+        for (int i = 0; i < NUM_MODULES; ++i) {
+            float angDeg = i * (360.0f / NUM_MODULES);
+            glPushMatrix();
+            glRotatef(angDeg, 0.0f, 0.0f, 1.0f);
+            glTranslatef(RING_R, 0.0f, 0.0f);
+
+            // Main pressurized module body
+            glMaterialfv(GL_FRONT, GL_DIFFUSE, hullWhite);
+            drawBox(0.24f, 0.36f, 0.26f);
+
+            // Dark thermal radiator / carbon trim plates
+            glMaterialfv(GL_FRONT, GL_DIFFUSE, hullDark);
+            glPushMatrix();
+            glTranslatef(0.11f, 0.0f, 0.0f);
+            drawBox(0.05f, 0.32f, 0.22f);
+            glPopMatrix();
+
+            // Connecting tubular perimeter truss to adjacent module
+            glPushMatrix();
+            glTranslatef(0.0f, 0.30f, 0.0f);
+            glRotatef(15.0f, 0.0f, 0.0f, 1.0f);
+            drawBox(0.06f, 0.28f, 0.06f);
+            glPopMatrix();
+
+            // Cabin Viewport Slits (warm amber/white glow)
+            GLfloat windowGlow[] = { 0.95f, 0.88f, 0.65f, 1.0f };
+            glMaterialfv(GL_FRONT, GL_EMISSION, windowGlow);
+            glPushMatrix();
+            glTranslatef(-0.115f, 0.0f, 0.04f);
+            drawBox(0.02f, 0.16f, 0.04f);
+            glPopMatrix();
+            glMaterialfv(GL_FRONT, GL_EMISSION, zeroEmit);
+
+            glPopMatrix();
+        }
+
+        // 4 Radial Spokes to Central Hub
+        glMaterialfv(GL_FRONT, GL_DIFFUSE, hullDark);
+        for (int s = 0; s < 4; ++s) {
+            glPushMatrix();
+            glRotatef(s * 90.0f, 0.0f, 0.0f, 1.0f);
+            glTranslatef(RING_R * 0.5f, 0.0f, 0.0f);
+            drawBox(RING_R * 0.92f, 0.07f, 0.09f);
+            glPopMatrix();
+        }
+
+        // Central Docking Hub & Spine
+        glMaterialfv(GL_FRONT, GL_DIFFUSE, hullWhite);
+        glutSolidSphere(0.20f, 20, 16);
+        glMaterialfv(GL_FRONT, GL_DIFFUSE, hullDark);
         glPushMatrix();
-        glRotatef(s * 90.0f, 0.0f, 0.0f, 1.0f);
-        glTranslatef(RING_R * 0.5f, 0.0f, 0.0f);
-        drawBox(RING_R * 0.92f, 0.07f, 0.09f);
+        glTranslatef(0.0f, 0.0f, -0.22f);
+        glutSolidCone(0.14f, 0.35f, 14, 4);
         glPopMatrix();
     }
-
-    // Central Docking Hub & Spine
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, hullWhite);
-    glutSolidSphere(0.20f, 20, 16);
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, hullDark);
-    glPushMatrix();
-    glTranslatef(0.0f, 0.0f, -0.22f);
-    glutSolidCone(0.14f, 0.35f, 14, 4);
-    glPopMatrix();
 
     glPopMatrix(); // End spinning ring
 
