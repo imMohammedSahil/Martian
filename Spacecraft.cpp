@@ -420,68 +420,72 @@ void renderEnduranceShip() {
         glPopMatrix();
     }
 
-    // Shot 1 (35.0s - 39.0s): Authentic 3D Ranger unlatches out from behind the central hub
+    glPopMatrix(); // End spinning ring
+
+    // Shot 1 (35.0s - 39.0s): Small craft naturally emerges out from inside the central hub pipe
     if (seqTime >= 35.0f && seqTime < 39.0f) {
         float u = (seqTime - 35.0f) / 4.0f;
         float smoothU = smoothstep(0.0f, 1.0f, u);
+        float emergeAlpha = smoothstep(0.0f, 0.12f, u); // Smooth progressive emergence, zero sudden pop-in
 
         loadRangerModel();
 
         glPushMatrix();
-        // Slides out backwards (-Z) from behind the central hub
-        float detachZ = lerpf(0.02f, -1.25f, smoothU);
-        float dropY   = lerpf(-0.02f, -0.26f, smoothU);
+        // Starts nestled inside the central pipe bore and smoothly slides out backwards (-Z)
+        float detachZ = lerpf(-0.06f, -0.92f, smoothU);
+        float dropY   = lerpf(-0.01f, -0.16f, smoothU);
         glTranslatef(0.0f, dropY, detachZ);
-        glRotatef(lerpf(0.0f, -18.0f, smoothU), 1.0f, 0.0f, 0.0f);
+        glRotatef(lerpf(0.0f, -14.0f, smoothU), 1.0f, 0.0f, 0.0f);
 
-        // Exact proportional scale relative to Endurance hub
-        float hubRangerScale = 0.22f;
-        glScalef(hubRangerScale, hubRangerScale, hubRangerScale);
+        // Small sleek proportional scale fitting cleanly out of the central pipe bore
+        float hubScale = 0.055f;
+        glScalef(hubScale, hubScale, hubScale);
 
-        if (rangerLoaded && rangerList) {
-            glCallList(rangerList);
-        } else {
-            GLfloat podWhite[] = { 0.92f, 0.94f, 0.96f, 1.0f };
-            GLfloat podDark[]  = { 0.16f, 0.18f, 0.22f, 1.0f };
-            glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, podWhite);
-            drawBox(0.36f, 0.14f, 0.90f);
-            glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, podDark);
-            glPushMatrix();
-            glTranslatef(0.0f, -0.05f, 0.0f);
-            drawBox(0.38f, 0.06f, 0.92f);
-            glPopMatrix();
-        }
-
-        // Cold-gas RCS separation thruster puffs & engine pilot glow
-        if (u > 0.12f && u < 0.85f) {
-            glDisable(GL_LIGHTING);
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-
-            glLineWidth(2.0f);
-            glColor4f(0.85f, 0.95f, 1.0f, 0.80f);
-            glBegin(GL_LINES);
-                glVertex3f(-0.55f, 0.0f, 0.2f); glVertex3f(-1.1f, 0.0f, 0.1f);
-                glVertex3f( 0.55f, 0.0f, 0.2f); glVertex3f( 1.1f, 0.0f, 0.1f);
-            glEnd();
-
-            glColor4f(0.35f, 0.75f, 1.0f, 0.85f);
-            for (float side = -0.32f; side <= 0.35f; side += 0.64f) {
+        if (emergeAlpha > 0.01f) {
+            if (rangerLoaded && rangerList) {
+                glCallList(rangerList);
+            } else {
+                GLfloat podWhite[] = { 0.92f, 0.94f, 0.96f, 1.0f };
+                GLfloat podDark[]  = { 0.16f, 0.18f, 0.22f, 1.0f };
+                glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, podWhite);
+                drawBox(0.36f, 0.14f, 0.90f);
+                glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, podDark);
                 glPushMatrix();
-                glTranslatef(side, 0.0f, -0.95f);
-                glutSolidSphere(0.08f, 8, 6);
+                glTranslatef(0.0f, -0.05f, 0.0f);
+                drawBox(0.38f, 0.06f, 0.92f);
                 glPopMatrix();
             }
 
-            glLineWidth(1.0f);
-            glDisable(GL_BLEND);
-            glEnable(GL_LIGHTING);
+            // Subtle RCS separation puff as it clears the pipe
+            if (u > 0.15f && u < 0.85f) {
+                glDisable(GL_LIGHTING);
+                glEnable(GL_BLEND);
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+
+                glColor4f(0.80f, 0.92f, 1.0f, 0.70f);
+                glLineWidth(1.8f);
+                glBegin(GL_LINES);
+                    glVertex3f(-0.50f, 0.0f, 0.1f); glVertex3f(-0.95f, 0.0f, 0.05f);
+                    glVertex3f( 0.50f, 0.0f, 0.1f); glVertex3f( 0.95f, 0.0f, 0.05f);
+                glEnd();
+
+                // Faint blue engine pilot spark
+                glColor4f(0.35f, 0.75f, 1.0f, 0.80f);
+                for (float side = -0.32f; side <= 0.35f; side += 0.64f) {
+                    glPushMatrix();
+                    glTranslatef(side, 0.0f, -0.95f);
+                    glutSolidSphere(0.06f, 8, 6);
+                    glPopMatrix();
+                }
+
+                glLineWidth(1.0f);
+                glDisable(GL_BLEND);
+                glEnable(GL_LIGHTING);
+            }
         }
 
         glPopMatrix();
     }
-
-    glPopMatrix(); // End spinning ring
 
     // Interstellar beacon: at scale distance, render crisp anti-aliased luminous point & strobe
     glDisable(GL_LIGHTING);
