@@ -125,6 +125,8 @@ static void renderAnamorphicFlare2D(float winX, float winY, float visibility) {
 void renderCinemaPost(float flareX, float flareY, bool flareInFront, float flareVisibility) {
     glDisable(GL_LIGHTING);
     glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_TEXTURE_2D);
 
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
@@ -140,21 +142,18 @@ void renderCinemaPost(float flareX, float flareY, bool flareInFront, float flare
         renderAnamorphicFlare2D(flareX, flareY, flareVisibility);
     }
 
-    // 2. 2.39:1 Widescreen Cinema Letterbox Bars
-    float barH = windowHeight * 0.115f;
+    // 2. 2.39:1 Widescreen Cinema Letterbox Bars (Top & Bottom)
+    float barH = (windowHeight - ((float)windowWidth / 2.39f)) * 0.5f;
+    if (barH < windowHeight * 0.125f) barH = windowHeight * 0.125f;
+
     glDisable(GL_BLEND);
     glColor3f(0.0f, 0.0f, 0.0f);
-    glBegin(GL_QUADS);
-        glVertex2f(0.0f, 0.0f);
-        glVertex2f((float)windowWidth, 0.0f);
-        glVertex2f((float)windowWidth, barH);
-        glVertex2f(0.0f, barH);
 
-        glVertex2f(0.0f, windowHeight - barH);
-        glVertex2f((float)windowWidth, windowHeight - barH);
-        glVertex2f((float)windowWidth, (float)windowHeight);
-        glVertex2f(0.0f, (float)windowHeight);
-    glEnd();
+    // Bottom Letterbox Bar
+    glRectf(-10.0f, -10.0f, (float)windowWidth + 10.0f, barH);
+
+    // Top Letterbox Bar
+    glRectf(-10.0f, (float)windowHeight - barH, (float)windowWidth + 10.0f, (float)windowHeight + 10.0f);
 
     // 3. Panel 4 Storyboard Title Card: "M A R T I A N" (20.0s - 27.5s)
     if (seqTime >= 20.0f && seqTime <= 27.5f) {

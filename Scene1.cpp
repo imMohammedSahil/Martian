@@ -70,7 +70,7 @@ void computeCameraScene1(float& eyeX, float& eyeY, float& eyeZ,
 
         eyeX = lerpf(-3.80f, -3.85f, e);
         eyeY = 0.00f;
-        eyeZ = lerpf( 7.50f,  7.30f, e);
+        eyeZ = lerpf( 7.80f,  7.60f, e);
 
         targetX = lerpf(16.50f, 0.00f, e);
         targetY = 0.00f;
