@@ -150,10 +150,10 @@ void renderCinemaPost(float flareX, float flareY, bool flareInFront, float flare
     glColor3f(0.0f, 0.0f, 0.0f);
 
     // Bottom Letterbox Bar
-    glRectf(-10.0f, -10.0f, (float)windowWidth + 10.0f, barH);
+    glRectf(0.0f, 0.0f, (float)windowWidth, barH);
 
     // Top Letterbox Bar
-    glRectf(-10.0f, (float)windowHeight - barH, (float)windowWidth + 10.0f, (float)windowHeight + 10.0f);
+    glRectf(0.0f, (float)windowHeight - barH, (float)windowWidth, (float)windowHeight);
 
     // 3. Panel 4 Storyboard Title Card: "M A R T I A N" (20.0s - 27.5s)
     if (seqTime >= 20.0f && seqTime <= 27.5f) {
