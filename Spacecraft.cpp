@@ -108,7 +108,9 @@ static void loadRangerModel() {
     glEnable(GL_COLOR_MATERIAL);
     glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
 
+    GLfloat amb[]  = { 0.40f, 0.40f, 0.45f, 1.0f };
     GLfloat spec[] = { 0.82f, 0.82f, 0.88f, 1.0f };
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, amb);
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec);
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 64.0f);
 
@@ -452,7 +454,7 @@ void renderRangerLander() {
     glRotatef(pitch + rangerPitchExtra, 1.0f, 0.0f, 0.0f);
     glRotatef(rangerRollAngle, 0.0f, 0.0f, 1.0f);
 
-    float rScale = 0.16f;
+    float rScale = 0.26f;
     glScalef(rScale, rScale, rScale);
 
     if (rangerLoaded && rangerList) {
