@@ -56,22 +56,22 @@ void updateScene2(float dt) {
     }
     else if (t < 46.0f) {
         // SHOT 2: DIAGONAL DESCENT TOWARD MARS (39.0s - 46.0s)
-        // Mars curve on far right, Ranger starts top-left in deep space
+        // High altitude descent from top-left deep black space towards Mars limb
         float u = (t - 39.0f) / 7.0f;
         float smoothU = smoothstep(0.0f, 1.0f, u);
 
-        rangerPosX = lerpf(-3.00f, -0.80f, smoothU);
-        rangerPosY = lerpf( 1.45f,  0.22f, smoothU);
-        rangerPosZ = lerpf( 3.10f,  2.45f, smoothU);
+        rangerPosX = lerpf(-4.316f, -3.196f, smoothU);
+        rangerPosY = lerpf( 0.670f,  0.154f, smoothU);
+        rangerPosZ = lerpf( 2.031f,  1.556f, smoothU);
 
         // Direction along diagonal descent path (downwards and rightwards toward Mars)
-        rangerDirX =  0.86f;
-        rangerDirY = -0.47f;
-        rangerDirZ = -0.20f;
+        rangerDirX =  0.848f;
+        rangerDirY = -0.433f;
+        rangerDirZ = -0.304f;
         normalize3(rangerDirX, rangerDirY, rangerDirZ);
 
-        rangerPitchExtra = -8.0f;
-        rangerRollAngle  = 12.0f;
+        rangerPitchExtra = -6.0f;
+        rangerRollAngle  = 10.0f;
 
         rcsActive = 0.0f;
         mainBurnActive = (t >= 39.2f) ? 1.0f : 0.0f;
@@ -79,50 +79,49 @@ void updateScene2(float dt) {
 
         // Exhaust trail particles shooting backwards up and to the left
         if (mainBurnActive > 0.0f) {
-            float exX = rangerPosX - rangerDirX * 0.35f;
-            float exY = rangerPosY - rangerDirY * 0.35f;
-            float exZ = rangerPosZ - rangerDirZ * 0.35f;
+            float exX = rangerPosX - rangerDirX * 0.25f;
+            float exY = rangerPosY - rangerDirY * 0.25f;
+            float exZ = rangerPosZ - rangerDirZ * 0.25f;
             for (int k = 0; k < 2; ++k) {
-                spawnParticle(exX + randRange(-0.02f, 0.02f),
-                              exY + randRange(-0.02f, 0.02f),
-                              exZ + randRange(-0.02f, 0.02f),
-                              -rangerDirX * 1.4f + randRange(-0.06f, 0.06f),
-                              -rangerDirY * 1.4f + randRange(-0.06f, 0.06f),
-                              -rangerDirZ * 1.4f + randRange(-0.06f, 0.06f),
-                              0.4f, randRange(2.5f, 4.0f),
+                spawnParticle(exX + randRange(-0.015f, 0.015f),
+                              exY + randRange(-0.015f, 0.015f),
+                              exZ + randRange(-0.015f, 0.015f),
+                              -rangerDirX * 1.3f + randRange(-0.05f, 0.05f),
+                              -rangerDirY * 1.3f + randRange(-0.05f, 0.05f),
+                              -rangerDirZ * 1.3f + randRange(-0.05f, 0.05f),
+                              0.38f, randRange(2.0f, 3.5f),
                               0.35f, 0.75f, 1.0f, true);
             }
         }
     }
     else {
         // SHOT 3: CROSSING HORIZON & SHRINKING TO PINPOINT DOT (46.0s - 56.0s)
-        // Crosses over the curved Martian limb into the upper atmosphere
-        // Shrinks from small craft down to a tiny dot over the red Martian landscape
+        // High altitude over Mars upper atmosphere (r > 2.27, never clipping into terrain)
         float u = (t - 46.0f) / 10.0f;
 
-        rangerPosX = lerpf(-0.80f,  0.45f, u);
-        rangerPosY = lerpf( 0.22f, -0.32f, u);
-        rangerPosZ = lerpf( 2.45f,  2.22f, u);
+        rangerPosX = lerpf(-3.196f, -1.870f, u);
+        rangerPosY = lerpf( 0.154f, -0.580f, u);
+        rangerPosZ = lerpf( 1.556f,  1.153f, u);
 
-        rangerDirX =  0.86f;
-        rangerDirY = -0.47f;
-        rangerDirZ = -0.20f;
+        rangerDirX =  0.848f;
+        rangerDirY = -0.433f;
+        rangerDirZ = -0.304f;
         normalize3(rangerDirX, rangerDirY, rangerDirZ);
 
-        rangerPitchExtra = -8.0f;
-        rangerRollAngle  = 8.0f;
+        rangerPitchExtra = -6.0f;
+        rangerRollAngle  = 6.0f;
 
         rcsActive = 0.0f;
         mainBurnActive = 1.0f;
         heatshieldThermal = smoothstep(48.0f, 54.0f, t) * 0.45f;
 
         if (rand() % 2 == 0) {
-            float exX = rangerPosX - rangerDirX * 0.35f;
-            float exY = rangerPosY - rangerDirY * 0.35f;
-            float exZ = rangerPosZ - rangerDirZ * 0.35f;
+            float exX = rangerPosX - rangerDirX * 0.20f;
+            float exY = rangerPosY - rangerDirY * 0.20f;
+            float exZ = rangerPosZ - rangerDirZ * 0.20f;
             spawnParticle(exX, exY, exZ,
-                          -rangerDirX * 1.2f, -rangerDirY * 1.2f, -rangerDirZ * 1.2f,
-                          0.35f, 2.2f, 0.4f, 0.8f, 1.0f, true);
+                          -rangerDirX * 1.1f, -rangerDirY * 1.1f, -rangerDirZ * 1.1f,
+                          0.30f, 2.0f, 0.4f, 0.8f, 1.0f, true);
         }
     }
 
@@ -160,24 +159,24 @@ void computeCameraScene2(float& eyeX, float& eyeY, float& eyeZ,
         targetZ = 2.45f;
     }
     else if (t < 46.0f) {
-        // SHOT 2 (39.0s - 46.0s): Mars sent further to the right edge
+        // SHOT 2 (39.0s - 46.0s): Mars pushed strongly to the right edge
         float u = (t - 39.0f) / 7.0f;
-        eyeX = lerpf(-2.15f, -2.05f, u);
+        eyeX = lerpf(-3.25f, -3.15f, u);
         eyeY = lerpf( 0.90f,  0.85f, u);
         eyeZ = lerpf( 4.05f,  3.95f, u);
 
-        targetX = lerpf(-1.35f, -1.20f, u);
+        targetX = lerpf(-3.45f, -3.35f, u);
         targetY = -0.20f;
         targetZ = 0.85f;
     }
     else {
         // SHOT 3 (46.0s - 56.0s): Receding Over Mars Surface on the right
         float u = (t - 46.0f) / 10.0f;
-        eyeX = lerpf(-2.05f, -1.95f, u);
+        eyeX = lerpf(-3.15f, -3.05f, u);
         eyeY = lerpf( 0.85f,  0.80f, u);
         eyeZ = lerpf( 3.95f,  4.00f, u);
 
-        targetX = lerpf(-1.20f, -0.95f, u);
+        targetX = lerpf(-3.35f, -3.15f, u);
         targetY = -0.25f;
         targetZ = 0.80f;
     }

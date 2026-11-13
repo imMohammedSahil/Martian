@@ -519,7 +519,15 @@ void renderRangerLander() {
     glRotatef(pitch + rangerPitchExtra, 1.0f, 0.0f, 0.0f);
     glRotatef(rangerRollAngle, 0.0f, 0.0f, 1.0f);
 
-    float rScale = 0.26f;
+    // Dynamic scale receding into distance: prominent hero scale in deep space -> pinpoint speck over Mars
+    float rScale = 0.22f;
+    if (seqTime >= 39.0f && seqTime < 46.0f) {
+        float u = (seqTime - 39.0f) / 7.0f;
+        rScale = lerpf(0.22f, 0.095f, smoothstep(0.0f, 1.0f, u));
+    } else if (seqTime >= 46.0f) {
+        float u = (seqTime - 46.0f) / 10.0f;
+        rScale = lerpf(0.095f, 0.016f, u);
+    }
     glScalef(rScale, rScale, rScale);
 
     if (rangerLoaded && rangerList) {
@@ -591,36 +599,38 @@ void renderRangerLander() {
         glEnable(GL_LIGHTING);
     }
 
-    // 2. Twin Main Propulsion De-Orbit Flame Plumes
+    // 2. Twin Main Propulsion De-Orbit Flame Plumes (cinematic compact shock diamonds & bright core)
     if (mainBurnActive > 0.0f) {
         glDisable(GL_LIGHTING);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
-        float burnFlicker = 0.85f + 0.15f * sinf(totalTime * 45.0f);
-        float flameLen = 2.4f * mainBurnActive * burnFlicker;
+        float burnFlicker = 0.88f + 0.12f * sinf(totalTime * 45.0f);
+        float flameLen = 0.45f * mainBurnActive * burnFlicker;
 
         for (float side = -0.32f; side <= 0.35f; side += 0.64f) {
             glPushMatrix();
             glTranslatef(side, 0.0f, -0.92f);
 
-            glColor4f(0.70f, 0.92f, 1.0f, 0.95f);
+            // Core shock diamond
+            glColor4f(0.95f, 0.98f, 1.0f, 0.95f);
+            glBegin(GL_TRIANGLE_FAN);
+                glVertex3f(0.0f, 0.0f, -flameLen * 0.55f);
+                for (int deg = 0; deg <= 360; deg += 45) {
+                    float rad = deg * 3.14159f / 180.0f;
+                    glColor4f(0.40f, 0.85f, 1.0f, 0.0f);
+                    glVertex3f(cosf(rad) * 0.07f, sinf(rad) * 0.07f, 0.0f);
+                }
+            glEnd();
+
+            // Outer plasma plume
+            glColor4f(0.25f, 0.65f, 1.0f, 0.70f);
             glBegin(GL_TRIANGLE_FAN);
                 glVertex3f(0.0f, 0.0f, -flameLen);
                 for (int deg = 0; deg <= 360; deg += 45) {
                     float rad = deg * 3.14159f / 180.0f;
-                    glColor4f(0.20f, 0.65f, 1.0f, 0.0f);
-                    glVertex3f(cosf(rad) * 0.18f, sinf(rad) * 0.18f, 0.0f);
-                }
-            glEnd();
-
-            glColor4f(0.15f, 0.55f, 1.0f, 0.70f);
-            glBegin(GL_TRIANGLE_FAN);
-                glVertex3f(0.0f, 0.0f, -flameLen * 1.35f);
-                for (int deg = 0; deg <= 360; deg += 45) {
-                    float rad = deg * 3.14159f / 180.0f;
-                    glColor4f(0.05f, 0.25f, 0.85f, 0.0f);
-                    glVertex3f(cosf(rad) * 0.32f, sinf(rad) * 0.32f, 0.0f);
+                    glColor4f(0.08f, 0.35f, 0.85f, 0.0f);
+                    glVertex3f(cosf(rad) * 0.14f, sinf(rad) * 0.14f, 0.0f);
                 }
             glEnd();
 
