@@ -168,13 +168,13 @@ void renderEnduranceShip() {
     glRotatef(26.0f, 1.0f, 0.0f, 0.0f);
     glRotatef(14.0f, 0.0f, 0.0f, 1.0f);
 
-    // Small pinpoint dot beacon during Shot 2 & early Shot 3 (0.0s - 22.0s)
-    if (seqTime < 22.0f) {
+    // Small pinpoint dot beacon during Shot 2 & early Shot 3 (0.0s - 18.0s)
+    if (seqTime < 18.0f) {
         glDisable(GL_LIGHTING);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
-        float dotAlpha = (seqTime < 16.0f) ? 1.0f : (1.0f - smoothstep(16.0f, 22.0f, seqTime));
+        float dotAlpha = (seqTime < 13.0f) ? 1.0f : (1.0f - smoothstep(13.0f, 18.0f, seqTime));
         float strobe = 0.85f + 0.15f * sinf(totalTime * 8.0f);
         glPointSize(3.5f);
         glBegin(GL_POINTS);
@@ -195,13 +195,13 @@ void renderEnduranceShip() {
     }
 
     // Dynamic gradual scale: tiny microscopic dot in Shot 2, smoothly expanding during the ultra-slow zoom
-    float shipScale = 0.38f;
-    if (seqTime < 14.5f) {
-        shipScale = 0.015f; // Tiny dot scale
-    } else if (seqTime < 28.0f) {
-        float t = (seqTime - 14.5f) / 13.5f;
+    float shipScale = 0.135f;
+    if (seqTime < 13.0f) {
+        shipScale = 0.008f; // Microscopic dot scale
+    } else if (seqTime < 22.0f) {
+        float t = (seqTime - 13.0f) / 9.0f;
         float e = smoothstep(0.0f, 1.0f, t);
-        shipScale = lerpf(0.015f, 0.38f, e); // Ultra-slow continuous enlargement
+        shipScale = lerpf(0.008f, 0.135f, e); // Ultra-slow continuous enlargement
     }
     glScalef(shipScale, shipScale, shipScale);
 
