@@ -142,52 +142,6 @@ void renderMarsAndAtmosphere() {
     }
     glEnable(GL_CULL_FACE);
     glPopMatrix();
-
-    // 2. Sun-Weighted Dual-Layer Martian Atmospheric Scattering
-    glDisable(GL_LIGHTING);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-    glDepthMask(GL_FALSE);
-
-    float sunX = SUN_DIR_X, sunY = SUN_DIR_Y, sunZ = SUN_DIR_Z;
-    normalize3(sunX, sunY, sunZ);
-
-    const float radii[2]   = { MARS_RADIUS * 1.018f, MARS_RADIUS * 1.052f };
-    const float alphas[2]  = { 0.24f, 0.11f };
-
-    for (int layer = 0; layer < 2; ++layer) {
-        float r = radii[layer];
-        int stacks = 36, slices = 72;
-        for (int i = 0; i < stacks; ++i) {
-            float lat0 = (float)M_PI * (-0.5f + (float)i / stacks);
-            float lat1 = (float)M_PI * (-0.5f + (float)(i + 1) / stacks);
-            float y0 = r * sinf(lat0), yr0 = r * cosf(lat0);
-            float y1 = r * sinf(lat1), yr1 = r * cosf(lat1);
-
-            glBegin(GL_QUAD_STRIP);
-            for (int j = 0; j <= slices; ++j) {
-                float lon = 2.0f * (float)M_PI * (float)j / slices;
-                float cL = cosf(lon), sL = sinf(lon);
-
-                float nx1 = cL * cosf(lat1), ny1 = sinf(lat1), nz1 = sL * cosf(lat1);
-                float dotSun1 = nx1 * sunX + ny1 * sunY + nz1 * sunZ;
-                float w1 = clampf(dotSun1 * 0.7f + 0.3f, 0.0f, 1.0f);
-                glColor4f(1.0f * w1 + 0.35f, 0.52f * w1 + 0.15f, 0.25f * w1 + 0.08f, alphas[layer] * (w1 * 0.85f + 0.15f));
-                glVertex3f(cL * yr1, y1, sL * yr1);
-
-                float nx0 = cL * cosf(lat0), ny0 = sinf(lat0), nz0 = sL * cosf(lat0);
-                float dotSun0 = nx0 * sunX + ny0 * sunY + nz0 * sunZ;
-                float w0 = clampf(dotSun0 * 0.7f + 0.3f, 0.0f, 1.0f);
-                glColor4f(1.0f * w0 + 0.35f, 0.52f * w0 + 0.15f, 0.25f * w0 + 0.08f, alphas[layer] * (w0 * 0.85f + 0.15f));
-                glVertex3f(cL * yr0, y0, sL * yr0);
-            }
-            glEnd();
-        }
-    }
-
-    glDepthMask(GL_TRUE);
-    glDisable(GL_BLEND);
-    glEnable(GL_LIGHTING);
 }
 
 void renderPhobos() {
