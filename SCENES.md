@@ -10,11 +10,10 @@
 ---
 
 ## Scene 2: Lander Undocking & Hypersonic Atmospheric Entry [COMPLETED]
-* **Duration:** 25.0s (`35.0s – 60.0s`).
-* **Phase 1 (35.0s – 41.0s / Separation):** Hull-mounted camera tracks authentic 3D Ranger detaching from Endurance hub, cold-gas RCS thruster puffs, pitch-down maneuver.
-* **Phase 2 (41.0s – 47.0s / Retro Burn):** Twin main thrusters ignite with dual electric-blue/cyan ion plumes, retrograde de-orbit burn toward Mars.
-* **Phase 3 (47.0s – 53.0s / Cockpit HUD):** Interior cut with dark canopy struts, exterior Martian horizon, and real-time phosphor green/amber CRT telemetry (Alt 128->62 km, Mach 24->20, Max-Q 38 kPa, Heatshield 1850°C, artificial horizon ladder, CRT scanlines).
-* **Phase 4 (53.0s – 60.0s / Hypersonic Entry):** Exterior orbital chase; incandescent orange heatshield, plasma bow shock wave, trailing flame embers, buffeting IMAX camera shake.
+* **Duration:** 20.0s (`35.0s – 55.0s`).
+* **Phase 1 (35.0s – 42.0s / Separation):** Hull-mounted camera tracks authentic 3D Ranger detaching from Endurance hub, cold-gas RCS thruster puffs, pitch-down maneuver.
+* **Phase 2 (42.0s – 48.0s / Retro Burn):** Twin main thrusters ignite with dual electric-blue/cyan ion plumes, retrograde de-orbit burn toward Mars.
+* **Phase 3 (48.0s – 55.0s / Hypersonic Entry):** Exterior orbital chase; incandescent orange heatshield, plasma bow shock wave, trailing flame embers, buffeting IMAX camera shake.
 
 ---
 

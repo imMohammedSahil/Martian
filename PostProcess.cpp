@@ -263,9 +263,9 @@ void renderCinemaPost(float flareX, float flareY, bool flareInFront, float flare
             fadeAlpha = std::max(fadeAlpha, 1.0f - smoothstep(35.0f, 35.2f, seqTime));
         }
     }
-    // Fade to fire/black at the end of Scene 2 (59.0s - 60.0s)
-    if (seqTime > 59.0f) {
-        fadeAlpha = std::max(fadeAlpha, smoothstep(59.0f, 60.0f, seqTime));
+    // Fade to fire/black at the end of Scene 2 (54.0s - 55.0s)
+    if (seqTime > 54.0f) {
+        fadeAlpha = std::max(fadeAlpha, smoothstep(54.0f, 55.0f, seqTime));
     }
 
     if (fadeAlpha > 0.005f) {
