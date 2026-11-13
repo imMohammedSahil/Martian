@@ -155,10 +155,10 @@ void renderCinemaPost(float flareX, float flareY, bool flareInFront, float flare
     // Top Letterbox Bar
     glRectf(0.0f, (float)windowHeight - barH, (float)windowWidth, (float)windowHeight);
 
-    // 3. Panel 4 Storyboard Title Card: "M A R T I A N" (26.5s - 34.5s)
-    // Mars background fully covers the screen at ~20.5s, allowing a solid 6.0s of edge-to-edge Martian backdrop first
-    if (seqTime >= 26.5f && seqTime <= 34.5f) {
-        float titleAlpha = smoothstep(26.5f, 28.0f, seqTime) * (1.0f - smoothstep(33.0f, 34.5f, seqTime));
+    // 3. Panel 4 Storyboard Title Card: "M A R T I A N" (27.0s - 34.5s)
+    // Mars background fully covers the screen at ~22.0s, allowing 5.0s of edge-to-edge Martian backdrop first
+    if (seqTime >= 27.0f && seqTime <= 34.5f) {
+        float titleAlpha = smoothstep(27.0f, 28.5f, seqTime) * (1.0f - smoothstep(33.0f, 34.5f, seqTime));
         if (titleAlpha > 0.01f) {
             const char* title = "M   A   R   T   I   A   N";
             float scale = (windowWidth / 1280.0f) * 0.28f;

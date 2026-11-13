@@ -17,19 +17,20 @@ struct CamKey {
 };
 
 static const CamKey CAM_KEYS[] = {
-    // Shot 1 (0.0s - 4.5s): Deep cosmic void
-    {  0.0f, -4.50f,  0.00f, 9.50f,  18.00f,  0.00f, 9.50f },
-    {  4.5f, -4.50f,  0.00f, 9.50f,  18.00f,  0.00f, 9.50f },
+    // Shot 1 (0.0s - 4.5s): Deep cosmic void panning
+    {  0.0f, -5.50f,  0.00f, 12.50f,  20.00f,  0.00f, 12.50f },
+    {  4.5f, -5.50f,  0.00f, 12.50f,  20.00f,  0.00f, 12.50f },
 
-    // Shot 2 (4.5s - 13.0s): Ultra-slow glide bringing full Mars sphere into center
-    { 13.0f, -2.00f,  0.00f, 9.00f,   0.00f,  0.00f, 0.00f },
+    // Shot 2 (4.5s - 13.0s): Full Mars disc centered in frame. Endurance is a tiny stationary dot in orbit with flashing beacon.
+    { 13.0f, -2.50f,  0.00f, 12.00f,   0.00f,  0.00f,  0.00f },
 
-    // Shot 3 (13.0s - 20.5s): Continuous descent toward southern hemisphere; Mars expands to cover the ENTIRE screen edge-to-edge
-    { 20.5f,  0.00f, -0.60f, 3.05f,   0.00f, -0.60f, 2.45f },
+    // Shot 3 (13.0s - 22.0s): Camera physically flies continuously toward southern hemisphere; Mars expands to cover 100% of the screen.
+    { 22.0f,  0.00f, -0.60f,  3.12f,   0.00f, -0.60f,  2.45f },
 
-    // Shot 4 (20.5s - 35.0s): Mars is fully covering the screen backdrop. Slow cinematic push directly to spinning Endurance before & during title card.
-    { 26.5f,  0.00f, -0.60f, 2.96f,   0.00f, -0.60f, 2.45f },
-    { 35.0f,  0.00f, -0.60f, 2.92f,   0.00f, -0.60f, 2.45f }
+    // Shot 4 (22.0s - 35.0s): Mars fully covers screen. Camera physically glides right up to stationary spinning Endurance.
+    // Title card fades in at 27.0s framing the craft at 'T'.
+    { 28.5f,  0.00f, -0.60f,  2.97f,   0.00f, -0.60f,  2.45f },
+    { 35.0f,  0.00f, -0.60f,  2.92f,   0.00f, -0.60f,  2.45f }
 };
 static const int NUM_CAM_KEYS = sizeof(CAM_KEYS) / sizeof(CAM_KEYS[0]);
 

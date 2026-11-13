@@ -194,15 +194,8 @@ void renderEnduranceShip() {
         glEnable(GL_LIGHTING);
     }
 
-    // Dynamic gradual scale: tiny microscopic dot in Shot 2, smoothly expanding during the ultra-slow zoom
-    float shipScale = 0.135f;
-    if (seqTime < 13.0f) {
-        shipScale = 0.008f; // Microscopic dot scale
-    } else if (seqTime < 22.0f) {
-        float t = (seqTime - 13.0f) / 9.0f;
-        float e = smoothstep(0.0f, 1.0f, t);
-        shipScale = lerpf(0.008f, 0.135f, e); // Ultra-slow continuous enlargement
-    }
+    // Authentic physical scale of Endurance in 3D orbit (constant rigid body, no artificial swelling)
+    const float shipScale = 0.135f;
     glScalef(shipScale, shipScale, shipScale);
 
     // Spinning Ring Frame
