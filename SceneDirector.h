@@ -15,5 +15,11 @@ void computeCameraScene1(float& eyeX, float& eyeY, float& eyeZ,
                         float& targetX, float& targetY, float& targetZ,
                         float& upX, float& upY, float& upZ);
 
+// Scene 2 specific handlers
+void updateScene2(float dt);
+void computeCameraScene2(float& eyeX, float& eyeY, float& eyeZ,
+                        float& targetX, float& targetY, float& targetZ,
+                        float& upX, float& upY, float& upZ);
+
 #endif // SCENE_DIRECTOR_H
 

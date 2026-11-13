@@ -21,6 +21,7 @@
 #include "Spacecraft.h"
 #include "PostProcess.h"
 #include "SceneDirector.h"
+#include "Scene2.h"
 
 // ============================================================================
 // GLOBAL STATE DEFINITIONS
@@ -79,16 +80,19 @@ void display() {
     if (seqTime >= 5.8f) {
         renderMarsAndAtmosphere();
         renderEnduranceShip();
-        if (rangerDetached) {
+        if (rangerDetached && !(seqTime >= 47.0f && seqTime < 53.0f)) {
             renderRangerLander();
         }
     }
 
     // 4. Particles & Speed Streaks (only active during atmospheric entry)
     renderParticles();
-    if (seqTime > 30.0f) {
+    if (seqTime > 41.0f) {
         renderSpeedDustStreaks(eyeX, eyeY, eyeZ);
     }
+
+    // 5. Cockpit HUD Telemetry Overlay (Scene 2 Phase 3)
+    renderCockpitHUD();
 
     // 6. 2D Post: Anamorphic Lens Flare, 2.39:1 Letterbox Bars, Title & Fades
     renderCinemaPost(flareX, flareY, flareInFront, sunVisibility);

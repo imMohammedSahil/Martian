@@ -255,9 +255,17 @@ void renderCinemaPost(float flareX, float flareY, bool flareInFront, float flare
     if (seqTime < 1.5f) {
         fadeAlpha = 1.0f - smoothstep(0.0f, 1.5f, seqTime);
     }
-    // Fade at the very end of sequence loop
-    if (seqTime > 34.0f) {
-        fadeAlpha = std::max(fadeAlpha, smoothstep(34.0f, 35.0f, seqTime));
+    // Brief cinematic shutter cut between Scene 1 and Scene 2 (34.7s - 35.2s)
+    if (seqTime >= 34.6f && seqTime <= 35.2f) {
+        if (seqTime <= 35.0f) {
+            fadeAlpha = std::max(fadeAlpha, smoothstep(34.6f, 35.0f, seqTime));
+        } else {
+            fadeAlpha = std::max(fadeAlpha, 1.0f - smoothstep(35.0f, 35.2f, seqTime));
+        }
+    }
+    // Fade to fire/black at the end of Scene 2 (59.0s - 60.0s)
+    if (seqTime > 59.0f) {
+        fadeAlpha = std::max(fadeAlpha, smoothstep(59.0f, 60.0f, seqTime));
     }
 
     if (fadeAlpha > 0.005f) {

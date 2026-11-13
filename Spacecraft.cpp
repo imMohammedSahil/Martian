@@ -24,6 +24,120 @@ static GLuint enduranceTexID = 0;
 static bool enduranceLoaded = false;
 static bool enduranceLoadFailed = false;
 
+static GLuint rangerList = 0;
+static GLuint rangerTexID = 0;
+static bool rangerLoaded = false;
+static bool rangerLoadFailed = false;
+
+static void loadRangerModel() {
+    if (rangerLoaded || rangerLoadFailed) return;
+
+    // 1. Texture
+    const char* texPaths[] = {
+        "ranger_diffuse.png",
+        "../ranger_diffuse.png",
+        "bin/Release/ranger_diffuse.png",
+        "bin/Debug/ranger_diffuse.png",
+        "C:/Holidays/Martian/ranger_diffuse.png",
+        "C:/Holidays/Martian/Ranger/textures/DefaultMaterial_Base_Color.png"
+    };
+    unsigned char* texData = NULL;
+    int tw = 0, th = 0, tch = 0;
+    for (int i = 0; i < 6; ++i) {
+        texData = stbi_load(texPaths[i], &tw, &th, &tch, 3);
+        if (texData) break;
+    }
+
+    if (texData) {
+        glGenTextures(1, &rangerTexID);
+        glBindTexture(GL_TEXTURE_2D, rangerTexID);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGB, tw, th, GL_RGB, GL_UNSIGNED_BYTE, texData);
+        stbi_image_free(texData);
+    }
+
+    // 2. Binary geometry
+    const char* binPaths[] = {
+        "ranger.bin",
+        "../ranger.bin",
+        "bin/Release/ranger.bin",
+        "bin/Debug/ranger.bin",
+        "C:/Holidays/Martian/ranger.bin"
+    };
+    FILE* fp = NULL;
+    for (int i = 0; i < 5; ++i) {
+        fp = fopen(binPaths[i], "rb");
+        if (fp) break;
+    }
+
+    if (!fp) {
+        rangerLoadFailed = true;
+        return;
+    }
+
+    char magic[4];
+    uint32_t numVerts = 0;
+    if (fread(magic, 1, 4, fp) != 4 || memcmp(magic, "RNGR", 4) != 0 ||
+        fread(&numVerts, sizeof(uint32_t), 1, fp) != 1 || numVerts == 0) {
+        fclose(fp);
+        rangerLoadFailed = true;
+        return;
+    }
+
+    std::vector<EnduVert> verts(numVerts);
+    size_t readCount = fread(&verts[0], sizeof(EnduVert), numVerts, fp);
+    fclose(fp);
+
+    if (readCount != numVerts) {
+        rangerLoadFailed = true;
+        return;
+    }
+
+    rangerList = glGenLists(1);
+    glNewList(rangerList, GL_COMPILE);
+
+    if (rangerTexID) {
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, rangerTexID);
+        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    }
+
+    glEnable(GL_COLOR_MATERIAL);
+    glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+
+    GLfloat spec[] = { 0.82f, 0.82f, 0.88f, 1.0f };
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec);
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 64.0f);
+
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_NORMAL_ARRAY);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    glEnableClientState(GL_COLOR_ARRAY);
+
+    glVertexPointer(3, GL_FLOAT, sizeof(EnduVert), &verts[0].x);
+    glNormalPointer(GL_FLOAT, sizeof(EnduVert), &verts[0].nx);
+    glTexCoordPointer(2, GL_FLOAT, sizeof(EnduVert), &verts[0].u);
+    glColorPointer(3, GL_FLOAT, sizeof(EnduVert), &verts[0].r);
+
+    glDrawArrays(GL_TRIANGLES, 0, (GLsizei)numVerts);
+
+    glDisableClientState(GL_COLOR_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+    glDisableClientState(GL_NORMAL_ARRAY);
+    glDisableClientState(GL_VERTEX_ARRAY);
+
+    glDisable(GL_COLOR_MATERIAL);
+    if (rangerTexID) {
+        glDisable(GL_TEXTURE_2D);
+    }
+
+    glEndList();
+    rangerLoaded = true;
+}
+
 static void loadEnduranceModel() {
     if (enduranceLoaded || enduranceLoadFailed) return;
 
@@ -324,6 +438,8 @@ void renderEnduranceShip() {
 }
 
 void renderRangerLander() {
+    loadRangerModel();
+
     glPushMatrix();
     glTranslatef(rangerPosX, rangerPosY, rangerPosZ);
 
@@ -336,66 +452,144 @@ void renderRangerLander() {
     glRotatef(pitch + rangerPitchExtra, 1.0f, 0.0f, 0.0f);
     glRotatef(rangerRollAngle, 0.0f, 0.0f, 1.0f);
 
-    glScalef(0.19f, 0.19f, 0.19f);
+    float rScale = 0.16f;
+    glScalef(rScale, rScale, rScale);
 
-    GLfloat zeroEmit[]     = { 0.0f, 0.0f, 0.0f, 1.0f };
-    GLfloat rangerWhite[]  = { 0.88f, 0.90f, 0.94f, 1.0f };
-    GLfloat rangerDark[]   = { 0.14f, 0.15f, 0.18f, 1.0f };
-    GLfloat rangerGlass[]  = { 0.08f, 0.12f, 0.18f, 1.0f };
+    if (rangerLoaded && rangerList) {
+        glCallList(rangerList);
+    } else {
+        GLfloat zeroEmit[]     = { 0.0f, 0.0f, 0.0f, 1.0f };
+        GLfloat rangerWhite[]  = { 0.88f, 0.90f, 0.94f, 1.0f };
+        GLfloat rangerDark[]   = { 0.14f, 0.15f, 0.18f, 1.0f };
+        GLfloat rangerGlass[]  = { 0.08f, 0.12f, 0.18f, 1.0f };
 
-    // Ranger Faceted Lifting-Body Fuselage
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, rangerWhite);
-    glBegin(GL_TRIANGLES);
-        // Top deck forward slope
-        glNormal3f(0.0f, 0.707f, 0.707f);
-        glVertex3f(0.0f,   0.14f,  0.88f);
-        glVertex3f(-0.35f, 0.02f, -0.22f);
-        glVertex3f(0.35f,  0.02f, -0.22f);
+        // Ranger Faceted Lifting-Body Fuselage
+        glMaterialfv(GL_FRONT, GL_DIFFUSE, rangerWhite);
+        glBegin(GL_TRIANGLES);
+            glNormal3f(0.0f, 0.707f, 0.707f);
+            glVertex3f(0.0f,   0.14f,  0.88f);
+            glVertex3f(-0.35f, 0.02f, -0.22f);
+            glVertex3f(0.35f,  0.02f, -0.22f);
 
-        // Aft upper deck
-        glNormal3f(0.0f, 1.0f, 0.0f);
-        glVertex3f(-0.35f, 0.02f, -0.22f);
-        glVertex3f(-0.52f, 0.00f, -0.85f);
-        glVertex3f(0.52f,  0.00f, -0.85f);
+            glNormal3f(0.0f, 1.0f, 0.0f);
+            glVertex3f(-0.35f, 0.02f, -0.22f);
+            glVertex3f(-0.52f, 0.00f, -0.85f);
+            glVertex3f(0.52f,  0.00f, -0.85f);
 
-        glVertex3f(-0.35f, 0.02f, -0.22f);
-        glVertex3f(0.52f,  0.00f, -0.85f);
-        glVertex3f(0.35f,  0.02f, -0.22f);
-    glEnd();
+            glVertex3f(-0.35f, 0.02f, -0.22f);
+            glVertex3f(0.52f,  0.00f, -0.85f);
+            glVertex3f(0.35f,  0.02f, -0.22f);
+        glEnd();
 
-    // Carbon-phenolic thermal belly heatshield
-    GLfloat heatEmit[4] = {
-        heatshieldThermal * 1.6f,
-        heatshieldThermal * 0.72f,
-        heatshieldThermal * 0.16f,
-        1.0f
-    };
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, rangerDark);
-    glMaterialfv(GL_FRONT, GL_EMISSION, heatEmit);
-    glBegin(GL_QUADS);
-        glNormal3f(0.0f, -1.0f, 0.0f);
-        glVertex3f(0.0f,   -0.12f,  0.88f);
-        glVertex3f(-0.54f, -0.06f, -0.85f);
-        glVertex3f(0.54f,  -0.06f, -0.85f);
-        glVertex3f(0.0f,   -0.12f,  0.88f);
-    glEnd();
-    glMaterialfv(GL_FRONT, GL_EMISSION, zeroEmit);
+        GLfloat heatEmit[4] = {
+            heatshieldThermal * 1.6f,
+            heatshieldThermal * 0.72f,
+            heatshieldThermal * 0.16f,
+            1.0f
+        };
+        glMaterialfv(GL_FRONT, GL_DIFFUSE, rangerDark);
+        glMaterialfv(GL_FRONT, GL_EMISSION, heatEmit);
+        glBegin(GL_QUADS);
+            glNormal3f(0.0f, -1.0f, 0.0f);
+            glVertex3f(0.0f,   -0.12f,  0.88f);
+            glVertex3f(-0.54f, -0.06f, -0.85f);
+            glVertex3f(0.54f,  -0.06f, -0.85f);
+            glVertex3f(0.0f,   -0.12f,  0.88f);
+        glEnd();
+        glMaterialfv(GL_FRONT, GL_EMISSION, zeroEmit);
 
-    // Dark Cockpit Canopy
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, rangerGlass);
-    glPushMatrix();
-    glTranslatef(0.0f, 0.08f, 0.32f);
-    glScalef(0.20f, 0.08f, 0.38f);
-    glutSolidCube(1.0);
-    glPopMatrix();
-
-    // Twin Main Propulsion Nozzles
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, rangerDark);
-    for (float side = -1.0f; side <= 1.0f; side += 2.0f) {
+        glMaterialfv(GL_FRONT, GL_DIFFUSE, rangerGlass);
         glPushMatrix();
-        glTranslatef(side * 0.22f, -0.02f, -0.92f);
-        glutSolidCone(0.07f, 0.18f, 12, 3);
+        glTranslatef(0.0f, 0.08f, 0.32f);
+        glScalef(0.20f, 0.08f, 0.38f);
+        glutSolidCube(1.0);
         glPopMatrix();
+    }
+
+    // 1. Cold-Gas RCS Thruster Puffs
+    if (rcsActive > 0.0f) {
+        glDisable(GL_LIGHTING);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+        glLineWidth(2.5f);
+        glColor4f(0.85f, 0.95f, 1.0f, 0.75f * rcsActive);
+        glBegin(GL_LINES);
+            glVertex3f(-0.55f, 0.0f, 0.2f); glVertex3f(-1.1f, 0.0f, 0.1f);
+            glVertex3f( 0.55f, 0.0f, 0.2f); glVertex3f( 1.1f, 0.0f, 0.1f);
+            glVertex3f(-0.45f, 0.1f, -0.4f); glVertex3f(-0.9f, 0.2f, -0.5f);
+            glVertex3f( 0.45f, 0.1f, -0.4f); glVertex3f( 0.9f, 0.2f, -0.5f);
+        glEnd();
+        glLineWidth(1.0f);
+        glDisable(GL_BLEND);
+        glEnable(GL_LIGHTING);
+    }
+
+    // 2. Twin Main Propulsion De-Orbit Flame Plumes
+    if (mainBurnActive > 0.0f) {
+        glDisable(GL_LIGHTING);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+
+        float burnFlicker = 0.85f + 0.15f * sinf(totalTime * 45.0f);
+        float flameLen = 2.4f * mainBurnActive * burnFlicker;
+
+        for (float side = -0.32f; side <= 0.35f; side += 0.64f) {
+            glPushMatrix();
+            glTranslatef(side, 0.0f, -0.92f);
+
+            glColor4f(0.70f, 0.92f, 1.0f, 0.95f);
+            glBegin(GL_TRIANGLE_FAN);
+                glVertex3f(0.0f, 0.0f, -flameLen);
+                for (int deg = 0; deg <= 360; deg += 45) {
+                    float rad = deg * 3.14159f / 180.0f;
+                    glColor4f(0.20f, 0.65f, 1.0f, 0.0f);
+                    glVertex3f(cosf(rad) * 0.18f, sinf(rad) * 0.18f, 0.0f);
+                }
+            glEnd();
+
+            glColor4f(0.15f, 0.55f, 1.0f, 0.70f);
+            glBegin(GL_TRIANGLE_FAN);
+                glVertex3f(0.0f, 0.0f, -flameLen * 1.35f);
+                for (int deg = 0; deg <= 360; deg += 45) {
+                    float rad = deg * 3.14159f / 180.0f;
+                    glColor4f(0.05f, 0.25f, 0.85f, 0.0f);
+                    glVertex3f(cosf(rad) * 0.32f, sinf(rad) * 0.32f, 0.0f);
+                }
+            glEnd();
+
+            glPopMatrix();
+        }
+
+        glDisable(GL_BLEND);
+        glEnable(GL_LIGHTING);
+    }
+
+    // 3. Hypersonic Plasma Bow Shock & Belly Incandescence
+    if (heatshieldThermal > 0.05f) {
+        glDisable(GL_LIGHTING);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+
+        float shockFlicker = 0.90f + 0.10f * sinf(totalTime * 32.0f);
+        float shockAlpha = heatshieldThermal * 0.75f * shockFlicker;
+
+        glColor4f(1.0f, 0.55f, 0.12f, shockAlpha);
+        glPushMatrix();
+        glTranslatef(0.0f, -0.05f, 0.85f);
+        glScalef(1.25f, 0.75f, 1.0f);
+        glBegin(GL_TRIANGLE_FAN);
+            glColor4f(1.0f, 0.85f, 0.45f, shockAlpha);
+            glVertex3f(0.0f, 0.0f, 0.35f);
+            for (int deg = 0; deg <= 360; deg += 30) {
+                float rad = deg * 3.14159f / 180.0f;
+                glColor4f(0.95f, 0.25f, 0.05f, 0.0f);
+                glVertex3f(cosf(rad) * 0.85f, sinf(rad) * 0.45f, -0.75f);
+            }
+        glEnd();
+        glPopMatrix();
+
+        glDisable(GL_BLEND);
+        glEnable(GL_LIGHTING);
     }
 
     glPopMatrix();
