@@ -78,7 +78,9 @@ void display() {
     // 3. Mars & Atmosphere (reveals smoothly at 6.0s)
     if (seqTime >= 5.8f) {
         renderMarsAndAtmosphere();
-        renderEnduranceShip();
+        if (seqTime < 39.0f) {
+            renderEnduranceShip();
+        }
         if (rangerDetached && seqTime >= 39.0f) {
             renderRangerLander();
         }
