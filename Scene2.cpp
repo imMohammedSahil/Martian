@@ -55,31 +55,30 @@ void updateScene2(float dt) {
         }
     }
     else if (t < 46.0f) {
-        // SHOT 2: SIDE PROFILE CRUISE (39.0s - 46.0s)
-        // Mars curve on TOP-RIGHT, Ranger on left traveling rightward toward Mars
+        // SHOT 2: DIAGONAL DESCENT TOWARD MARS (39.0s - 46.0s)
+        // Starts close & big at top-left, cruises diagonally down-right toward Mars horizon
         // Stays strictly in upper atmosphere (altitude > 2.26, Mars radius is 2.20)
         float u = (t - 39.0f) / 7.0f;
         float smoothU = smoothstep(0.0f, 1.0f, u);
 
-        // Ranger flies from left to right across the screen above Mars surface
-        rangerPosX = lerpf(-2.40f, -0.60f, smoothU);
-        rangerPosY = lerpf(-0.60f, -0.52f, smoothU);
-        rangerPosZ = lerpf( 2.30f,  2.26f, smoothU);
+        rangerPosX = lerpf(-2.50f, -0.60f, smoothU);
+        rangerPosY = lerpf( 1.40f,  0.28f, smoothU);
+        rangerPosZ = lerpf( 3.10f,  2.48f, smoothU);
 
-        // Directed horizontally rightward toward Mars
-        rangerDirX = 0.998f;
-        rangerDirY = 0.04f;
-        rangerDirZ = -0.02f;
+        // Direction along diagonal descent path (downwards and rightwards toward Mars)
+        rangerDirX =  0.86f;
+        rangerDirY = -0.47f;
+        rangerDirZ = -0.20f;
         normalize3(rangerDirX, rangerDirY, rangerDirZ);
 
-        rangerPitchExtra = -2.0f;
-        rangerRollAngle  = 4.0f;
+        rangerPitchExtra = -8.0f;
+        rangerRollAngle  = 12.0f;
 
         rcsActive = 0.0f;
         mainBurnActive = (t >= 39.2f) ? 1.0f : 0.0f;
         heatshieldThermal = 0.0f;
 
-        // Twin main propulsion trail particles shooting backwards to the left
+        // Exhaust trail particles shooting backwards up and to the left
         if (mainBurnActive > 0.0f) {
             float exX = rangerPosX - rangerDirX * 0.35f;
             float exY = rangerPosY - rangerDirY * 0.35f;
@@ -88,43 +87,42 @@ void updateScene2(float dt) {
                 spawnParticle(exX + randRange(-0.02f, 0.02f),
                               exY + randRange(-0.02f, 0.02f),
                               exZ + randRange(-0.02f, 0.02f),
-                              -rangerDirX * 1.5f + randRange(-0.08f, 0.08f),
-                              -rangerDirY * 1.5f + randRange(-0.04f, 0.04f),
-                              -rangerDirZ * 1.5f + randRange(-0.08f, 0.08f),
+                              -rangerDirX * 1.4f + randRange(-0.06f, 0.06f),
+                              -rangerDirY * 1.4f + randRange(-0.06f, 0.06f),
+                              -rangerDirZ * 1.4f + randRange(-0.06f, 0.06f),
                               0.4f, randRange(2.5f, 4.0f),
                               0.35f, 0.75f, 1.0f, true);
             }
         }
     }
     else {
-        // SHOT 3: RECEDING INTO DISTANCE (46.0s - 56.0s)
-        // "It keeps going on -> small dot it becomes"
-        // Curves over the Martian horizon into the deep background (altitude ~2.38 > 2.20)
+        // SHOT 3: CROSSING HORIZON & SHRINKING TO PINPOINT DOT (46.0s - 56.0s)
+        // Crosses over the curved Martian limb into the upper atmosphere (alt ~0.11 above surface)
+        // Shrinks from small craft down to a tiny dot over the red Martian landscape
         float u = (t - 46.0f) / 10.0f;
 
-        rangerPosX = lerpf(-0.60f,  0.95f, u);
-        rangerPosY = lerpf(-0.52f, -0.42f, u);
-        rangerPosZ = lerpf( 2.26f,  2.16f, u);
+        rangerPosX = lerpf(-0.60f,  0.65f, u);
+        rangerPosY = lerpf( 0.28f, -0.32f, u);
+        rangerPosZ = lerpf( 2.48f,  2.24f, u);
 
-        rangerDirX = 0.998f;
-        rangerDirY = 0.04f;
-        rangerDirZ = -0.02f;
+        rangerDirX =  0.86f;
+        rangerDirY = -0.47f;
+        rangerDirZ = -0.20f;
         normalize3(rangerDirX, rangerDirY, rangerDirZ);
 
-        rangerPitchExtra = -2.0f;
-        rangerRollAngle  = 3.0f;
+        rangerPitchExtra = -8.0f;
+        rangerRollAngle  = 8.0f;
 
         rcsActive = 0.0f;
-        mainBurnActive = 1.0f; // continuous cruise burn
-        heatshieldThermal = smoothstep(49.0f, 54.0f, t) * 0.35f;
+        mainBurnActive = 1.0f;
+        heatshieldThermal = smoothstep(48.0f, 54.0f, t) * 0.45f;
 
-        // Faint wake trail
         if (rand() % 2 == 0) {
             float exX = rangerPosX - rangerDirX * 0.35f;
-            float exY = rangerPosY;
+            float exY = rangerPosY - rangerDirY * 0.35f;
             float exZ = rangerPosZ - rangerDirZ * 0.35f;
             spawnParticle(exX, exY, exZ,
-                          -rangerDirX * 1.2f, 0.0f, -rangerDirZ * 1.2f,
+                          -rangerDirX * 1.2f, -rangerDirY * 1.2f, -rangerDirZ * 1.2f,
                           0.35f, 2.2f, 0.4f, 0.8f, 1.0f, true);
         }
     }
@@ -163,27 +161,27 @@ void computeCameraScene2(float& eyeX, float& eyeY, float& eyeZ,
         targetZ = 2.45f;
     }
     else if (t < 46.0f) {
-        // SHOT 2 (39.0s - 46.0s): Side Profile Shot (Panel 2)
-        // Mars curve on TOP-RIGHT, Ranger on the left flying rightward
+        // SHOT 2 (39.0s - 46.0s): Diagonal Descent Profile Shot
+        // Mars curve occupies bottom-right, Ranger enters top-left
         float u = (t - 39.0f) / 7.0f;
-        eyeX = lerpf(-0.60f, -0.50f, u);
-        eyeY = lerpf(-0.85f, -0.80f, u);
-        eyeZ = lerpf( 3.80f,  3.70f, u);
+        eyeX = lerpf(-1.60f, -1.50f, u);
+        eyeY = lerpf( 0.90f,  0.85f, u);
+        eyeZ = lerpf( 4.00f,  3.90f, u);
 
-        targetX = lerpf(-1.50f, -1.25f, u);
-        targetY = -0.60f;
-        targetZ = 1.60f;
+        targetX = lerpf(-0.80f, -0.65f, u);
+        targetY = -0.20f;
+        targetZ = 0.80f;
     }
     else {
-        // SHOT 3 (46.0s - 56.0s): The Great Martian Expanse (Panel 3)
-        // Camera holds wide as Ranger shrinks into a tiny dot near the top-right Mars curve
+        // SHOT 3 (46.0s - 56.0s): Receding Over Mars Surface
+        // Camera holds wide as Ranger shrinks into a tiny dot descending over the Martian surface
         float u = (t - 46.0f) / 10.0f;
-        eyeX = lerpf(-0.50f, -0.40f, u);
-        eyeY = lerpf(-0.80f, -0.75f, u);
-        eyeZ = lerpf( 3.70f,  3.75f, u);
+        eyeX = lerpf(-1.50f, -1.40f, u);
+        eyeY = lerpf( 0.85f,  0.80f, u);
+        eyeZ = lerpf( 3.90f,  3.95f, u);
 
-        targetX = lerpf(-1.25f, -0.90f, u);
-        targetY = -0.55f;
-        targetZ = 1.55f;
+        targetX = lerpf(-0.65f, -0.40f, u);
+        targetY = -0.25f;
+        targetZ = 0.75f;
     }
 }
