@@ -420,6 +420,53 @@ void renderEnduranceShip() {
         glPopMatrix();
     }
 
+    // Shot 1 (35.0s - 39.0s): Small rectangular craft emerges out from behind the central hub
+    if (seqTime >= 35.0f && seqTime < 39.0f) {
+        float u = (seqTime - 35.0f) / 4.0f;
+        float smoothU = smoothstep(0.0f, 1.0f, u);
+
+        glPushMatrix();
+        // Slides out backwards (-Z) from behind the central hub
+        float detachZ = lerpf(0.02f, -1.15f, smoothU);
+        float dropY   = lerpf(0.0f, -0.22f, smoothU);
+        glTranslatef(0.0f, dropY, detachZ);
+        glRotatef(lerpf(0.0f, -16.0f, smoothU), 1.0f, 0.0f, 0.0f);
+
+        GLfloat podWhite[] = { 0.92f, 0.94f, 0.96f, 1.0f };
+        GLfloat podDark[]  = { 0.16f, 0.18f, 0.22f, 1.0f };
+        GLfloat zeroEmit[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+
+        // Sleek rectangular body
+        glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, podWhite);
+        drawBox(0.08f, 0.038f, 0.20f);
+
+        // Dark thermal underside
+        glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, podDark);
+        glPushMatrix();
+        glTranslatef(0.0f, -0.012f, 0.0f);
+        drawBox(0.082f, 0.016f, 0.202f);
+        glPopMatrix();
+
+        // Dark canopy strip on top
+        glPushMatrix();
+        glTranslatef(0.0f, 0.018f, 0.04f);
+        drawBox(0.045f, 0.012f, 0.07f);
+        glPopMatrix();
+
+        // Tiny RCS / thruster glint at rear
+        if (u > 0.15f && u < 0.90f) {
+            GLfloat rcsBlue[] = { 0.3f, 0.75f, 1.0f, 1.0f };
+            glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, rcsBlue);
+            glPushMatrix();
+            glTranslatef(0.0f, 0.0f, -0.11f);
+            glutSolidSphere(0.016f, 8, 6);
+            glPopMatrix();
+            glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, zeroEmit);
+        }
+
+        glPopMatrix();
+    }
+
     glPopMatrix(); // End spinning ring
 
     // Interstellar beacon: at scale distance, render crisp anti-aliased luminous point & strobe

@@ -79,7 +79,7 @@ void display() {
     if (seqTime >= 5.8f) {
         renderMarsAndAtmosphere();
         renderEnduranceShip();
-        if (rangerDetached) {
+        if (rangerDetached && seqTime >= 39.0f) {
             renderRangerLander();
         }
     }
