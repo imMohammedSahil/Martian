@@ -61,9 +61,9 @@ void updateScene2(float dt) {
         u = clampf(u, 0.0f, 1.0f);
 
         // Cubic Bezier curve control points:
-        // P0 matches commit 15ab35d entrance at scale 2.40: (-8.20, -1.75, 3.20)
-        const float p0x =  -8.20f, p0y = -1.75f, p0z =  3.20f;
-        const float p1x =  -4.20f, p1y = -0.30f, p1z =  2.30f;
+        // Calibrated start for scale 1.20: enters cleanly from off-screen bottom-left
+        const float p0x =  -6.80f, p0y = -1.15f, p0z =  2.95f;
+        const float p1x =  -3.80f, p1y = -0.20f, p1z =  2.20f;
         const float p2x =  -2.50f, p2y =  0.10f, p2z =  1.40f;
         const float p3x =  -1.20f, p3y = -0.55f, p3z =  0.60f;
 
