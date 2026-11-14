@@ -61,9 +61,9 @@ void updateScene2(float dt) {
         u = clampf(u, 0.0f, 1.0f);
 
         // Cubic Bezier curve control points:
-        // Calibrated start for scale 0.75: enters cleanly from off-screen bottom-left
-        const float p0x =  -5.80f, p0y = -0.85f, p0z =  2.75f;
-        const float p1x =  -3.50f, p1y = -0.15f, p1z =  2.20f;
+        // Calibrated start for scale 0.50: enters cleanly from off-screen bottom-left
+        const float p0x =  -5.20f, p0y = -0.65f, p0z =  2.60f;
+        const float p1x =  -3.30f, p1y = -0.10f, p1z =  2.15f;
         const float p2x =  -2.40f, p2y =  0.25f, p2z =  1.65f;
         const float p3x =  -1.55f, p3y = -0.15f, p3z =  1.85f;
 
