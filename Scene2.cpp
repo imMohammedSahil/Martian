@@ -56,14 +56,14 @@ void updateScene2(float dt) {
     }
     else if (t < 46.0f) {
         // SHOT 2: STARTS OFF-SCREEN BOTTOM-LEFT, FLIES INTO SCREEN TOWARD MARS (39.0s - 46.0s)
-        // Starts completely off-screen at bottom-left (X = -5.40, Y = -0.55), enters into frame,
-        // and travels diagonally rightward and deeper towards Mars horizon.
+        // STARTS COMPLETELY OFF-SCREEN AT BOTTOM-LEFT WITH LARGE HERO SCALE
+        // Starts at X = -5.80, Y = -0.75 so the much larger ship cleanly enters from outside the screen
         float u = (t - 39.0f) / 7.0f;
         float smoothU = smoothstep(0.0f, 1.0f, u);
 
-        rangerPosX = lerpf(-5.40f, -3.10f, smoothU);
-        rangerPosY = lerpf(-0.55f,  0.15f, smoothU);
-        rangerPosZ = lerpf( 2.70f,  1.60f, smoothU);
+        rangerPosX = lerpf(-5.80f, -3.10f, smoothU);
+        rangerPosY = lerpf(-0.75f,  0.15f, smoothU);
+        rangerPosZ = lerpf( 2.80f,  1.60f, smoothU);
 
         // Direction: pointing right (+X), up (+Y), into depth (-Z)
         rangerDirX =  0.88f;
