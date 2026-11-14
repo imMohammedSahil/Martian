@@ -145,26 +145,27 @@ void computeCameraScene2(float& eyeX, float& eyeY, float& eyeZ,
         targetY = -0.20f;
         targetZ =  0.85f;
 
-        // Realistic Brief Camera Shockwave Jolt (0.85s quick supersonic displacement + micro-vibrations)
-        if (t >= 39.05f && t <= 39.90f) {
-            float dtShake = t - 39.05f;
-            float progress = dtShake / 0.85f; // 0.85 second brief impulse
-            // Rapid shock impulse wave: peaks instantly at ~0.15s then dampens quickly
-            float envelope = sinf(progress * (float)M_PI) * expf(-progress * 3.8f);
+        // Powerful Visible Flyby Camera Shockwave Shake:
+        // Triggers as screen un-blacks and the supersonic ship sweeps across bottom-left (39.3s - 40.8s)
+        if (t >= 39.30f && t <= 40.80f) {
+            float dtShake = t - 39.30f;
+            float progress = dtShake / 1.50f; // 1.5s total visible rumble
+            // Sharp impulse that gently decays as ship passes
+            float envelope = sinf(progress * (float)M_PI * 0.5f + (float)M_PI * 0.5f) * expf(-progress * 2.2f);
 
-            // Perlin-style organic layered harmonics (vertical jolt dominant with subtle roll/yaw)
-            float joltY = (sinf(dtShake * 85.0f) * 0.65f + sinf(dtShake * 140.0f) * 0.35f) * envelope * 0.038f;
-            float joltX = (cosf(dtShake * 70.0f) * 0.55f + sinf(dtShake * 115.0f) * 0.45f) * envelope * 0.022f;
-            float joltZ = sinf(dtShake * 95.0f) * envelope * 0.015f;
+            // Prominent visible displacement: vertical thud + horizontal shudder + roll tilt
+            float joltY = (sinf(dtShake * 55.0f) * 0.70f + sinf(dtShake * 90.0f) * 0.30f) * envelope * 0.16f;
+            float joltX = (cosf(dtShake * 42.0f) * 0.65f + sinf(dtShake * 75.0f) * 0.35f) * envelope * 0.11f;
+            float joltZ = sinf(dtShake * 60.0f) * envelope * 0.08f;
 
             eyeX += joltX;
             eyeY += joltY;
             eyeZ += joltZ;
-            targetX += joltX * 0.35f;
-            targetY += joltY * 0.35f;
+            targetX += joltX * 0.20f;
+            targetY += joltY * 0.20f;
 
-            // Micro camera roll twist from acoustic wake
-            upX += cosf(dtShake * 60.0f) * envelope * 0.018f;
+            // Camera roll shake
+            upX += cosf(dtShake * 45.0f) * envelope * 0.085f;
         }
     }
     else {
