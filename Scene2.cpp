@@ -151,19 +151,19 @@ void computeCameraScene2(float& eyeX, float& eyeY, float& eyeZ,
             float progress = dtShake / 1.0f; // 1.0s duration
             float envelope = sinf(progress * (float)M_PI) * expf(-progress * 2.8f);
 
-            // Balanced amplitude: clearly visible but subtle and cinematic
-            float joltY = sinf(dtShake * 55.0f) * envelope * 0.055f;
-            float joltX = cosf(dtShake * 42.0f) * envelope * 0.035f;
-            float joltZ = sinf(dtShake * 60.0f) * envelope * 0.020f;
+            // Very subtle, refined cinematic shudder (soft acoustic wake)
+            float joltY = sinf(dtShake * 55.0f) * envelope * 0.028f;
+            float joltX = cosf(dtShake * 42.0f) * envelope * 0.018f;
+            float joltZ = sinf(dtShake * 60.0f) * envelope * 0.010f;
 
             eyeX += joltX;
             eyeY += joltY;
             eyeZ += joltZ;
-            targetX += joltX * 0.25f;
-            targetY += joltY * 0.25f;
+            targetX += joltX * 0.20f;
+            targetY += joltY * 0.20f;
 
-            // Subtle camera roll
-            upX += cosf(dtShake * 45.0f) * envelope * 0.022f;
+            // Delicate camera roll
+            upX += cosf(dtShake * 45.0f) * envelope * 0.011f;
         }
     }
     else {
