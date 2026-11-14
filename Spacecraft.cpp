@@ -684,14 +684,14 @@ void renderRangerLander() {
 
     // 3. Atmospheric heatshield glow removed (clean deep space flight)
 
-    // 4. Brilliant Radiant Beacon Dot: shrinks progressively from small flare down to micro-pixel dot and vanishes
-    if (seqTime >= 40.5f && seqTime <= 44.5f) {
-        float progress = (seqTime - 40.5f) / 4.0f; // 40.5s -> 44.5s
+    // 4. Brilliant Radiant Beacon Dot: shrinks down to micro-pixel dot and disappears at 43.20s
+    if (seqTime >= 40.5f && seqTime <= 43.20f) {
+        float progress = (seqTime - 40.5f) / 2.70f; // 40.5s -> 43.2s
         progress = clampf(progress, 0.0f, 1.0f);
 
-        // Point sizes continuously diminish down to 1.0f pixel then extinguish
+        // Point sizes continuously diminish down to 1.0f pixel then extinguish at 43.20s
         float coreSize = lerpf(5.0f, 1.0f, progress);
-        float haloSize = lerpf(12.0f, 2.0f, progress);
+        float haloSize = lerpf(12.0f, 1.5f, progress);
         float alpha = lerpf(1.0f, 0.0f, progress * progress); // smoothly fades out as it shrinks away
 
         if (alpha > 0.02f) {
