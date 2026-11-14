@@ -684,39 +684,41 @@ void renderRangerLander() {
 
     // 3. Atmospheric heatshield glow removed (clean deep space flight)
 
-    // 4. Brilliant Radiant Beacon Dot: as it recedes and disappears, it shines as an intense bright dot
-    if (seqTime >= 40.5f) {
-        float dotU = clampf((seqTime - 40.5f) / 2.7f, 0.0f, 1.0f); // glows into full brightness as it shrinks
-        float dotIntensity = smoothstep(0.0f, 1.0f, dotU);
-        float fade = (seqTime > 45.0f) ? (1.0f - smoothstep(45.0f, 47.0f, seqTime)) : 1.0f;
+    // 4. Brilliant Radiant Beacon Dot: shrinks progressively from small flare down to micro-pixel dot and vanishes
+    if (seqTime >= 40.5f && seqTime <= 44.5f) {
+        float progress = (seqTime - 40.5f) / 4.0f; // 40.5s -> 44.5s
+        progress = clampf(progress, 0.0f, 1.0f);
 
-        glDisable(GL_LIGHTING);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+        // Point sizes continuously diminish down to 1.0f pixel then extinguish
+        float coreSize = lerpf(5.0f, 1.0f, progress);
+        float haloSize = lerpf(12.0f, 2.0f, progress);
+        float alpha = lerpf(1.0f, 0.0f, progress * progress); // smoothly fades out as it shrinks away
 
-        // Core brilliant white pinpoint
-        glPointSize(6.0f);
-        glBegin(GL_POINTS);
-            glColor4f(1.0f, 1.0f, 1.0f, dotIntensity * fade);
-            glVertex3f(0.0f, 0.0f, 0.0f);
-        glEnd();
+        if (alpha > 0.02f) {
+            glDisable(GL_LIGHTING);
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
-        // Radiant cyan/gold halo flare
-        glPointSize(12.0f);
-        glBegin(GL_POINTS);
-            glColor4f(0.65f, 0.88f, 1.0f, 0.65f * dotIntensity * fade);
-            glVertex3f(0.0f, 0.0f, 0.0f);
-        glEnd();
+            // Halo shrinks continuously
+            if (haloSize >= 1.5f) {
+                glPointSize(haloSize);
+                glBegin(GL_POINTS);
+                    glColor4f(0.55f, 0.85f, 1.0f, 0.50f * alpha);
+                    glVertex3f(0.0f, 0.0f, 0.0f);
+                glEnd();
+            }
 
-        glPointSize(18.0f);
-        glBegin(GL_POINTS);
-            glColor4f(0.40f, 0.70f, 1.0f, 0.30f * dotIntensity * fade);
-            glVertex3f(0.0f, 0.0f, 0.0f);
-        glEnd();
+            // Core pinpoint shrinks continuously down to single sub-pixel dot
+            glPointSize(coreSize);
+            glBegin(GL_POINTS);
+                glColor4f(1.0f, 1.0f, 1.0f, alpha);
+                glVertex3f(0.0f, 0.0f, 0.0f);
+            glEnd();
 
-        glPointSize(1.0f);
-        glDisable(GL_BLEND);
-        glEnable(GL_LIGHTING);
+            glPointSize(1.0f);
+            glDisable(GL_BLEND);
+            glEnable(GL_LIGHTING);
+        }
     }
 
     glDisable(GL_LIGHT2);
