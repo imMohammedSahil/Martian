@@ -161,6 +161,26 @@ void computeCameraScene2(float& eyeX, float& eyeY, float& eyeZ,
         targetX = lerpf(-3.45f, -3.35f, u);
         targetY = -0.20f;
         targetZ =  0.85f;
+
+        // Cinematic Flyby Camera Jolt / Rumble Shake:
+        // Triggers as the supersonic ship blasts right past the camera lens (39.0s - 41.5s)
+        if (t >= 39.05f && t <= 41.5f) {
+            float shakeProgress = (t - 39.05f) / 2.45f;
+            // Envelope: sharp initial strike followed by rapid exponential decay
+            float shakeAmp = (1.0f - shakeProgress) * expf(-shakeProgress * 2.5f) * 0.048f;
+            float freq = totalTime * 65.0f; // fast turbulent vibration
+            float freq2 = totalTime * 48.0f;
+
+            float shakeX = sinf(freq) * shakeAmp;
+            float shakeY = cosf(freq * 1.3f) * (shakeAmp * 0.85f);
+            float shakeZ = sinf(freq2) * (shakeAmp * 0.5f);
+
+            eyeX += shakeX;
+            eyeY += shakeY;
+            eyeZ += shakeZ;
+            targetX += shakeX * 0.5f;
+            targetY += shakeY * 0.5f;
+        }
     }
     else {
         // SHOT 3 (46.0s - 56.0s): Receding Over Mars Surface on the right
