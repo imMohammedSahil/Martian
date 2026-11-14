@@ -56,14 +56,14 @@ void updateScene2(float dt) {
     }
     else if (t < 46.0f) {
         // SHOT 2: STARTS OFF-SCREEN BOTTOM-LEFT, FLIES INTO SCREEN TOWARD MARS (39.0s - 46.0s)
-        // STARTS COMPLETELY OFF-SCREEN AT BOTTOM-LEFT WITH COLOSSAL FOREGROUND FLYBY SCALE
-        // Starts at X = -8.20, Y = -1.75 so the colossal foreground ship flies in smoothly across the camera lens
+        // STARTS COMPLETELY OFF-SCREEN AT BOTTOM-LEFT WITH TITANIC FOREGROUND SCALE
+        // Starts at X = -11.50, Y = -2.80 so the titanic ship enters smoothly filling the bottom-left lens
         float u = (t - 39.0f) / 7.0f;
         float smoothU = smoothstep(0.0f, 1.0f, u);
 
-        rangerPosX = lerpf(-8.20f, -3.10f, smoothU);
-        rangerPosY = lerpf(-1.75f,  0.15f, smoothU);
-        rangerPosZ = lerpf( 3.20f,  1.60f, smoothU);
+        rangerPosX = lerpf(-11.50f, -3.10f, smoothU);
+        rangerPosY = lerpf( -2.80f,  0.15f, smoothU);
+        rangerPosZ = lerpf(  3.60f,  1.60f, smoothU);
 
         // Direction: pointing right (+X), up (+Y), into depth (-Z)
         rangerDirX =  0.88f;
