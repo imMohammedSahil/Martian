@@ -99,23 +99,6 @@ void updateScene2(float dt) {
         rcsActive = 0.0f;
         mainBurnActive = (t >= 39.1f && u < 1.0f) ? 1.0f : 0.0f;
         heatshieldThermal = 0.0f; // Pure space vacuum - zero atmospheric entry friction yet
-
-        // High-velocity elongated jet exhaust plume
-        if (mainBurnActive > 0.0f && rangerPosX > -5.20f) {
-            float exX = rangerPosX - rangerDirX * 0.22f;
-            float exY = rangerPosY - rangerDirY * 0.22f;
-            float exZ = rangerPosZ - rangerDirZ * 0.22f;
-            for (int k = 0; k < 3; ++k) {
-                spawnParticle(exX + randRange(-0.015f, 0.015f),
-                              exY + randRange(-0.015f, 0.015f),
-                              exZ + randRange(-0.015f, 0.015f),
-                              -rangerDirX * 2.8f + randRange(-0.08f, 0.08f),
-                              -rangerDirY * 2.8f + randRange(-0.08f, 0.08f),
-                              -rangerDirZ * 2.8f + randRange(-0.08f, 0.08f),
-                              0.42f, randRange(2.5f, 4.0f),
-                              0.35f, 0.75f, 1.0f, true);
-            }
-        }
     }
 
     // Update active particles life
