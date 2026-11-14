@@ -55,60 +55,65 @@ void updateScene2(float dt) {
         }
     }
     else {
-        // SHOTS 2 & 3: CONTINUOUS SMOOTH CURVING FLIGHT PATH INTO MARS (39.0s - 56.0s)
-        // 17 seconds of single continuous Bezier flight — zero cuts, zero stops, zero jerks.
-        float u = (t - 39.0f) / 17.0f; // 0.0 at 39s -> 1.0 at 56s
+        // SHOTS 2 & 3: SUPERSONIC HIGH-SPEED JET DESCENT INTO MARS (39.0s - 46.5s)
+        // High supersonic velocity: flies past like a jet interceptor, reaching horizon dot quickly (in 6.5s)
+        const float FLIGHT_DURATION = 6.5f;
+        float elapsed = t - 39.0f;
+        float u = elapsed / FLIGHT_DURATION;
         u = clampf(u, 0.0f, 1.0f);
+        // Non-linear power curve for dramatic jet acceleration: fast zip past camera, then deceleration into deep distance
+        float speedU = powf(u, 0.75f);
 
-        // Cubic Bezier curve control points:
-        // Calibrated start for scale 0.50: enters cleanly from off-screen bottom-left
-        const float p0x =  -5.20f, p0y = -0.65f, p0z =  2.60f;
-        const float p1x =  -3.30f, p1y = -0.10f, p1z =  2.15f;
-        const float p2x =  -2.40f, p2y =  0.25f, p2z =  1.65f;
-        const float p3x =  -1.55f, p3y = -0.15f, p3z =  1.85f;
+        // Extended trajectory with high velocity
+        const float p0x =  -5.60f, p0y = -0.70f, p0z =  2.65f;
+        const float p1x =  -3.20f, p1y = -0.05f, p1z =  2.10f;
+        const float p2x =  -2.20f, p2y =  0.28f, p2z =  1.65f;
+        const float p3x =  -1.35f, p3y = -0.12f, p3z =  1.85f;
 
-        float invU = 1.0f - u;
+        float invU = 1.0f - speedU;
         float b0 = invU * invU * invU;
-        float b1 = 3.0f * invU * invU * u;
-        float b2 = 3.0f * invU * u * u;
-        float b3 = u * u * u;
+        float b1 = 3.0f * invU * invU * speedU;
+        float b2 = 3.0f * invU * speedU * speedU;
+        float b3 = speedU * speedU * speedU;
 
         rangerPosX = b0 * p0x + b1 * p1x + b2 * p2x + b3 * p3x;
         rangerPosY = b0 * p0y + b1 * p1y + b2 * p2y + b3 * p3y;
         rangerPosZ = b0 * p0z + b1 * p1z + b2 * p2z + b3 * p3z;
 
-        // Exact analytical tangent vector (derivative dP/du) ensures continuous smooth heading
+        // Tangent heading
         float d0 = -3.0f * invU * invU;
-        float d1 =  3.0f * invU * (1.0f - 3.0f * u);
-        float d2 =  3.0f * u * (2.0f - 3.0f * u);
-        float d3 =  3.0f * u * u;
+        float d1 =  3.0f * invU * (1.0f - 3.0f * speedU);
+        float d2 =  3.0f * speedU * (2.0f - 3.0f * speedU);
+        float d3 =  3.0f * speedU * speedU;
 
         rangerDirX = d0 * p0x + d1 * p1x + d2 * p2x + d3 * p3x;
         rangerDirY = d0 * p0y + d1 * p1y + d2 * p2y + d3 * p3y;
         rangerDirZ = d0 * p0z + d1 * p1z + d2 * p2z + d3 * p3z;
         normalize3(rangerDirX, rangerDirY, rangerDirZ);
 
-        // Smooth continuous roll & pitch banking into the curve
+        // Dynamic banking
         rangerPitchExtra = -8.0f;
-        rangerRollAngle  = lerpf(28.0f, 18.0f, u);
+        rangerRollAngle  = lerpf(30.0f, 16.0f, speedU);
 
         rcsActive = 0.0f;
-        mainBurnActive = (t >= 39.1f && t < 55.0f) ? 1.0f : 0.0f;
-        heatshieldThermal = smoothstep(46.0f, 54.0f, t) * 0.45f;
+        mainBurnActive = (t >= 39.1f && u < 1.0f) ? 1.0f : 0.0f;
+        heatshieldThermal = smoothstep(40.5f, 44.5f, t) * 0.45f;
 
-        // Exhaust trail particles along the continuous curve
-        if (mainBurnActive > 0.0f && rangerPosX > -6.0f && (rand() % 2 == 0)) {
+        // High-velocity elongated jet exhaust plume
+        if (mainBurnActive > 0.0f && rangerPosX > -5.20f) {
             float exX = rangerPosX - rangerDirX * 0.22f;
             float exY = rangerPosY - rangerDirY * 0.22f;
             float exZ = rangerPosZ - rangerDirZ * 0.22f;
-            spawnParticle(exX + randRange(-0.015f, 0.015f),
-                          exY + randRange(-0.015f, 0.015f),
-                          exZ + randRange(-0.015f, 0.015f),
-                          -rangerDirX * 1.2f + randRange(-0.05f, 0.05f),
-                          -rangerDirY * 1.2f + randRange(-0.05f, 0.05f),
-                          -rangerDirZ * 1.2f + randRange(-0.05f, 0.05f),
-                          0.35f, randRange(2.0f, 3.5f),
-                          0.35f, 0.75f, 1.0f, true);
+            for (int k = 0; k < 3; ++k) {
+                spawnParticle(exX + randRange(-0.015f, 0.015f),
+                              exY + randRange(-0.015f, 0.015f),
+                              exZ + randRange(-0.015f, 0.015f),
+                              -rangerDirX * 2.8f + randRange(-0.08f, 0.08f),
+                              -rangerDirY * 2.8f + randRange(-0.08f, 0.08f),
+                              -rangerDirZ * 2.8f + randRange(-0.08f, 0.08f),
+                              0.42f, randRange(2.5f, 4.0f),
+                              0.35f, 0.75f, 1.0f, true);
+            }
         }
     }
 
