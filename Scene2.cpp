@@ -55,31 +55,32 @@ void updateScene2(float dt) {
         }
     }
     else if (t < 46.0f) {
-        // SHOT 2: DESCENT FROM RIGHT TO LEFT INTO DEPTH (39.0s - 46.0s)
-        // Starts on right side of screen, angled with roof tilted toward camera,
-        // and travels left and deep into Mars (-Z depth).
+        // SHOT 2: DESCENT FROM SCREEN RIGHT TOWARD MARS ON THE RIGHT (39.0s - 46.0s)
+        // Ranger is on the right side of the screen, oriented in a front 3/4 view
+        // (nose pointed toward Mars and downward, roof tilted up toward camera),
+        // descending from right to left & receding deep into distance (-Z).
         float u = (t - 39.0f) / 7.0f;
         float smoothU = smoothstep(0.0f, 1.0f, u);
 
-        rangerPosX = lerpf( 2.20f, -0.60f, smoothU);
-        rangerPosY = lerpf( 0.45f, -0.15f, smoothU);
-        rangerPosZ = lerpf( 2.50f,  0.50f, smoothU); // travels deep into Mars atmosphere
+        rangerPosX = lerpf( 0.45f, -0.65f, smoothU);
+        rangerPosY = lerpf( 0.65f,  0.10f, smoothU);
+        rangerPosZ = lerpf( 2.20f,  0.80f, smoothU);
 
-        // Direction: travelling left (-X), slightly down (-Y), and away into depth (-Z)
-        rangerDirX = -0.75f;
-        rangerDirY = -0.16f;
-        rangerDirZ = -0.64f;
+        // Direction: moving toward -X, downward -Y, and away -Z
+        rangerDirX = -0.78f;
+        rangerDirY = -0.38f;
+        rangerDirZ = -0.49f;
         normalize3(rangerDirX, rangerDirY, rangerDirZ);
 
-        // Roof tilted toward user screen: roll around flight axis + pitch
-        rangerPitchExtra = 12.0f;
-        rangerRollAngle  = 55.0f;
+        // Front 3/4 view: bank so top roof facets face the camera from above
+        rangerPitchExtra = -8.0f;
+        rangerRollAngle  = -35.0f;
 
         rcsActive = 0.0f;
         mainBurnActive = (t >= 39.2f) ? 1.0f : 0.0f;
         heatshieldThermal = 0.0f;
 
-        // Exhaust trail shooting backward (+X, +Y, +Z)
+        // Exhaust trail
         if (mainBurnActive > 0.0f) {
             float exX = rangerPosX - rangerDirX * 0.25f;
             float exY = rangerPosY - rangerDirY * 0.25f;
@@ -100,17 +101,17 @@ void updateScene2(float dt) {
         // SHOT 3: RECEDING DEEP INTO MARS HORIZON -> SHRINKING TO PINPOINT DOT (46.0s - 56.0s)
         float u = (t - 46.0f) / 10.0f;
 
-        rangerPosX = lerpf(-0.60f, -1.95f, u);
-        rangerPosY = lerpf(-0.15f, -0.48f, u);
-        rangerPosZ = lerpf( 0.50f, -1.80f, u); // deep distance into Mars horizon
+        rangerPosX = lerpf(-0.65f, -1.85f, u);
+        rangerPosY = lerpf( 0.10f, -0.45f, u);
+        rangerPosZ = lerpf( 0.80f, -1.50f, u);
 
-        rangerDirX = -0.68f;
-        rangerDirY = -0.16f;
-        rangerDirZ = -0.71f;
+        rangerDirX = -0.72f;
+        rangerDirY = -0.30f;
+        rangerDirZ = -0.62f;
         normalize3(rangerDirX, rangerDirY, rangerDirZ);
 
-        rangerPitchExtra = 12.0f;
-        rangerRollAngle  = 50.0f;
+        rangerPitchExtra = -8.0f;
+        rangerRollAngle  = -30.0f;
 
         rcsActive = 0.0f;
         mainBurnActive = 1.0f;
@@ -160,25 +161,26 @@ void computeCameraScene2(float& eyeX, float& eyeY, float& eyeZ,
         targetZ = 2.45f;
     }
     else if (t < 46.0f) {
-        // SHOT 2 (39.0s - 46.0s): Camera framing Ranger entering from right, Mars horizon
+        // SHOT 2 (39.0s - 46.0s): Mars placed on right half of screen
+        // Camera positioned to the left & slightly above, viewing Mars on right
         float u = (t - 39.0f) / 7.0f;
-        eyeX = lerpf( 0.20f,  0.30f, u);
-        eyeY = lerpf( 0.95f,  0.90f, u);
-        eyeZ = lerpf( 4.40f,  4.20f, u);
+        eyeX = lerpf(-1.85f, -1.75f, u);
+        eyeY = lerpf( 1.15f,  1.05f, u);
+        eyeZ = lerpf( 4.10f,  3.90f, u);
 
-        targetX = lerpf( 0.30f, -0.20f, u);
-        targetY = -0.10f;
-        targetZ =  0.60f;
+        targetX = lerpf(-0.25f, -0.45f, u);
+        targetY =  0.05f;
+        targetZ =  0.80f;
     }
     else {
-        // SHOT 3 (46.0s - 56.0s): Wide camera view watching Ranger recede into distant Mars curve
+        // SHOT 3 (46.0s - 56.0s): Receding Over Mars Surface toward distant curve
         float u = (t - 46.0f) / 10.0f;
-        eyeX = lerpf( 0.30f,  0.35f, u);
-        eyeY = lerpf( 0.90f,  0.85f, u);
-        eyeZ = lerpf( 4.20f,  4.10f, u);
+        eyeX = lerpf(-1.75f, -1.65f, u);
+        eyeY = lerpf( 1.05f,  0.95f, u);
+        eyeZ = lerpf( 3.90f,  3.80f, u);
 
-        targetX = lerpf(-0.20f, -1.20f, u);
-        targetY = lerpf(-0.10f, -0.30f, u);
-        targetZ = lerpf( 0.60f, -0.60f, u);
+        targetX = lerpf(-0.45f, -1.15f, u);
+        targetY = lerpf( 0.05f, -0.20f, u);
+        targetZ = lerpf( 0.80f, -0.50f, u);
     }
 }
