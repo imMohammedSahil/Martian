@@ -39,7 +39,7 @@ static bool   soundTriggered = false;
 // Dynamic Scene 3 Lander State
 static float s3ShipX = 0.0f, s3ShipY = 0.0f, s3ShipZ = 0.0f;
 static float s3ShipDirX = 0.0f, s3ShipDirY = -0.5f, s3ShipDirZ = 1.0f;
-static float s3ShipRoll = 0.0f, s3ShipPitch = 0.0f;
+static float s3ShipRoll = 0.0f, s3ShipPitchExtra = 0.0f;
 static float s3ShipScale = 0.50f;
 static float s3HeatGlow = 0.0f; // 0.0 to 1.0 heatshield incandescence
 
@@ -64,7 +64,7 @@ struct VaporStreak {
     float length;
     float speed;
     float alpha;
-    float width;
+    float scale;
 };
 static std::vector<VaporStreak> s3Vapor;
 
@@ -243,15 +243,15 @@ void initScene3() {
     if (!sparkTexID) sparkTexID = loadTextureHelper("spark1.png", false);
 
     if (s3Vapor.empty()) {
-        for (int i = 0; i < 45; ++i) {
+        for (int i = 0; i < 40; ++i) {
             VaporStreak v;
-            v.x = randRange(-8.0f, 8.0f);
-            v.y = randRange(-3.0f, 6.0f);
-            v.z = randRange(-12.0f, 12.0f);
-            v.length = randRange(4.0f, 10.0f);
-            v.speed  = randRange(28.0f, 48.0f);
-            v.alpha  = randRange(0.25f, 0.65f);
-            v.width  = randRange(1.8f, 3.8f);
+            v.x = randRange(-6.0f, 6.0f);
+            v.y = randRange(-3.0f, 4.0f);
+            v.z = randRange(-10.0f, 10.0f);
+            v.length = randRange(3.5f, 7.5f);
+            v.speed  = randRange(26.0f, 44.0f);
+            v.alpha  = randRange(0.25f, 0.55f);
+            v.scale  = randRange(0.4f, 1.2f);
             s3Vapor.push_back(v);
         }
     }
@@ -271,14 +271,15 @@ void updateScene3(float dt) {
         PlaySoundA("mars_wind_nasa.wav", NULL, SND_FILENAME | SND_ASYNC | SND_NOSTOP);
     }
 
-    // Update tearing atmospheric cloud streaks
+    // Update cloud vapor shreds streaming backward
     for (size_t i = 0; i < s3Vapor.size(); ++i) {
         s3Vapor[i].z -= s3Vapor[i].speed * dt;
-        s3Vapor[i].x -= s3Vapor[i].speed * 0.45f * dt;
-        if (s3Vapor[i].z < s3ShipZ - 14.0f) {
-            s3Vapor[i].z = s3ShipZ + randRange(12.0f, 22.0f);
-            s3Vapor[i].x = s3ShipX + randRange(-6.0f, 8.0f);
-            s3Vapor[i].y = s3ShipY + randRange(-2.5f, 5.0f);
+        s3Vapor[i].x -= s3Vapor[i].speed * 0.40f * dt;
+        s3Vapor[i].y += s3Vapor[i].speed * 0.25f * dt;
+        if (s3Vapor[i].z < s3ShipZ - 12.0f) {
+            s3Vapor[i].z = s3ShipZ + randRange(10.0f, 18.0f);
+            s3Vapor[i].x = s3ShipX + randRange(-4.0f, 6.0f);
+            s3Vapor[i].y = s3ShipY + randRange(-2.0f, 4.0f);
         }
     }
 
@@ -287,31 +288,35 @@ void updateScene3(float dt) {
     // ------------------------------------------------------------------------
     if (t < 47.5f) {
         float u = (t - 44.0f) / 3.5f;
+
+        // Plunging steep downward descent into upper Martian atmosphere
         s3ShipX = lerpf(-18.0f, -10.0f, u);
-        s3ShipY = lerpf( 15.0f,   8.5f, u * u);
+        s3ShipY = lerpf( 16.0f,   8.0f, u * u);
         s3ShipZ = lerpf(-20.0f, -10.0f, u);
 
+        // Vector plunging downward along the diagonal
         s3ShipDirX =  0.65f;
-        s3ShipDirY = -0.45f;
+        s3ShipDirY = -0.55f; // Strong downward pitch vector
         s3ShipDirZ =  0.75f;
         normalize3(s3ShipDirX, s3ShipDirY, s3ShipDirZ);
 
-        s3ShipPitch = -18.0f;
-        s3ShipRoll  = lerpf(25.0f, 15.0f, u);
+        // Angle of attack: nose pitched DOWNWARD into the dive (+8.0 degrees additional dive pitch)
+        s3ShipPitchExtra = 8.0f;
+        s3ShipRoll  = lerpf(22.0f, 12.0f, u);
         s3ShipScale = 0.50f;
-        s3HeatGlow  = lerpf(0.60f, 1.0f, u); // Intense white-hot underbelly glow
+        s3HeatGlow  = lerpf(0.50f, 1.0f, u); // High friction thermal glow
 
-        // Streaming thermal sparks & plasma whip
-        for (int k = 0; k < 6; ++k) {
-            float ox = randRange(-0.25f, 0.25f);
-            float oy = randRange(-0.25f, 0.05f); // from heatshield underside
-            float oz = randRange(-0.25f, 0.25f);
+        // Trailing plasma sparks whipped backwards from underbelly & nose
+        for (int k = 0; k < 5; ++k) {
+            float ox = randRange(-0.2f, 0.2f);
+            float oy = randRange(-0.2f, -0.05f); // Underbelly heatshield
+            float oz = randRange(-0.3f, 0.4f);
             spawnParticle(s3ShipX + ox, s3ShipY + oy, s3ShipZ + oz,
-                          -s3ShipDirX * 14.0f + randRange(-1.5f, 1.5f),
-                          -s3ShipDirY * 14.0f + randRange(-1.0f, 1.0f),
-                          -s3ShipDirZ * 14.0f + randRange(-1.5f, 1.5f),
-                          randRange(0.18f, 0.40f), randRange(1.8f, 3.2f),
-                          1.0f, randRange(0.55f, 0.95f), 0.20f, true);
+                          -s3ShipDirX * 12.0f + randRange(-1.0f, 1.0f),
+                          -s3ShipDirY * 12.0f + randRange(-0.8f, 0.8f),
+                          -s3ShipDirZ * 12.0f + randRange(-1.0f, 1.0f),
+                          randRange(0.15f, 0.35f), randRange(1.4f, 2.5f),
+                          1.0f, randRange(0.6f, 0.95f), 0.2f, true);
         }
     }
     // ------------------------------------------------------------------------
@@ -322,24 +327,24 @@ void updateScene3(float dt) {
         float ease = u * u;
 
         s3ShipX = lerpf(-10.0f, -2.5f, u);
-        s3ShipY = lerpf(  8.5f,  3.8f, ease);
+        s3ShipY = lerpf(  8.0f,  3.5f, ease);
         s3ShipZ = lerpf(-10.0f, -2.0f, u);
 
         s3ShipDirX =  0.60f;
-        s3ShipDirY = -0.38f;
+        s3ShipDirY = -0.42f;
         s3ShipDirZ =  0.75f;
         normalize3(s3ShipDirX, s3ShipDirY, s3ShipDirZ);
 
-        s3ShipPitch = lerpf(-18.0f, -12.0f, u);
-        s3ShipRoll  = lerpf( 15.0f,   5.0f, u);
+        s3ShipPitchExtra = lerpf(8.0f, 4.0f, u);
+        s3ShipRoll  = lerpf(12.0f, 4.0f, u);
         s3ShipScale = 0.50f;
-        s3HeatGlow  = lerpf( 1.0f,   0.35f, u); // Cooling down as speed drops
+        s3HeatGlow  = lerpf(1.0f, 0.25f, u);
 
         // Trailing plasma wisps
-        for (int k = 0; k < 3; ++k) {
+        for (int k = 0; k < 2; ++k) {
             spawnParticle(s3ShipX, s3ShipY, s3ShipZ,
-                          -s3ShipDirX * 8.0f, -s3ShipDirY * 8.0f, -s3ShipDirZ * 8.0f,
-                          0.22f, 1.6f, 0.95f, 0.45f, 0.15f, true);
+                          -s3ShipDirX * 7.0f, -s3ShipDirY * 7.0f, -s3ShipDirZ * 7.0f,
+                          0.20f, 1.4f, 0.95f, 0.45f, 0.15f, true);
         }
     }
     // ------------------------------------------------------------------------
@@ -350,18 +355,18 @@ void updateScene3(float dt) {
         float smoothU = smoothstep(0.0f, 1.0f, u);
 
         s3ShipX = lerpf(-2.5f, 3.2f, smoothU);
-        s3ShipY = lerpf( 3.8f, 1.2f, smoothU);
+        s3ShipY = lerpf( 3.5f, 1.2f, smoothU);
         s3ShipZ = lerpf(-2.0f, 4.5f, smoothU);
 
         s3ShipDirX =  0.50f;
-        s3ShipDirY = -0.22f;
+        s3ShipDirY = -0.25f;
         s3ShipDirZ =  0.80f;
         normalize3(s3ShipDirX, s3ShipDirY, s3ShipDirZ);
 
-        s3ShipPitch = lerpf(-12.0f, -4.0f, smoothU);
-        s3ShipRoll  = lerpf(  5.0f, -6.0f, smoothU);
+        s3ShipPitchExtra = lerpf(4.0f, 0.0f, smoothU);
+        s3ShipRoll  = lerpf(4.0f, -6.0f, smoothU);
         s3ShipScale = 0.50f;
-        s3HeatGlow  = 0.0f; // Heatshield fully cooled
+        s3HeatGlow  = 0.0f; // Cooled
     }
     // ------------------------------------------------------------------------
     // SHOT 4: SUPERSONIC PARACHUTE DEPLOYMENT (56.0s - 60.5s)
@@ -370,24 +375,22 @@ void updateScene3(float dt) {
         float u = (t - 56.0f) / 4.5f;
         float smoothU = smoothstep(0.0f, 1.0f, u);
 
-        s3ChuteDeploy = clampf((t - 56.0f) * 2.8f, 0.0f, 1.0f); // Unfurls in 0.35s
+        s3ChuteDeploy = clampf((t - 56.0f) * 2.8f, 0.0f, 1.0f);
 
-        // Rapid deceleration
         s3ShipX = lerpf( 3.2f, 5.0f, smoothU);
         s3ShipY = lerpf( 1.2f, -0.6f, smoothU);
         s3ShipZ = lerpf( 4.5f, 7.5f, smoothU);
 
         s3ShipDirX = lerpf(0.50f, 0.15f, smoothU);
-        s3ShipDirY = lerpf(-0.22f, -0.10f, smoothU);
+        s3ShipDirY = lerpf(-0.25f, -0.10f, smoothU);
         s3ShipDirZ = lerpf(0.80f, 0.98f, smoothU);
         normalize3(s3ShipDirX, s3ShipDirY, s3ShipDirZ);
 
-        s3ShipPitch = lerpf(-4.0f, 3.0f, smoothU);
+        s3ShipPitchExtra = lerpf(0.0f, 2.0f, smoothU);
         s3ShipRoll  = lerpf(-6.0f, 0.0f, smoothU);
         s3ShipScale = 0.50f;
         s3HeatGlow  = 0.0f;
 
-        // Parachute canopy trails gracefully above craft
         s3ChuteX = s3ShipX - s3ShipDirX * 1.5f;
         s3ChuteY = s3ShipY + 2.5f + 0.08f * sinf(t * 7.0f);
         s3ChuteZ = s3ShipZ - s3ShipDirZ * 1.5f;
@@ -401,23 +404,20 @@ void updateScene3(float dt) {
         float landEase = smoothstep(0.0f, 1.0f, u);
 
         s3ChuteCut = true;
-        // Parachute drifts away on Martian breeze
         s3ChuteX += 1.6f * dt;
         s3ChuteY += 0.6f * dt;
         s3ChuteZ -= 2.0f * dt;
 
-        // Lander settle down onto crater plateau (target landing Y = -2.10f)
         s3ShipX = lerpf( 5.0f,  5.6f, landEase);
         s3ShipY = lerpf(-0.6f, -2.10f, landEase);
         s3ShipZ = lerpf( 7.5f,  9.0f, landEase);
 
-        s3ShipPitch = lerpf(3.0f, 0.0f, landEase);
+        s3ShipPitchExtra = 0.0f;
         s3ShipRoll  = 0.0f;
         s3ShipDirX = 0.08f; s3ShipDirY = -0.04f; s3ShipDirZ = 0.99f;
         normalize3(s3ShipDirX, s3ShipDirY, s3ShipDirZ);
         s3HeatGlow = 0.0f;
 
-        // Ventral retro thrusters pulsing down before touchdown (60.5s - 63.5s)
         if (t >= 60.5f && t <= 63.5f) {
             for (int k = 0; k < 2; ++k) {
                 float ox = randRange(-0.3f, 0.3f);
@@ -428,7 +428,6 @@ void updateScene3(float dt) {
             }
         }
 
-        // Touchdown point contact at 63.2s: radial red dust plumes
         if (t >= 63.0f && t <= 65.5f) {
             for (int d = 0; d < 3; ++d) {
                 float ang = randRange(0.0f, 2.0f * (float)M_PI);
@@ -481,23 +480,23 @@ void computeCameraScene3(float& eyeX, float& eyeY, float& eyeZ,
     // ------------------------------------------------------------------------
     // SHOT 1: SIDE-PROFILE HERO SHOT (44.0s - 47.5s)
     // ------------------------------------------------------------------------
-    // Camera rides alongside the Ranger's port flank:
-    // Ranger prominently framed on the left, open Martian sky & clouds tearing past on the right.
+    // Cinematic side flank: Ranger plunges downward from upper-right toward lower-left.
+    // Framed with open Martian salmon sky and vapor shreds tearing beside it.
     if (t < 47.5f) {
         float u = (t - 44.0f) / 3.5f;
 
-        // Position camera to the side-front of the ship
-        eyeX = s3ShipX + 1.85f;
-        eyeY = s3ShipY + 0.35f;
-        eyeZ = s3ShipZ - 0.70f;
+        // Position camera to the side-above the diving ship
+        eyeX = s3ShipX + 2.4f;
+        eyeY = s3ShipY + 0.65f;
+        eyeZ = s3ShipZ - 0.40f;
 
-        targetX = s3ShipX - 0.15f;
-        targetY = s3ShipY;
-        targetZ = s3ShipZ + 0.45f;
+        targetX = s3ShipX - 0.35f;
+        targetY = s3ShipY - 0.60f; // Look downward along the plunge trajectory
+        targetZ = s3ShipZ + 0.55f;
 
-        // Violent hypersonic aerodynamic shudder & cabin vibration
+        // Aerodynamic buffeting shudder
         float freq = t * 62.0f;
-        float amp  = (1.0f - u * 0.2f) * 0.024f;
+        float amp  = (1.0f - u * 0.2f) * 0.022f;
         eyeX += sinf(freq * 1.05f) * amp;
         eyeY += cosf(freq * 0.95f) * amp;
         eyeZ += sinf(freq * 1.25f) * amp;
@@ -549,7 +548,6 @@ void computeCameraScene3(float& eyeX, float& eyeY, float& eyeZ,
         targetY = s3ShipY + 1.2f;
         targetZ = s3ShipZ;
 
-        // Snapping jolt upon parachute opening at 56.1s - 56.6s
         if (t >= 56.1f && t <= 56.6f) {
             float snap = sinf((t - 56.1f) * 40.0f) * 0.028f;
             eyeY += snap;
@@ -570,7 +568,6 @@ void computeCameraScene3(float& eyeX, float& eyeY, float& eyeZ,
         targetY = -2.05f;
         targetZ = lerpf( 7.5f,  9.0f, smoothU);
 
-        // Touchdown impact shudder at 63.0s - 63.6s
         if (t >= 63.0f && t <= 63.6f) {
             float impact = sinf((t - 63.0f) * 28.0f) * 0.020f * (1.0f - (t - 63.0f) / 0.6f);
             eyeY += impact;
@@ -617,34 +614,34 @@ static void renderAtmosphericSkybox() {
 }
 
 static void renderAtmosphericVaporStreaks() {
-    if (seqTime > 51.5f || s3Vapor.empty()) return;
+    if (seqTime > 51.5f || s3Vapor.empty() || !smokeTexID) return;
 
     glDisable(GL_LIGHTING);
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE); // Radiant vapor additive glow
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE); // Additive luminous vapor
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, smokeTexID);
     glDepthMask(GL_FALSE);
 
-    glLineWidth(2.4f);
-    glBegin(GL_LINES);
+    // Billowing high-speed cloud vapor shreds tearing diagonally past
     for (size_t i = 0; i < s3Vapor.size(); ++i) {
         const VaporStreak& v = s3Vapor[i];
-        float x0 = v.x;
-        float y0 = v.y;
-        float z0 = v.z;
-        float x1 = x0 + s3ShipDirX * v.length;
-        float y1 = y0 + s3ShipDirY * v.length;
-        float z1 = z0 + s3ShipDirZ * v.length;
+        glColor4f(0.92f, 0.82f, 0.75f, v.alpha * 0.65f);
 
-        // Whitish-cyan high altitude condensation shreds
-        glColor4f(0.92f, 0.88f, 0.82f, v.alpha * 0.70f);
-        glVertex3f(x0, y0, z0);
-        glColor4f(0.75f, 0.45f, 0.30f, 0.0f);
-        glVertex3f(x1, y1, z1);
+        glPushMatrix();
+        glTranslatef(v.x, v.y, v.z);
+        glScalef(v.scale * 1.8f, v.scale * 0.45f, v.length);
+        glBegin(GL_QUADS);
+            glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, 0.0f, -1.0f);
+            glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, 0.0f, -1.0f);
+            glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f, 0.0f,  1.0f);
+            glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f, 0.0f,  1.0f);
+        glEnd();
+        glPopMatrix();
     }
-    glEnd();
 
-    glLineWidth(1.0f);
     glDepthMask(GL_TRUE);
+    glDisable(GL_TEXTURE_2D);
     glDisable(GL_BLEND);
     glEnable(GL_LIGHTING);
 }
@@ -657,30 +654,34 @@ static void renderHeatshieldGlow() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);
     glDepthMask(GL_FALSE);
 
-    // Multi-layered incandescent plasma halo wrapped around the nosecone & underside
+    // Realistic aerodynamic bow-shock plasma halo wrapped tightly on nosecone
     glPushMatrix();
-    glTranslatef(0.0f, -0.05f, 0.45f); // Nosecone & forward underside
+    glTranslatef(0.0f, -0.04f, 0.92f); // Nosecone apex
 
-    for (int layer = 0; layer < 3; ++layer) {
-        float s = 0.32f + (float)layer * 0.12f;
-        float a = s3HeatGlow * (0.65f - (float)layer * 0.18f);
+    // 1. Pure white core shock apex
+    glColor4f(1.0f, 0.98f, 0.85f, s3HeatGlow * 0.70f);
+    glPushMatrix();
+    glScalef(0.18f, 0.08f, 0.22f);
+    glutSolidSphere(1.0, 10, 8);
+    glPopMatrix();
 
-        // Core white-hot, fading into fiery orange outer envelope
-        if (layer == 0) {
-            glColor4f(1.0f, 0.95f, 0.75f, a);
-        } else if (layer == 1) {
-            glColor4f(1.0f, 0.55f, 0.15f, a);
-        } else {
-            glColor4f(0.90f, 0.25f, 0.05f, a);
-        }
+    // 2. Fiery orange-red bow shock envelope
+    glColor4f(1.0f, 0.45f, 0.10f, s3HeatGlow * 0.45f);
+    glPushMatrix();
+    glScalef(0.32f, 0.14f, 0.42f);
+    glutSolidSphere(1.0, 12, 8);
+    glPopMatrix();
 
-        glPushMatrix();
-        glScalef(s * 1.8f, s * 0.6f, s * 2.2f);
-        glutSolidSphere(1.0, 14, 10);
-        glPopMatrix();
-    }
+    // 3. Radiant underbelly thermal compression sheath
+    glTranslatef(0.0f, -0.06f, -0.55f);
+    glColor4f(0.95f, 0.35f, 0.05f, s3HeatGlow * 0.35f);
+    glPushMatrix();
+    glScalef(0.42f, 0.08f, 0.85f);
+    glutSolidSphere(1.0, 12, 8);
+    glPopMatrix();
 
     glPopMatrix();
+
     glDepthMask(GL_TRUE);
     glDisable(GL_BLEND);
     glEnable(GL_LIGHTING);
@@ -728,7 +729,6 @@ static void renderParachuteWithLines() {
     glCallList(parachuteDisplayList);
     glPopMatrix();
 
-    // Shroud lines connecting parachute skirt to ship hardpoints (only before cut)
     if (!s3ChuteCut && s3ChuteDeploy > 0.5f) {
         glDisable(GL_LIGHTING);
         glEnable(GL_BLEND);
@@ -788,10 +788,14 @@ void renderScene3() {
     glTranslatef(s3ShipX, s3ShipY, s3ShipZ);
     glScalef(s3ShipScale, s3ShipScale, s3ShipScale);
 
-    // Orientation
+    // Orientation: Compute true descent plunge pitch
     float yaw = atan2f(s3ShipDirX, s3ShipDirZ) * 180.0f / (float)M_PI;
+    float horizLen = sqrtf(s3ShipDirX * s3ShipDirX + s3ShipDirZ * s3ShipDirZ);
+    float flightPitch = -atan2f(s3ShipDirY, horizLen) * 180.0f / (float)M_PI;
+
     glRotatef(yaw, 0.0f, 1.0f, 0.0f);
-    glRotatef(s3ShipPitch, 1.0f, 0.0f, 0.0f);
+    // Positive pitch angles the nose DOWNWARD into the descent
+    glRotatef(flightPitch + s3ShipPitchExtra, 1.0f, 0.0f, 0.0f);
     glRotatef(s3ShipRoll, 0.0f, 0.0f, 1.0f);
 
     // Key & Fill lighting for crisp ship illumination
@@ -805,7 +809,7 @@ void renderScene3() {
 
     renderRangerMesh();
 
-    // Incandescent heatshield plasma envelope during entry
+    // Aerodynamic bow-shock & underbelly thermal glow
     renderHeatshieldGlow();
 
     glDisable(GL_LIGHT2);
