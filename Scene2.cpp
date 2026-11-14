@@ -56,25 +56,25 @@ void updateScene2(float dt) {
     }
     else if (t < 46.0f) {
         // SHOT 2: DESCENT FROM SCREEN RIGHT TOWARD MARS ON THE RIGHT (39.0s - 46.0s)
-        // Ranger is on the right side of the screen, oriented in a front 3/4 view
-        // (nose pointed toward Mars and downward, roof tilted up toward camera),
-        // descending from right to left & receding deep into distance (-Z).
+        // With camera at eyeX ~ -3.20 looking at targetX ~ -1.85, the screen center line is at X = -1.85.
+        // Screen right is at X >= -1.0. Mars is at (0,0,0) (strongly on the right side).
+        // Ranger starts at X = -0.90 (screen right) and flies toward Mars surface / horizon (-Z depth).
         float u = (t - 39.0f) / 7.0f;
         float smoothU = smoothstep(0.0f, 1.0f, u);
 
-        rangerPosX = lerpf( 0.45f, -0.65f, smoothU);
-        rangerPosY = lerpf( 0.65f,  0.10f, smoothU);
-        rangerPosZ = lerpf( 2.20f,  0.80f, smoothU);
+        rangerPosX = lerpf(-0.90f, -1.65f, smoothU);
+        rangerPosY = lerpf( 0.45f,  0.05f, smoothU);
+        rangerPosZ = lerpf( 2.20f,  0.90f, smoothU);
 
-        // Direction: moving toward -X, downward -Y, and away -Z
-        rangerDirX = -0.78f;
-        rangerDirY = -0.38f;
-        rangerDirZ = -0.49f;
+        // Heading: moving leftward (-X), downward (-Y), into distance (-Z)
+        rangerDirX = -0.65f;
+        rangerDirY = -0.35f;
+        rangerDirZ = -0.67f;
         normalize3(rangerDirX, rangerDirY, rangerDirZ);
 
-        // Front 3/4 view: bank so top roof facets face the camera from above
-        rangerPitchExtra = -8.0f;
-        rangerRollAngle  = -35.0f;
+        // Front 3/4 view: nose pointing downward-left, roof tilted toward camera
+        rangerPitchExtra = -6.0f;
+        rangerRollAngle  = 40.0f;
 
         rcsActive = 0.0f;
         mainBurnActive = (t >= 39.2f) ? 1.0f : 0.0f;
@@ -101,17 +101,17 @@ void updateScene2(float dt) {
         // SHOT 3: RECEDING DEEP INTO MARS HORIZON -> SHRINKING TO PINPOINT DOT (46.0s - 56.0s)
         float u = (t - 46.0f) / 10.0f;
 
-        rangerPosX = lerpf(-0.65f, -1.85f, u);
-        rangerPosY = lerpf( 0.10f, -0.45f, u);
-        rangerPosZ = lerpf( 0.80f, -1.50f, u);
+        rangerPosX = lerpf(-1.65f, -2.40f, u);
+        rangerPosY = lerpf( 0.05f, -0.38f, u);
+        rangerPosZ = lerpf( 0.90f, -0.90f, u);
 
-        rangerDirX = -0.72f;
-        rangerDirY = -0.30f;
-        rangerDirZ = -0.62f;
+        rangerDirX = -0.65f;
+        rangerDirY = -0.28f;
+        rangerDirZ = -0.70f;
         normalize3(rangerDirX, rangerDirY, rangerDirZ);
 
-        rangerPitchExtra = -8.0f;
-        rangerRollAngle  = -30.0f;
+        rangerPitchExtra = -6.0f;
+        rangerRollAngle  = 35.0f;
 
         rcsActive = 0.0f;
         mainBurnActive = 1.0f;
@@ -161,26 +161,26 @@ void computeCameraScene2(float& eyeX, float& eyeY, float& eyeZ,
         targetZ = 2.45f;
     }
     else if (t < 46.0f) {
-        // SHOT 2 (39.0s - 46.0s): Mars placed on right half of screen
-        // Camera positioned to the left & slightly above, viewing Mars on right
+        // SHOT 2 (39.0s - 46.0s): Sudden cut right to Mars on the right edge of screen
+        // Eye shifted far left and looking towards negative X, forcing Mars (0,0,0) into the right frame
         float u = (t - 39.0f) / 7.0f;
-        eyeX = lerpf(-1.85f, -1.75f, u);
-        eyeY = lerpf( 1.15f,  1.05f, u);
+        eyeX = lerpf(-3.20f, -3.10f, u);
+        eyeY = lerpf( 1.10f,  1.00f, u);
         eyeZ = lerpf( 4.10f,  3.90f, u);
 
-        targetX = lerpf(-0.25f, -0.45f, u);
+        targetX = lerpf(-1.80f, -1.95f, u);
         targetY =  0.05f;
-        targetZ =  0.80f;
+        targetZ =  0.70f;
     }
     else {
         // SHOT 3 (46.0s - 56.0s): Receding Over Mars Surface toward distant curve
         float u = (t - 46.0f) / 10.0f;
-        eyeX = lerpf(-1.75f, -1.65f, u);
-        eyeY = lerpf( 1.05f,  0.95f, u);
+        eyeX = lerpf(-3.10f, -3.00f, u);
+        eyeY = lerpf( 1.00f,  0.90f, u);
         eyeZ = lerpf( 3.90f,  3.80f, u);
 
-        targetX = lerpf(-0.45f, -1.15f, u);
+        targetX = lerpf(-1.95f, -2.25f, u);
         targetY = lerpf( 0.05f, -0.20f, u);
-        targetZ = lerpf( 0.80f, -0.50f, u);
+        targetZ = lerpf( 0.70f, -0.40f, u);
     }
 }
