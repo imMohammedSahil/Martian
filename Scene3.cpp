@@ -41,6 +41,7 @@ static float s3ShipX = 0.0f, s3ShipY = 0.0f, s3ShipZ = 0.0f;
 static float s3ShipDirX = 0.0f, s3ShipDirY = -0.5f, s3ShipDirZ = 1.0f;
 static float s3ShipRoll = 0.0f, s3ShipPitch = 0.0f;
 static float s3ShipScale = 0.50f;
+static float s3HeatGlow = 0.0f; // 0.0 to 1.0 heatshield incandescence
 
 static float s3ChuteDeploy = 0.0f; // 0.0 = packed, 1.0 = fully inflated
 static float s3ChuteX = 0.0f, s3ChuteY = 0.0f, s3ChuteZ = 0.0f;
@@ -56,6 +57,16 @@ struct TouchdownDust {
     float life;
 };
 static std::vector<TouchdownDust> s3Dust;
+
+// Atmospheric Cloud Vapor Shred Streaks
+struct VaporStreak {
+    float x, y, z;
+    float length;
+    float speed;
+    float alpha;
+    float width;
+};
+static std::vector<VaporStreak> s3Vapor;
 
 // ============================================================================
 // ASSET LOADERS
@@ -230,6 +241,20 @@ void initScene3() {
     loadParachuteMesh();
     if (!smokeTexID) smokeTexID = loadTextureHelper("smoke1.png", false);
     if (!sparkTexID) sparkTexID = loadTextureHelper("spark1.png", false);
+
+    if (s3Vapor.empty()) {
+        for (int i = 0; i < 45; ++i) {
+            VaporStreak v;
+            v.x = randRange(-8.0f, 8.0f);
+            v.y = randRange(-3.0f, 6.0f);
+            v.z = randRange(-12.0f, 12.0f);
+            v.length = randRange(4.0f, 10.0f);
+            v.speed  = randRange(28.0f, 48.0f);
+            v.alpha  = randRange(0.25f, 0.65f);
+            v.width  = randRange(1.8f, 3.8f);
+            s3Vapor.push_back(v);
+        }
+    }
 }
 
 // ============================================================================
@@ -246,115 +271,154 @@ void updateScene3(float dt) {
         PlaySoundA("mars_wind_nasa.wav", NULL, SND_FILENAME | SND_ASYNC | SND_NOSTOP);
     }
 
-    // PHASE 1: HYPERSONIC ENTRY & PLASMA FIRE (44.0s - 48.0s)
-    if (t < 48.0f) {
-        float u = (t - 44.0f) / 4.0f;
-        float ease = u * u;
+    // Update tearing atmospheric cloud streaks
+    for (size_t i = 0; i < s3Vapor.size(); ++i) {
+        s3Vapor[i].z -= s3Vapor[i].speed * dt;
+        s3Vapor[i].x -= s3Vapor[i].speed * 0.45f * dt;
+        if (s3Vapor[i].z < s3ShipZ - 14.0f) {
+            s3Vapor[i].z = s3ShipZ + randRange(12.0f, 22.0f);
+            s3Vapor[i].x = s3ShipX + randRange(-6.0f, 8.0f);
+            s3Vapor[i].y = s3ShipY + randRange(-2.5f, 5.0f);
+        }
+    }
 
-        // Blazing descent through upper atmosphere above crater rim
-        s3ShipX = lerpf(-14.0f, -4.0f, u);
-        s3ShipY = lerpf( 12.0f,  4.5f, ease);
-        s3ShipZ = lerpf(-16.0f, -5.0f, u);
+    // ------------------------------------------------------------------------
+    // SHOT 1: SIDE-PROFILE ATMOSPHERIC PIERCE & HEATSHIELD TEAR (44.0s - 47.5s)
+    // ------------------------------------------------------------------------
+    if (t < 47.5f) {
+        float u = (t - 44.0f) / 3.5f;
+        s3ShipX = lerpf(-18.0f, -10.0f, u);
+        s3ShipY = lerpf( 15.0f,   8.5f, u * u);
+        s3ShipZ = lerpf(-20.0f, -10.0f, u);
 
         s3ShipDirX =  0.65f;
-        s3ShipDirY = -0.50f;
+        s3ShipDirY = -0.45f;
         s3ShipDirZ =  0.75f;
         normalize3(s3ShipDirX, s3ShipDirY, s3ShipDirZ);
 
-        s3ShipPitch = -20.0f;
-        s3ShipRoll  = lerpf(40.0f, 18.0f, u);
+        s3ShipPitch = -18.0f;
+        s3ShipRoll  = lerpf(25.0f, 15.0f, u);
         s3ShipScale = 0.50f;
+        s3HeatGlow  = lerpf(0.60f, 1.0f, u); // Intense white-hot underbelly glow
 
-        // Spawn plasma entry flame & heatshield spark particles
-        for (int k = 0; k < 5; ++k) {
-            float ox = randRange(-0.3f, 0.3f);
-            float oy = randRange(-0.2f, 0.2f);
-            float oz = randRange(-0.3f, 0.3f);
+        // Streaming thermal sparks & plasma whip
+        for (int k = 0; k < 6; ++k) {
+            float ox = randRange(-0.25f, 0.25f);
+            float oy = randRange(-0.25f, 0.05f); // from heatshield underside
+            float oz = randRange(-0.25f, 0.25f);
             spawnParticle(s3ShipX + ox, s3ShipY + oy, s3ShipZ + oz,
-                          -s3ShipDirX * 10.0f + randRange(-1.0f, 1.0f),
-                          -s3ShipDirY * 10.0f + randRange(-0.8f, 0.8f),
-                          -s3ShipDirZ * 10.0f + randRange(-1.0f, 1.0f),
-                          randRange(0.2f, 0.5f), randRange(1.5f, 2.8f),
-                          1.0f, randRange(0.45f, 0.85f), 0.15f, true);
+                          -s3ShipDirX * 14.0f + randRange(-1.5f, 1.5f),
+                          -s3ShipDirY * 14.0f + randRange(-1.0f, 1.0f),
+                          -s3ShipDirZ * 14.0f + randRange(-1.5f, 1.5f),
+                          randRange(0.18f, 0.40f), randRange(1.8f, 3.2f),
+                          1.0f, randRange(0.55f, 0.95f), 0.20f, true);
         }
     }
-    // PHASE 2: CANYON REVEAL & DESCENT (48.0s - 53.0s)
-    else if (t < 53.0f) {
-        float u = (t - 48.0f) / 5.0f;
-        float smoothU = smoothstep(0.0f, 1.0f, u);
+    // ------------------------------------------------------------------------
+    // SHOT 2: HYPERSONIC OVER-THE-SHOULDER DIVE (47.5s - 51.5s)
+    // ------------------------------------------------------------------------
+    else if (t < 51.5f) {
+        float u = (t - 47.5f) / 4.0f;
+        float ease = u * u;
 
-        // Sweeping descent banking through Gale Crater mountain pass
-        s3ShipX = lerpf(-4.0f, 2.5f, smoothU);
-        s3ShipY = lerpf( 4.5f, 1.8f, smoothU);
-        s3ShipZ = lerpf(-5.0f, 3.5f, smoothU);
+        s3ShipX = lerpf(-10.0f, -2.5f, u);
+        s3ShipY = lerpf(  8.5f,  3.8f, ease);
+        s3ShipZ = lerpf(-10.0f, -2.0f, u);
 
-        s3ShipDirX =  0.55f;
-        s3ShipDirY = -0.30f;
+        s3ShipDirX =  0.60f;
+        s3ShipDirY = -0.38f;
         s3ShipDirZ =  0.75f;
         normalize3(s3ShipDirX, s3ShipDirY, s3ShipDirZ);
 
-        s3ShipPitch = lerpf(-20.0f, -8.0f, smoothU);
-        s3ShipRoll  = lerpf( 18.0f, -6.0f, smoothU);
+        s3ShipPitch = lerpf(-18.0f, -12.0f, u);
+        s3ShipRoll  = lerpf( 15.0f,   5.0f, u);
         s3ShipScale = 0.50f;
+        s3HeatGlow  = lerpf( 1.0f,   0.35f, u); // Cooling down as speed drops
 
-        // Cooling plasma streaks
-        if (u < 0.35f && (rand() % 2 == 0)) {
+        // Trailing plasma wisps
+        for (int k = 0; k < 3; ++k) {
             spawnParticle(s3ShipX, s3ShipY, s3ShipZ,
-                          -s3ShipDirX * 5.0f, -s3ShipDirY * 5.0f, -s3ShipDirZ * 5.0f,
-                          0.25f, 1.2f, 0.9f, 0.4f, 0.15f, true);
+                          -s3ShipDirX * 8.0f, -s3ShipDirY * 8.0f, -s3ShipDirZ * 8.0f,
+                          0.22f, 1.6f, 0.95f, 0.45f, 0.15f, true);
         }
     }
-    // PHASE 3: SUPERSONIC PARACHUTE DEPLOYMENT (53.0s - 58.0s)
-    else if (t < 58.0f) {
-        float u = (t - 53.0f) / 5.0f;
+    // ------------------------------------------------------------------------
+    // SHOT 3: WIDE CANYON REVEAL & MOUNTAIN PASS BANK (51.5s - 56.0s)
+    // ------------------------------------------------------------------------
+    else if (t < 56.0f) {
+        float u = (t - 51.5f) / 4.5f;
         float smoothU = smoothstep(0.0f, 1.0f, u);
 
-        s3ChuteDeploy = clampf((t - 53.0f) * 2.5f, 0.0f, 1.0f); // Unfurls cleanly in 0.4s
+        s3ShipX = lerpf(-2.5f, 3.2f, smoothU);
+        s3ShipY = lerpf( 3.8f, 1.2f, smoothU);
+        s3ShipZ = lerpf(-2.0f, 4.5f, smoothU);
 
-        // Aerodynamic deceleration, gliding smoothly
-        s3ShipX = lerpf( 2.5f, 4.8f, smoothU);
-        s3ShipY = lerpf( 1.8f, -0.4f, smoothU);
-        s3ShipZ = lerpf( 3.5f, 7.2f, smoothU);
-
-        s3ShipDirX = lerpf(0.55f, 0.15f, smoothU);
-        s3ShipDirY = lerpf(-0.30f, -0.12f, smoothU);
-        s3ShipDirZ = lerpf(0.75f, 0.98f, smoothU);
+        s3ShipDirX =  0.50f;
+        s3ShipDirY = -0.22f;
+        s3ShipDirZ =  0.80f;
         normalize3(s3ShipDirX, s3ShipDirY, s3ShipDirZ);
 
-        // Stabilizing pitch & roll
-        s3ShipPitch = lerpf(-8.0f, 3.0f, smoothU);
+        s3ShipPitch = lerpf(-12.0f, -4.0f, smoothU);
+        s3ShipRoll  = lerpf(  5.0f, -6.0f, smoothU);
+        s3ShipScale = 0.50f;
+        s3HeatGlow  = 0.0f; // Heatshield fully cooled
+    }
+    // ------------------------------------------------------------------------
+    // SHOT 4: SUPERSONIC PARACHUTE DEPLOYMENT (56.0s - 60.5s)
+    // ------------------------------------------------------------------------
+    else if (t < 60.5f) {
+        float u = (t - 56.0f) / 4.5f;
+        float smoothU = smoothstep(0.0f, 1.0f, u);
+
+        s3ChuteDeploy = clampf((t - 56.0f) * 2.8f, 0.0f, 1.0f); // Unfurls in 0.35s
+
+        // Rapid deceleration
+        s3ShipX = lerpf( 3.2f, 5.0f, smoothU);
+        s3ShipY = lerpf( 1.2f, -0.6f, smoothU);
+        s3ShipZ = lerpf( 4.5f, 7.5f, smoothU);
+
+        s3ShipDirX = lerpf(0.50f, 0.15f, smoothU);
+        s3ShipDirY = lerpf(-0.22f, -0.10f, smoothU);
+        s3ShipDirZ = lerpf(0.80f, 0.98f, smoothU);
+        normalize3(s3ShipDirX, s3ShipDirY, s3ShipDirZ);
+
+        s3ShipPitch = lerpf(-4.0f, 3.0f, smoothU);
         s3ShipRoll  = lerpf(-6.0f, 0.0f, smoothU);
         s3ShipScale = 0.50f;
+        s3HeatGlow  = 0.0f;
 
         // Parachute canopy trails gracefully above craft
         s3ChuteX = s3ShipX - s3ShipDirX * 1.5f;
         s3ChuteY = s3ShipY + 2.5f + 0.08f * sinf(t * 7.0f);
         s3ChuteZ = s3ShipZ - s3ShipDirZ * 1.5f;
     }
-    // PHASE 4: RETRO-THRUSTERS & SOFT TOUCHDOWN (58.0s - 64.0s)
+    // ------------------------------------------------------------------------
+    // SHOT 5: RETRO-THRUSTERS & TOUCHDOWN DUST KICK (60.5s - 66.0s)
+    // ------------------------------------------------------------------------
     else {
-        float u = (t - 58.0f) / 5.5f;
+        float u = (t - 60.5f) / 5.5f;
         u = clampf(u, 0.0f, 1.0f);
         float landEase = smoothstep(0.0f, 1.0f, u);
 
         s3ChuteCut = true;
-        // Jettisoned parachute drifts away on Martian breeze
+        // Parachute drifts away on Martian breeze
         s3ChuteX += 1.6f * dt;
         s3ChuteY += 0.6f * dt;
         s3ChuteZ -= 2.0f * dt;
 
-        // Lander vertical settle down onto crater plateau (target landing Y = -2.10f)
-        s3ShipX = lerpf( 4.8f,  5.5f, landEase);
-        s3ShipY = lerpf(-0.4f, -2.10f, landEase);
-        s3ShipZ = lerpf( 7.2f,  8.8f, landEase);
+        // Lander settle down onto crater plateau (target landing Y = -2.10f)
+        s3ShipX = lerpf( 5.0f,  5.6f, landEase);
+        s3ShipY = lerpf(-0.6f, -2.10f, landEase);
+        s3ShipZ = lerpf( 7.5f,  9.0f, landEase);
 
         s3ShipPitch = lerpf(3.0f, 0.0f, landEase);
         s3ShipRoll  = 0.0f;
         s3ShipDirX = 0.08f; s3ShipDirY = -0.04f; s3ShipDirZ = 0.99f;
         normalize3(s3ShipDirX, s3ShipDirY, s3ShipDirZ);
+        s3HeatGlow = 0.0f;
 
-        // Ventral retro thrusters pulsing down before touchdown (58.0s - 61.2s)
-        if (t >= 58.0f && t <= 61.2f) {
+        // Ventral retro thrusters pulsing down before touchdown (60.5s - 63.5s)
+        if (t >= 60.5f && t <= 63.5f) {
             for (int k = 0; k < 2; ++k) {
                 float ox = randRange(-0.3f, 0.3f);
                 float oz = randRange(-0.3f, 0.3f);
@@ -364,8 +428,8 @@ void updateScene3(float dt) {
             }
         }
 
-        // Touchdown point contact at 61.0s: radial red dust plumes
-        if (t >= 61.0f && t <= 63.5f) {
+        // Touchdown point contact at 63.2s: radial red dust plumes
+        if (t >= 63.0f && t <= 65.5f) {
             for (int d = 0; d < 3; ++d) {
                 float ang = randRange(0.0f, 2.0f * (float)M_PI);
                 float spd = randRange(1.5f, 3.8f);
@@ -414,30 +478,54 @@ void computeCameraScene3(float& eyeX, float& eyeY, float& eyeZ,
     upX = 0.0f; upY = 1.0f; upZ = 0.0f;
     float t = seqTime;
 
-    // PHASE 1: HYPERSONIC CHASE CAM (44.0s - 48.0s)
-    if (t < 48.0f) {
-        float u = (t - 44.0f) / 4.0f;
-        eyeX = s3ShipX - s3ShipDirX * 3.5f + 1.2f;
-        eyeY = s3ShipY - s3ShipDirY * 3.5f + 0.8f;
-        eyeZ = s3ShipZ - s3ShipDirZ * 3.5f + 1.5f;
+    // ------------------------------------------------------------------------
+    // SHOT 1: SIDE-PROFILE HERO SHOT (44.0s - 47.5s)
+    // ------------------------------------------------------------------------
+    // Camera rides alongside the Ranger's port flank:
+    // Ranger prominently framed on the left, open Martian sky & clouds tearing past on the right.
+    if (t < 47.5f) {
+        float u = (t - 44.0f) / 3.5f;
+
+        // Position camera to the side-front of the ship
+        eyeX = s3ShipX + 1.85f;
+        eyeY = s3ShipY + 0.35f;
+        eyeZ = s3ShipZ - 0.70f;
+
+        targetX = s3ShipX - 0.15f;
+        targetY = s3ShipY;
+        targetZ = s3ShipZ + 0.45f;
+
+        // Violent hypersonic aerodynamic shudder & cabin vibration
+        float freq = t * 62.0f;
+        float amp  = (1.0f - u * 0.2f) * 0.024f;
+        eyeX += sinf(freq * 1.05f) * amp;
+        eyeY += cosf(freq * 0.95f) * amp;
+        eyeZ += sinf(freq * 1.25f) * amp;
+    }
+    // ------------------------------------------------------------------------
+    // SHOT 2: HYPERSONIC CHASE DIVE (47.5s - 51.5s)
+    // ------------------------------------------------------------------------
+    else if (t < 51.5f) {
+        float u = (t - 47.5f) / 4.0f;
+        eyeX = s3ShipX - s3ShipDirX * 3.4f + 1.1f;
+        eyeY = s3ShipY - s3ShipDirY * 3.4f + 0.7f;
+        eyeZ = s3ShipZ - s3ShipDirZ * 3.4f + 1.4f;
 
         targetX = s3ShipX + s3ShipDirX * 1.5f;
         targetY = s3ShipY + s3ShipDirY * 1.5f;
         targetZ = s3ShipZ + s3ShipDirZ * 1.5f;
 
-        // Supersonic entry turbulence shake
-        float shakeFreq = t * 45.0f;
-        float shakeAmp = (1.0f - u * 0.4f) * 0.035f;
-        eyeX += sinf(shakeFreq * 1.1f) * shakeAmp;
-        eyeY += cosf(shakeFreq * 0.9f) * shakeAmp;
-        eyeZ += sinf(shakeFreq * 1.3f) * shakeAmp;
+        float shake = (1.0f - u * 0.5f) * 0.020f;
+        eyeX += sinf(t * 42.0f) * shake;
+        eyeY += cosf(t * 38.0f) * shake;
     }
-    // PHASE 2: SWEEPING CANYON REVEAL (48.0s - 53.0s)
-    else if (t < 53.0f) {
-        float u = (t - 48.0f) / 5.0f;
+    // ------------------------------------------------------------------------
+    // SHOT 3: WIDE CANYON REVEAL (51.5s - 56.0s)
+    // ------------------------------------------------------------------------
+    else if (t < 56.0f) {
+        float u = (t - 51.5f) / 4.5f;
         float smoothU = smoothstep(0.0f, 1.0f, u);
 
-        // Wide panoramic view framing the mountains and the descending ship
         eyeX = lerpf(-10.0f, -2.5f, smoothU);
         eyeY = lerpf(  7.5f,  4.5f, smoothU);
         eyeZ = lerpf( -2.0f,  6.5f, smoothU);
@@ -446,43 +534,45 @@ void computeCameraScene3(float& eyeX, float& eyeY, float& eyeZ,
         targetY = s3ShipY;
         targetZ = s3ShipZ;
     }
-    // PHASE 3: PARACHUTE DEPLOYMENT TRACK (53.0s - 58.0s)
-    else if (t < 58.0f) {
-        float u = (t - 53.0f) / 5.0f;
+    // ------------------------------------------------------------------------
+    // SHOT 4: LOW-ANGLE PARACHUTE TRACK (56.0s - 60.5s)
+    // ------------------------------------------------------------------------
+    else if (t < 60.5f) {
+        float u = (t - 56.0f) / 4.5f;
         float smoothU = smoothstep(0.0f, 1.0f, u);
 
-        // Low angle looking upward past the craft toward the blossoming parachute
         eyeX = lerpf(s3ShipX + 2.8f, s3ShipX + 2.2f, smoothU);
         eyeY = lerpf(s3ShipY - 0.8f, s3ShipY - 0.5f, smoothU);
         eyeZ = lerpf(s3ShipZ - 3.2f, s3ShipZ - 2.8f, smoothU);
 
         targetX = s3ShipX;
-        targetY = s3ShipY + 1.2f; // Look up toward canopy
+        targetY = s3ShipY + 1.2f;
         targetZ = s3ShipZ;
 
-        // Snapping jolt upon parachute opening at 53.1s - 53.6s
-        if (t >= 53.1f && t <= 53.6f) {
-            float snap = sinf((t - 53.1f) * 40.0f) * 0.028f;
+        // Snapping jolt upon parachute opening at 56.1s - 56.6s
+        if (t >= 56.1f && t <= 56.6f) {
+            float snap = sinf((t - 56.1f) * 40.0f) * 0.028f;
             eyeY += snap;
         }
     }
-    // PHASE 4: GROUND-LEVEL CINEMATIC TOUCHDOWN (58.0s - 64.0s)
+    // ------------------------------------------------------------------------
+    // SHOT 5: GROUND-LEVEL TOUCHDOWN (60.5s - 66.0s)
+    // ------------------------------------------------------------------------
     else {
-        float u = (t - 58.0f) / 6.0f;
+        float u = (t - 60.5f) / 5.5f;
         float smoothU = smoothstep(0.0f, 1.0f, u);
 
-        // Tripod angle sitting on the red plateau foreground
         eyeX = lerpf( 2.4f,  2.8f, smoothU);
-        eyeY = -1.85f; // Ground tripod level
+        eyeY = -1.85f;
         eyeZ = lerpf( 5.5f,  6.0f, smoothU);
 
-        targetX = lerpf( 4.8f,  5.5f, smoothU);
+        targetX = lerpf( 5.0f,  5.6f, smoothU);
         targetY = -2.05f;
-        targetZ = lerpf( 7.2f,  8.8f, smoothU);
+        targetZ = lerpf( 7.5f,  9.0f, smoothU);
 
-        // Subtle camera shudder on touchdown impact at 61.0s - 61.6s
-        if (t >= 61.0f && t <= 61.6f) {
-            float impact = sinf((t - 61.0f) * 28.0f) * 0.020f * (1.0f - (t - 61.0f) / 0.6f);
+        // Touchdown impact shudder at 63.0s - 63.6s
+        if (t >= 63.0f && t <= 63.6f) {
+            float impact = sinf((t - 63.0f) * 28.0f) * 0.020f * (1.0f - (t - 63.0f) / 0.6f);
             eyeY += impact;
         }
     }
@@ -523,6 +613,76 @@ static void renderAtmosphericSkybox() {
 
     glDepthMask(GL_TRUE);
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_LIGHTING);
+}
+
+static void renderAtmosphericVaporStreaks() {
+    if (seqTime > 51.5f || s3Vapor.empty()) return;
+
+    glDisable(GL_LIGHTING);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE); // Radiant vapor additive glow
+    glDepthMask(GL_FALSE);
+
+    glLineWidth(2.4f);
+    glBegin(GL_LINES);
+    for (size_t i = 0; i < s3Vapor.size(); ++i) {
+        const VaporStreak& v = s3Vapor[i];
+        float x0 = v.x;
+        float y0 = v.y;
+        float z0 = v.z;
+        float x1 = x0 + s3ShipDirX * v.length;
+        float y1 = y0 + s3ShipDirY * v.length;
+        float z1 = z0 + s3ShipDirZ * v.length;
+
+        // Whitish-cyan high altitude condensation shreds
+        glColor4f(0.92f, 0.88f, 0.82f, v.alpha * 0.70f);
+        glVertex3f(x0, y0, z0);
+        glColor4f(0.75f, 0.45f, 0.30f, 0.0f);
+        glVertex3f(x1, y1, z1);
+    }
+    glEnd();
+
+    glLineWidth(1.0f);
+    glDepthMask(GL_TRUE);
+    glDisable(GL_BLEND);
+    glEnable(GL_LIGHTING);
+}
+
+static void renderHeatshieldGlow() {
+    if (s3HeatGlow <= 0.01f) return;
+
+    glDisable(GL_LIGHTING);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+    glDepthMask(GL_FALSE);
+
+    // Multi-layered incandescent plasma halo wrapped around the nosecone & underside
+    glPushMatrix();
+    glTranslatef(0.0f, -0.05f, 0.45f); // Nosecone & forward underside
+
+    for (int layer = 0; layer < 3; ++layer) {
+        float s = 0.32f + (float)layer * 0.12f;
+        float a = s3HeatGlow * (0.65f - (float)layer * 0.18f);
+
+        // Core white-hot, fading into fiery orange outer envelope
+        if (layer == 0) {
+            glColor4f(1.0f, 0.95f, 0.75f, a);
+        } else if (layer == 1) {
+            glColor4f(1.0f, 0.55f, 0.15f, a);
+        } else {
+            glColor4f(0.90f, 0.25f, 0.05f, a);
+        }
+
+        glPushMatrix();
+        glScalef(s * 1.8f, s * 0.6f, s * 2.2f);
+        glutSolidSphere(1.0, 14, 10);
+        glPopMatrix();
+    }
+
+    glPopMatrix();
+    glDepthMask(GL_TRUE);
+    glDisable(GL_BLEND);
     glEnable(GL_LIGHTING);
 }
 
@@ -578,7 +738,6 @@ static void renderParachuteWithLines() {
 
         float canopyBottomY = s3ChuteY - 0.2f;
         glBegin(GL_LINES);
-            // 4 Corner suspension cords
             glVertex3f(s3ChuteX - 0.7f, canopyBottomY, s3ChuteZ - 0.7f);
             glVertex3f(s3ShipX - 0.2f, s3ShipY + 0.2f, s3ShipZ - 0.2f);
 
@@ -601,7 +760,10 @@ void renderScene3() {
     // 1. Martian Atmospheric Gradient Sky
     renderAtmosphericSkybox();
 
-    // 2. Official NASA Gale Crater 3D Topography Mesh
+    // 2. High-Altitude Atmospheric Cloud & Vapor Shreds
+    renderAtmosphericVaporStreaks();
+
+    // 3. Official NASA Gale Crater 3D Topography Mesh
     if (craterLoaded && craterDisplayList != 0) {
         glPushMatrix();
         glTranslatef(0.0f, -4.5f, 0.0f);
@@ -618,10 +780,10 @@ void renderScene3() {
         glPopMatrix();
     }
 
-    // 3. Parachute Canopy & Suspension Lines
+    // 4. Parachute Canopy & Suspension Lines
     renderParachuteWithLines();
 
-    // 4. Star Sparrow / Ranger Lander Craft
+    // 5. Star Sparrow / Ranger Lander Craft with Heatshield Thermal Glow
     glPushMatrix();
     glTranslatef(s3ShipX, s3ShipY, s3ShipZ);
     glScalef(s3ShipScale, s3ShipScale, s3ShipScale);
@@ -643,9 +805,12 @@ void renderScene3() {
 
     renderRangerMesh();
 
+    // Incandescent heatshield plasma envelope during entry
+    renderHeatshieldGlow();
+
     glDisable(GL_LIGHT2);
     glPopMatrix();
 
-    // 5. Volumetric Touchdown Dust Clouds
+    // 6. Volumetric Touchdown Dust Clouds
     renderTouchdownDustParticles();
 }
