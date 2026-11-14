@@ -628,38 +628,50 @@ void renderRangerLander() {
         glEnable(GL_LIGHTING);
     }
 
-    // 2. Twin Main Propulsion De-Orbit Flame Plumes (cinematic compact shock diamonds & bright core)
+    // 2. Realistic Vacuum Rocket Thruster Plumes (Ion / Kerolox blue-white hypersonic vacuum plume)
     if (mainBurnActive > 0.0f) {
         glDisable(GL_LIGHTING);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
-        float burnFlicker = 0.88f + 0.12f * sinf(totalTime * 45.0f);
-        float flameLen = 0.45f * mainBurnActive * burnFlicker;
+        float burnFlicker = 0.92f + 0.08f * sinf(totalTime * 60.0f);
+        float flameLen = 0.85f * mainBurnActive * burnFlicker;
 
-        for (float side = -0.32f; side <= 0.35f; side += 0.64f) {
+        // Realistic thruster exhaust bell positions at the back
+        for (float side = -0.22f; side <= 0.25f; side += 0.44f) {
             glPushMatrix();
             glTranslatef(side, 0.0f, -0.92f);
 
-            // Core shock diamond
-            glColor4f(0.95f, 0.98f, 1.0f, 0.95f);
+            // 1) Bright white inner ignition core
+            glColor4f(1.0f, 1.0f, 1.0f, 0.95f);
             glBegin(GL_TRIANGLE_FAN);
-                glVertex3f(0.0f, 0.0f, -flameLen * 0.55f);
-                for (int deg = 0; deg <= 360; deg += 45) {
+                glVertex3f(0.0f, 0.0f, -flameLen * 0.35f);
+                for (int deg = 0; deg <= 360; deg += 30) {
                     float rad = deg * 3.14159f / 180.0f;
-                    glColor4f(0.40f, 0.85f, 1.0f, 0.0f);
-                    glVertex3f(cosf(rad) * 0.07f, sinf(rad) * 0.07f, 0.0f);
+                    glColor4f(0.85f, 0.95f, 1.0f, 0.20f);
+                    glVertex3f(cosf(rad) * 0.045f, sinf(rad) * 0.045f, 0.0f);
                 }
             glEnd();
 
-            // Outer plasma plume
-            glColor4f(0.25f, 0.65f, 1.0f, 0.70f);
+            // 2) Electric cyan intermediate mach core
+            glColor4f(0.40f, 0.80f, 1.0f, 0.75f);
+            glBegin(GL_TRIANGLE_FAN);
+                glVertex3f(0.0f, 0.0f, -flameLen * 0.70f);
+                for (int deg = 0; deg <= 360; deg += 30) {
+                    float rad = deg * 3.14159f / 180.0f;
+                    glColor4f(0.15f, 0.50f, 0.95f, 0.05f);
+                    glVertex3f(cosf(rad) * 0.09f, sinf(rad) * 0.09f, 0.0f);
+                }
+            glEnd();
+
+            // 3) Deep vacuum expanding outer plume envelope (realistic bell flare in space)
+            glColor4f(0.12f, 0.35f, 0.85f, 0.45f);
             glBegin(GL_TRIANGLE_FAN);
                 glVertex3f(0.0f, 0.0f, -flameLen);
-                for (int deg = 0; deg <= 360; deg += 45) {
+                for (int deg = 0; deg <= 360; deg += 30) {
                     float rad = deg * 3.14159f / 180.0f;
-                    glColor4f(0.08f, 0.35f, 0.85f, 0.0f);
-                    glVertex3f(cosf(rad) * 0.14f, sinf(rad) * 0.14f, 0.0f);
+                    glColor4f(0.04f, 0.15f, 0.60f, 0.0f);
+                    glVertex3f(cosf(rad) * 0.16f, sinf(rad) * 0.16f, 0.0f);
                 }
             glEnd();
 
@@ -670,33 +682,7 @@ void renderRangerLander() {
         glEnable(GL_LIGHTING);
     }
 
-    // 3. Hypersonic Plasma Bow Shock & Belly Incandescence
-    if (heatshieldThermal > 0.05f) {
-        glDisable(GL_LIGHTING);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-
-        float shockFlicker = 0.90f + 0.10f * sinf(totalTime * 32.0f);
-        float shockAlpha = heatshieldThermal * 0.75f * shockFlicker;
-
-        glColor4f(1.0f, 0.55f, 0.12f, shockAlpha);
-        glPushMatrix();
-        glTranslatef(0.0f, -0.05f, 0.85f);
-        glScalef(1.25f, 0.75f, 1.0f);
-        glBegin(GL_TRIANGLE_FAN);
-            glColor4f(1.0f, 0.85f, 0.45f, shockAlpha);
-            glVertex3f(0.0f, 0.0f, 0.35f);
-            for (int deg = 0; deg <= 360; deg += 30) {
-                float rad = deg * 3.14159f / 180.0f;
-                glColor4f(0.95f, 0.25f, 0.05f, 0.0f);
-                glVertex3f(cosf(rad) * 0.85f, sinf(rad) * 0.45f, -0.75f);
-            }
-        glEnd();
-        glPopMatrix();
-
-        glDisable(GL_BLEND);
-        glEnable(GL_LIGHTING);
-    }
+    // 3. Atmospheric heatshield glow removed (clean deep space flight)
 
     // 4. Brilliant Radiant Beacon Dot: as it recedes and disappears, it shines as an intense bright dot
     if (seqTime >= 40.5f) {

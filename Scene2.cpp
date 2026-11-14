@@ -98,7 +98,7 @@ void updateScene2(float dt) {
 
         rcsActive = 0.0f;
         mainBurnActive = (t >= 39.1f && u < 1.0f) ? 1.0f : 0.0f;
-        heatshieldThermal = smoothstep(40.5f, 44.5f, t) * 0.45f;
+        heatshieldThermal = 0.0f; // Pure space vacuum - zero atmospheric entry friction yet
 
         // High-velocity elongated jet exhaust plume
         if (mainBurnActive > 0.0f && rangerPosX > -5.20f) {
