@@ -55,32 +55,33 @@ void updateScene2(float dt) {
         }
     }
     else if (t < 46.0f) {
-        // SHOT 2: DESCENT FROM SCREEN RIGHT TOWARD MARS ON THE RIGHT (39.0s - 46.0s)
-        // With camera at eyeX ~ -3.20 looking at targetX ~ -1.85, the screen center line is at X = -1.85.
-        // Screen right is at X >= -1.0. Mars is at (0,0,0) (strongly on the right side).
-        // Ranger starts at X = -0.90 (screen right) and flies toward Mars surface / horizon (-Z depth).
+        // SHOT 2: DESCENT FROM SCREEN RIGHT TOWARD MARS (39.0s - 46.0s)
+        // With Camera at (-3.2, 0.9, 4.0) looking at (-3.4, -0.2, 0.85),
+        // Mars (0,0,0) is prominently on the right.
+        // Screen-right is X ~ -2.4 .. -2.6, screen-left/center is X ~ -3.6 .. -4.0.
+        // Ranger starts near screen right and flies leftward + into depth (-Z) toward Mars curve.
         float u = (t - 39.0f) / 7.0f;
         float smoothU = smoothstep(0.0f, 1.0f, u);
 
-        rangerPosX = lerpf(-0.90f, -1.65f, smoothU);
-        rangerPosY = lerpf( 0.45f,  0.05f, smoothU);
-        rangerPosZ = lerpf( 2.20f,  0.90f, smoothU);
+        rangerPosX = lerpf(-2.55f, -3.20f, smoothU);
+        rangerPosY = lerpf( 0.40f,  0.05f, smoothU);
+        rangerPosZ = lerpf( 2.20f,  1.45f, smoothU);
 
-        // Heading: moving leftward (-X), downward (-Y), into distance (-Z)
+        // Direction: moving left (-X), down (-Y), and into depth (-Z)
         rangerDirX = -0.65f;
         rangerDirY = -0.35f;
         rangerDirZ = -0.67f;
         normalize3(rangerDirX, rangerDirY, rangerDirZ);
 
-        // Front 3/4 view: nose pointing downward-left, roof tilted toward camera
-        rangerPitchExtra = -6.0f;
-        rangerRollAngle  = 40.0f;
+        // Front 3/4 top-down view: roof tilted toward user screen
+        rangerPitchExtra = 15.0f;
+        rangerRollAngle  = 45.0f;
 
         rcsActive = 0.0f;
         mainBurnActive = (t >= 39.2f) ? 1.0f : 0.0f;
         heatshieldThermal = 0.0f;
 
-        // Exhaust trail
+        // Exhaust trail shooting backward (+X, +Y, +Z)
         if (mainBurnActive > 0.0f) {
             float exX = rangerPosX - rangerDirX * 0.25f;
             float exY = rangerPosY - rangerDirY * 0.25f;
@@ -98,20 +99,20 @@ void updateScene2(float dt) {
         }
     }
     else {
-        // SHOT 3: RECEDING DEEP INTO MARS HORIZON -> SHRINKING TO PINPOINT DOT (46.0s - 56.0s)
+        // SHOT 3: CROSSING HORIZON & RECEDING INTO DISTANT DOT (46.0s - 56.0s)
         float u = (t - 46.0f) / 10.0f;
 
-        rangerPosX = lerpf(-1.65f, -2.40f, u);
-        rangerPosY = lerpf( 0.05f, -0.38f, u);
-        rangerPosZ = lerpf( 0.90f, -0.90f, u);
+        rangerPosX = lerpf(-3.20f, -3.65f, u);
+        rangerPosY = lerpf( 0.05f, -0.45f, u);
+        rangerPosZ = lerpf( 1.45f,  0.40f, u); // deep distance into background
 
-        rangerDirX = -0.65f;
-        rangerDirY = -0.28f;
-        rangerDirZ = -0.70f;
+        rangerDirX = -0.55f;
+        rangerDirY = -0.35f;
+        rangerDirZ = -0.76f;
         normalize3(rangerDirX, rangerDirY, rangerDirZ);
 
-        rangerPitchExtra = -6.0f;
-        rangerRollAngle  = 35.0f;
+        rangerPitchExtra = 15.0f;
+        rangerRollAngle  = 45.0f;
 
         rcsActive = 0.0f;
         mainBurnActive = 1.0f;
@@ -161,26 +162,25 @@ void computeCameraScene2(float& eyeX, float& eyeY, float& eyeZ,
         targetZ = 2.45f;
     }
     else if (t < 46.0f) {
-        // SHOT 2 (39.0s - 46.0s): Sudden cut right to Mars on the right edge of screen
-        // Eye shifted far left and looking towards negative X, forcing Mars (0,0,0) into the right frame
+        // SHOT 2 (39.0s - 46.0s): Mars firmly placed on right edge of viewport
         float u = (t - 39.0f) / 7.0f;
-        eyeX = lerpf(-3.20f, -3.10f, u);
-        eyeY = lerpf( 1.10f,  1.00f, u);
-        eyeZ = lerpf( 4.10f,  3.90f, u);
+        eyeX = lerpf(-3.25f, -3.15f, u);
+        eyeY = lerpf( 0.90f,  0.85f, u);
+        eyeZ = lerpf( 4.05f,  3.95f, u);
 
-        targetX = lerpf(-1.80f, -1.95f, u);
-        targetY =  0.05f;
-        targetZ =  0.70f;
+        targetX = lerpf(-3.45f, -3.35f, u);
+        targetY = -0.20f;
+        targetZ =  0.85f;
     }
     else {
-        // SHOT 3 (46.0s - 56.0s): Receding Over Mars Surface toward distant curve
+        // SHOT 3 (46.0s - 56.0s): Receding Over Mars Surface on the right
         float u = (t - 46.0f) / 10.0f;
-        eyeX = lerpf(-3.10f, -3.00f, u);
-        eyeY = lerpf( 1.00f,  0.90f, u);
-        eyeZ = lerpf( 3.90f,  3.80f, u);
+        eyeX = lerpf(-3.15f, -3.05f, u);
+        eyeY = lerpf( 0.85f,  0.80f, u);
+        eyeZ = lerpf( 3.95f,  4.00f, u);
 
-        targetX = lerpf(-1.95f, -2.25f, u);
-        targetY = lerpf( 0.05f, -0.20f, u);
-        targetZ = lerpf( 0.70f, -0.40f, u);
+        targetX = lerpf(-3.35f, -3.15f, u);
+        targetY = -0.25f;
+        targetZ =  0.80f;
     }
 }
