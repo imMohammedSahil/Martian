@@ -539,11 +539,16 @@ void renderRangerLander() {
     glRotatef(pitch + rangerPitchExtra, 1.0f, 0.0f, 0.0f);
     glRotatef(rangerRollAngle, 0.0f, 0.0f, 1.0f);
 
-    // Dynamic scale receding into distance: balanced hero size (1.20) -> smooth curve -> dot -> vanishes
+    // Dynamic scale: 1.20 hero size at entrance -> smooth shrink -> pinpoint speck dot -> vanishes
     float rScale = 1.2f;
     if (seqTime >= 39.0f) {
         float u = (seqTime - 39.0f) / 17.0f;
-        rScale = lerpf(1.20f, 0.0f, smoothstep(0.0f, 0.95f, u));
+        // Shrinks down to 0.012 (pinpoint dot) by u=0.88 (54s), then fades/vanishes by 55.5s
+        if (u < 0.88f) {
+            rScale = lerpf(1.20f, 0.012f, smoothstep(0.0f, 0.88f, u));
+        } else {
+            rScale = lerpf(0.012f, 0.0f, smoothstep(0.88f, 0.98f, u));
+        }
     }
     if (rScale <= 0.0001f) {
         glDisable(GL_LIGHT2);

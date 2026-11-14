@@ -61,11 +61,11 @@ void updateScene2(float dt) {
         u = clampf(u, 0.0f, 1.0f);
 
         // Cubic Bezier curve control points:
-        // Calibrated start for scale 1.20: enters cleanly from off-screen bottom-left
+        // Orbital entry trajectory skimming OVER Mars horizon atmosphere (Radius >= 2.42, never penetrating surface mesh)
         const float p0x =  -6.80f, p0y = -1.15f, p0z =  2.95f;
-        const float p1x =  -3.80f, p1y = -0.20f, p1z =  2.20f;
-        const float p2x =  -2.50f, p2y =  0.10f, p2z =  1.40f;
-        const float p3x =  -1.20f, p3y = -0.55f, p3z =  0.60f;
+        const float p1x =  -3.80f, p1y = -0.20f, p1z =  2.30f;
+        const float p2x =  -2.40f, p2y =  0.25f, p2z =  1.65f;
+        const float p3x =  -1.55f, p3y = -0.15f, p3z =  1.85f;
 
         float invU = 1.0f - u;
         float b0 = invU * invU * invU;
