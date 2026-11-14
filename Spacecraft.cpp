@@ -108,10 +108,12 @@ static void loadRangerModel() {
     glEnable(GL_COLOR_MATERIAL);
     glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
 
-    GLfloat amb[]  = { 0.40f, 0.40f, 0.45f, 1.0f };
-    GLfloat spec[] = { 0.82f, 0.82f, 0.88f, 1.0f };
+    GLfloat amb[]  = { 0.85f, 0.85f, 0.90f, 1.0f };
+    GLfloat spec[] = { 0.95f, 0.95f, 1.00f, 1.0f };
+    GLfloat emit[] = { 0.22f, 0.22f, 0.25f, 1.0f }; // subtle self-illumination so craft never looks shadowy
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, amb);
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, emit);
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 64.0f);
 
     glEnableClientState(GL_VERTEX_ARRAY);
@@ -510,16 +512,24 @@ void renderRangerLander() {
     glPushMatrix();
     glTranslatef(rangerPosX, rangerPosY, rangerPosZ);
 
-    // Dedicated key light for the Ranger so its facets, heatshield and hull pop out vividly
+    // Dedicated multi-angle brilliant key & fill lights directly on Ranger body
     glEnable(GL_LIGHT2);
-    GLfloat rangerKeyPos[4]     = { -1.5f, 3.0f, 2.5f, 0.0f }; // Directional light angled from upper-front
-    GLfloat rangerKeyDiffuse[4] = { 1.6f, 1.55f, 1.5f, 1.0f };
-    GLfloat rangerKeyAmbient[4] = { 0.45f, 0.45f, 0.50f, 1.0f };
-    GLfloat rangerKeySpec[4]    = { 0.8f, 0.8f, 0.8f, 1.0f };
+    GLfloat rangerKeyPos[4]     = { 0.0f, 4.0f, 2.0f, 0.0f }; // Strong overhead-front directional light
+    GLfloat rangerKeyDiffuse[4] = { 2.4f, 2.35f, 2.3f, 1.0f };
+    GLfloat rangerKeyAmbient[4] = { 0.95f, 0.95f, 1.05f, 1.0f }; // High ambient to kill shadows
+    GLfloat rangerKeySpec[4]    = { 1.2f, 1.2f, 1.2f, 1.0f };
     glLightfv(GL_LIGHT2, GL_POSITION, rangerKeyPos);
     glLightfv(GL_LIGHT2, GL_DIFFUSE, rangerKeyDiffuse);
     glLightfv(GL_LIGHT2, GL_AMBIENT, rangerKeyAmbient);
     glLightfv(GL_LIGHT2, GL_SPECULAR, rangerKeySpec);
+
+    glEnable(GL_LIGHT3);
+    GLfloat rangerFillPos[4]     = { 0.0f, -3.0f, 2.0f, 0.0f }; // Underside/front fill light
+    GLfloat rangerFillDiffuse[4] = { 1.2f, 1.2f, 1.3f, 1.0f };
+    GLfloat rangerFillAmbient[4] = { 0.5f, 0.5f, 0.55f, 1.0f };
+    glLightfv(GL_LIGHT3, GL_POSITION, rangerFillPos);
+    glLightfv(GL_LIGHT3, GL_DIFFUSE, rangerFillDiffuse);
+    glLightfv(GL_LIGHT3, GL_AMBIENT, rangerFillAmbient);
 
     // Orientation: look along flight direction vector
     float yaw = atan2f(rangerDirX, rangerDirZ) * 180.0f / (float)M_PI;
@@ -541,6 +551,7 @@ void renderRangerLander() {
     }
     if (rScale <= 0.0001f) {
         glDisable(GL_LIGHT2);
+        glDisable(GL_LIGHT3);
         glPopMatrix();
         return;
     }
@@ -711,6 +722,7 @@ void renderRangerLander() {
     }
 
     glDisable(GL_LIGHT2);
+    glDisable(GL_LIGHT3);
     glPopMatrix();
 }
 
