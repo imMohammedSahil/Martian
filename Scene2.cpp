@@ -145,27 +145,25 @@ void computeCameraScene2(float& eyeX, float& eyeY, float& eyeZ,
         targetY = -0.20f;
         targetZ =  0.85f;
 
-        // Powerful Visible Flyby Camera Shockwave Shake:
-        // Triggers as screen un-blacks and the supersonic ship sweeps across bottom-left (39.3s - 40.8s)
-        if (t >= 39.30f && t <= 40.80f) {
+        // Subtle, Cinematic Flyby Shockwave Shake (1.0s clean dampened acoustic shudder)
+        if (t >= 39.30f && t <= 40.30f) {
             float dtShake = t - 39.30f;
-            float progress = dtShake / 1.50f; // 1.5s total visible rumble
-            // Sharp impulse that gently decays as ship passes
-            float envelope = sinf(progress * (float)M_PI * 0.5f + (float)M_PI * 0.5f) * expf(-progress * 2.2f);
+            float progress = dtShake / 1.0f; // 1.0s duration
+            float envelope = sinf(progress * (float)M_PI) * expf(-progress * 2.8f);
 
-            // Prominent visible displacement: vertical thud + horizontal shudder + roll tilt
-            float joltY = (sinf(dtShake * 55.0f) * 0.70f + sinf(dtShake * 90.0f) * 0.30f) * envelope * 0.16f;
-            float joltX = (cosf(dtShake * 42.0f) * 0.65f + sinf(dtShake * 75.0f) * 0.35f) * envelope * 0.11f;
-            float joltZ = sinf(dtShake * 60.0f) * envelope * 0.08f;
+            // Balanced amplitude: clearly visible but subtle and cinematic
+            float joltY = sinf(dtShake * 55.0f) * envelope * 0.055f;
+            float joltX = cosf(dtShake * 42.0f) * envelope * 0.035f;
+            float joltZ = sinf(dtShake * 60.0f) * envelope * 0.020f;
 
             eyeX += joltX;
             eyeY += joltY;
             eyeZ += joltZ;
-            targetX += joltX * 0.20f;
-            targetY += joltY * 0.20f;
+            targetX += joltX * 0.25f;
+            targetY += joltY * 0.25f;
 
-            // Camera roll shake
-            upX += cosf(dtShake * 45.0f) * envelope * 0.085f;
+            // Subtle camera roll
+            upX += cosf(dtShake * 45.0f) * envelope * 0.022f;
         }
     }
     else {
