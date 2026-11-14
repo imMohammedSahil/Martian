@@ -539,9 +539,9 @@ void renderRangerLander() {
     glRotatef(pitch + rangerPitchExtra, 1.0f, 0.0f, 0.0f);
     glRotatef(rangerRollAngle, 0.0f, 0.0f, 1.0f);
 
-    // Dynamic scale: 0.50 size -> high supersonic jet zip (4.2s) -> pinpoint speck dot -> vanishes
+    // Dynamic scale: 0.50 size -> high supersonic jet zip (4.2s) -> pinpoint speck dot -> vanishes in Scene 2
     float rScale = 0.50f;
-    if (seqTime >= 39.0f) {
+    if (seqTime >= 39.0f && seqTime < 44.0f) {
         float u = (seqTime - 39.0f) / 4.2f; // matches fast 4.2s jet flyby
         u = clampf(u, 0.0f, 1.0f);
         float speedU = u * (2.0f - u);
@@ -781,5 +781,12 @@ void renderSpeedDustStreaks(float camX, float camY, float camZ) {
     glLineWidth(1.0f);
     glDisable(GL_BLEND);
     glEnable(GL_LIGHTING);
+}
+
+void renderRangerMesh() {
+    loadRangerModel();
+    if (rangerLoaded && rangerList) {
+        glCallList(rangerList);
+    }
 }
 

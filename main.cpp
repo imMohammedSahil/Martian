@@ -154,6 +154,15 @@ void keyboard(unsigned char key, int x, int y) {
         isPaused = !isPaused;
     } else if (key == 'r' || key == 'R') { // Replay Scene from start
         seqTime = 0.0f;
+    } else if (key == '1') {
+        seqTime = 0.0f;
+        particles.clear();
+    } else if (key == '2') {
+        seqTime = 35.0f;
+        particles.clear();
+    } else if (key == '3') {
+        seqTime = 44.0f;
+        particles.clear();
     } else if (key == 'f' || key == 'F' || key == '.' || key == '>') { // Fast-Forward 5s
         seqTime = clampf(seqTime + 5.0f, 0.0f, SEQUENCE_DURATION - 0.1f);
     } else if (key == 'b' || key == 'B' || key == ',' || key == '<') { // Rewind 5s

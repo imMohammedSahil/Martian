@@ -5,6 +5,7 @@
 
 void renderEnduranceShip();
 void renderRangerLander();
+void renderRangerMesh();
 void renderParticles();
 void renderSpeedDustStreaks(float camX, float camY, float camZ);
 void spawnParticle(float x, float y, float z,

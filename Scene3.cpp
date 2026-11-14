@@ -33,7 +33,6 @@ static bool   parachuteLoadFailed = false;
 
 static GLuint smokeTexID = 0;
 static GLuint sparkTexID = 0;
-static GLuint cloudTexID = 0;
 
 static bool   soundTriggered = false;
 
@@ -41,7 +40,7 @@ static bool   soundTriggered = false;
 static float s3ShipX = 0.0f, s3ShipY = 0.0f, s3ShipZ = 0.0f;
 static float s3ShipDirX = 0.0f, s3ShipDirY = -0.5f, s3ShipDirZ = 1.0f;
 static float s3ShipRoll = 0.0f, s3ShipPitch = 0.0f;
-static float s3ShipScale = 0.35f;
+static float s3ShipScale = 0.50f;
 
 static float s3ChuteDeploy = 0.0f; // 0.0 = packed, 1.0 = fully inflated
 static float s3ChuteX = 0.0f, s3ChuteY = 0.0f, s3ChuteZ = 0.0f;
@@ -199,8 +198,8 @@ static void loadParachuteMesh() {
         glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     }
 
-    GLfloat pDiff[] = { 1.30f, 1.25f, 1.20f, 1.0f };
-    GLfloat pAmb[]  = { 0.70f, 0.65f, 0.60f, 1.0f };
+    GLfloat pDiff[] = { 1.40f, 1.35f, 1.30f, 1.0f };
+    GLfloat pAmb[]  = { 0.85f, 0.80f, 0.75f, 1.0f };
     glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, pDiff);
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, pAmb);
 
@@ -231,7 +230,6 @@ void initScene3() {
     loadParachuteMesh();
     if (!smokeTexID) smokeTexID = loadTextureHelper("smoke1.png", false);
     if (!sparkTexID) sparkTexID = loadTextureHelper("spark1.png", false);
-    if (!cloudTexID) cloudTexID = loadTextureHelper("cloud.png", false);
 }
 
 // ============================================================================
@@ -254,56 +252,56 @@ void updateScene3(float dt) {
         float ease = u * u;
 
         // Blazing descent through upper atmosphere above crater rim
-        s3ShipX = lerpf(-18.0f, -6.0f, u);
-        s3ShipY = lerpf( 16.5f,  7.2f, ease);
-        s3ShipZ = lerpf(-22.0f, -8.0f, u);
+        s3ShipX = lerpf(-14.0f, -4.0f, u);
+        s3ShipY = lerpf( 12.0f,  4.5f, ease);
+        s3ShipZ = lerpf(-16.0f, -5.0f, u);
 
         s3ShipDirX =  0.65f;
-        s3ShipDirY = -0.55f;
+        s3ShipDirY = -0.50f;
         s3ShipDirZ =  0.75f;
         normalize3(s3ShipDirX, s3ShipDirY, s3ShipDirZ);
 
-        s3ShipPitch = -24.0f;
-        s3ShipRoll  = lerpf(45.0f, 22.0f, u);
-        s3ShipScale = 0.40f;
+        s3ShipPitch = -20.0f;
+        s3ShipRoll  = lerpf(40.0f, 18.0f, u);
+        s3ShipScale = 0.50f;
 
         // Spawn plasma entry flame & heatshield spark particles
-        for (int k = 0; k < 4; ++k) {
-            float ox = randRange(-0.4f, 0.4f);
-            float oy = randRange(-0.3f, 0.3f);
-            float oz = randRange(-0.4f, 0.4f);
+        for (int k = 0; k < 5; ++k) {
+            float ox = randRange(-0.3f, 0.3f);
+            float oy = randRange(-0.2f, 0.2f);
+            float oz = randRange(-0.3f, 0.3f);
             spawnParticle(s3ShipX + ox, s3ShipY + oy, s3ShipZ + oz,
-                          -s3ShipDirX * 12.0f + randRange(-1.5f, 1.5f),
-                          -s3ShipDirY * 12.0f + randRange(-1.0f, 1.0f),
-                          -s3ShipDirZ * 12.0f + randRange(-1.5f, 1.5f),
-                          randRange(0.25f, 0.55f), randRange(1.8f, 3.2f),
-                          1.0f, randRange(0.4f, 0.85f), 0.15f, true);
+                          -s3ShipDirX * 10.0f + randRange(-1.0f, 1.0f),
+                          -s3ShipDirY * 10.0f + randRange(-0.8f, 0.8f),
+                          -s3ShipDirZ * 10.0f + randRange(-1.0f, 1.0f),
+                          randRange(0.2f, 0.5f), randRange(1.5f, 2.8f),
+                          1.0f, randRange(0.45f, 0.85f), 0.15f, true);
         }
     }
-    // PHASE 2: CLOUD BREAK & CANYON REVEAL (48.0s - 53.0s)
+    // PHASE 2: CANYON REVEAL & DESCENT (48.0s - 53.0s)
     else if (t < 53.0f) {
         float u = (t - 48.0f) / 5.0f;
         float smoothU = smoothstep(0.0f, 1.0f, u);
 
         // Sweeping descent banking through Gale Crater mountain pass
-        s3ShipX = lerpf(-6.0f, 2.5f, smoothU);
-        s3ShipY = lerpf( 7.2f, 2.6f, smoothU);
-        s3ShipZ = lerpf(-8.0f, 3.0f, smoothU);
+        s3ShipX = lerpf(-4.0f, 2.5f, smoothU);
+        s3ShipY = lerpf( 4.5f, 1.8f, smoothU);
+        s3ShipZ = lerpf(-5.0f, 3.5f, smoothU);
 
-        s3ShipDirX =  0.60f;
-        s3ShipDirY = -0.35f;
-        s3ShipDirZ =  0.70f;
+        s3ShipDirX =  0.55f;
+        s3ShipDirY = -0.30f;
+        s3ShipDirZ =  0.75f;
         normalize3(s3ShipDirX, s3ShipDirY, s3ShipDirZ);
 
-        s3ShipPitch = lerpf(-24.0f, -10.0f, smoothU);
-        s3ShipRoll  = lerpf( 22.0f,  -8.0f, smoothU);
-        s3ShipScale = 0.40f;
+        s3ShipPitch = lerpf(-20.0f, -8.0f, smoothU);
+        s3ShipRoll  = lerpf( 18.0f, -6.0f, smoothU);
+        s3ShipScale = 0.50f;
 
-        // Residual cooling plasma streaks fading out
-        if (u < 0.4f && (rand() % 3 == 0)) {
+        // Cooling plasma streaks
+        if (u < 0.35f && (rand() % 2 == 0)) {
             spawnParticle(s3ShipX, s3ShipY, s3ShipZ,
-                          -s3ShipDirX * 6.0f, -s3ShipDirY * 6.0f, -s3ShipDirZ * 6.0f,
-                          0.3f, 1.5f, 0.9f, 0.35f, 0.1f, true);
+                          -s3ShipDirX * 5.0f, -s3ShipDirY * 5.0f, -s3ShipDirZ * 5.0f,
+                          0.25f, 1.2f, 0.9f, 0.4f, 0.15f, true);
         }
     }
     // PHASE 3: SUPERSONIC PARACHUTE DEPLOYMENT (53.0s - 58.0s)
@@ -311,77 +309,76 @@ void updateScene3(float dt) {
         float u = (t - 53.0f) / 5.0f;
         float smoothU = smoothstep(0.0f, 1.0f, u);
 
-        s3ChuteDeploy = clampf((t - 53.0f) * 2.2f, 0.0f, 1.0f); // Unfurls in 0.45s
+        s3ChuteDeploy = clampf((t - 53.0f) * 2.5f, 0.0f, 1.0f); // Unfurls cleanly in 0.4s
 
-        // Rapid aerodynamic deceleration, leveling off descent
-        s3ShipX = lerpf( 2.5f, 5.0f, smoothU);
-        s3ShipY = lerpf( 2.6f, -0.6f, smoothU); // Glides downward steadily
-        s3ShipZ = lerpf( 3.0f, 7.5f, smoothU);
+        // Aerodynamic deceleration, gliding smoothly
+        s3ShipX = lerpf( 2.5f, 4.8f, smoothU);
+        s3ShipY = lerpf( 1.8f, -0.4f, smoothU);
+        s3ShipZ = lerpf( 3.5f, 7.2f, smoothU);
 
-        s3ShipDirX = lerpf(0.60f, 0.20f, smoothU);
-        s3ShipDirY = lerpf(-0.35f, -0.15f, smoothU);
-        s3ShipDirZ = lerpf(0.70f, 0.95f, smoothU);
+        s3ShipDirX = lerpf(0.55f, 0.15f, smoothU);
+        s3ShipDirY = lerpf(-0.30f, -0.12f, smoothU);
+        s3ShipDirZ = lerpf(0.75f, 0.98f, smoothU);
         normalize3(s3ShipDirX, s3ShipDirY, s3ShipDirZ);
 
         // Stabilizing pitch & roll
-        s3ShipPitch = lerpf(-10.0f, 4.0f, smoothU);
-        s3ShipRoll  = lerpf(-8.0f,  0.0f, smoothU);
-        s3ShipScale = 0.40f;
+        s3ShipPitch = lerpf(-8.0f, 3.0f, smoothU);
+        s3ShipRoll  = lerpf(-6.0f, 0.0f, smoothU);
+        s3ShipScale = 0.50f;
 
-        // Position parachute canopy high above craft trailing behind
-        s3ChuteX = s3ShipX - s3ShipDirX * 1.8f;
-        s3ChuteY = s3ShipY + 2.8f + 0.1f * sinf(t * 8.0f);
-        s3ChuteZ = s3ShipZ - s3ShipDirZ * 1.8f;
+        // Parachute canopy trails gracefully above craft
+        s3ChuteX = s3ShipX - s3ShipDirX * 1.5f;
+        s3ChuteY = s3ShipY + 2.5f + 0.08f * sinf(t * 7.0f);
+        s3ChuteZ = s3ShipZ - s3ShipDirZ * 1.5f;
     }
-    // PHASE 4: RETRO-THRUSTERS & TOUCHDOWN (58.0s - 64.0s)
+    // PHASE 4: RETRO-THRUSTERS & SOFT TOUCHDOWN (58.0s - 64.0s)
     else {
         float u = (t - 58.0f) / 5.5f;
         u = clampf(u, 0.0f, 1.0f);
         float landEase = smoothstep(0.0f, 1.0f, u);
 
         s3ChuteCut = true;
-        // Jettisoned parachute drifts away on Martian wind
-        s3ChuteX += 1.8f * dt;
-        s3ChuteY += 0.8f * dt;
-        s3ChuteZ -= 2.2f * dt;
+        // Jettisoned parachute drifts away on Martian breeze
+        s3ChuteX += 1.6f * dt;
+        s3ChuteY += 0.6f * dt;
+        s3ChuteZ -= 2.0f * dt;
 
-        // Lander vertical settle down onto crater plateau (target landing Y = -2.40f)
-        s3ShipX = lerpf( 5.0f,  5.8f, landEase);
-        s3ShipY = lerpf(-0.6f, -2.35f, landEase);
-        s3ShipZ = lerpf( 7.5f,  9.2f, landEase);
+        // Lander vertical settle down onto crater plateau (target landing Y = -2.10f)
+        s3ShipX = lerpf( 4.8f,  5.5f, landEase);
+        s3ShipY = lerpf(-0.4f, -2.10f, landEase);
+        s3ShipZ = lerpf( 7.2f,  8.8f, landEase);
 
-        s3ShipPitch = lerpf(4.0f, 0.0f, landEase);
+        s3ShipPitch = lerpf(3.0f, 0.0f, landEase);
         s3ShipRoll  = 0.0f;
-        s3ShipDirX = 0.10f; s3ShipDirY = -0.05f; s3ShipDirZ = 0.99f;
+        s3ShipDirX = 0.08f; s3ShipDirY = -0.04f; s3ShipDirZ = 0.99f;
         normalize3(s3ShipDirX, s3ShipDirY, s3ShipDirZ);
 
-        // Ventral retro thrusters pulsing down before touchdown (58.0s - 61.5s)
-        if (t >= 58.0f && t <= 61.5f) {
+        // Ventral retro thrusters pulsing down before touchdown (58.0s - 61.2s)
+        if (t >= 58.0f && t <= 61.2f) {
             for (int k = 0; k < 2; ++k) {
-                float ox = randRange(-0.35f, 0.35f);
-                float oz = randRange(-0.35f, 0.35f);
-                // Fiery cyan/blue retro-exhaust firing downward into ground
+                float ox = randRange(-0.3f, 0.3f);
+                float oz = randRange(-0.3f, 0.3f);
                 spawnParticle(s3ShipX + ox, s3ShipY - 0.2f, s3ShipZ + oz,
-                              randRange(-0.3f, 0.3f), -5.5f, randRange(-0.3f, 0.3f),
-                              0.18f, 1.2f, 0.2f, 0.8f, 1.0f, true);
+                              randRange(-0.2f, 0.2f), -5.0f, randRange(-0.2f, 0.2f),
+                              0.15f, 1.0f, 0.2f, 0.85f, 1.0f, true);
             }
         }
 
-        // Touchdown point contact at 61.2s: kick up radial dust plumes
+        // Touchdown point contact at 61.0s: radial red dust plumes
         if (t >= 61.0f && t <= 63.5f) {
             for (int d = 0; d < 3; ++d) {
                 float ang = randRange(0.0f, 2.0f * (float)M_PI);
-                float spd = randRange(1.8f, 4.2f);
+                float spd = randRange(1.5f, 3.8f);
                 TouchdownDust p;
-                p.x = s3ShipX + cosf(ang) * 0.4f;
-                p.y = -2.38f;
-                p.z = s3ShipZ + sinf(ang) * 0.4f;
+                p.x = s3ShipX + cosf(ang) * 0.3f;
+                p.y = -2.10f;
+                p.z = s3ShipZ + sinf(ang) * 0.3f;
                 p.vx = cosf(ang) * spd;
-                p.vy = randRange(0.4f, 1.6f);
+                p.vy = randRange(0.3f, 1.4f);
                 p.vz = sinf(ang) * spd;
-                p.scale = randRange(0.4f, 0.9f);
+                p.scale = randRange(0.4f, 0.8f);
                 p.alpha = 0.85f;
-                p.maxLife = randRange(1.8f, 2.8f);
+                p.maxLife = randRange(1.8f, 2.6f);
                 p.life = p.maxLife;
                 s3Dust.push_back(p);
             }
@@ -395,8 +392,8 @@ void updateScene3(float dt) {
         s3Dust[i].z += s3Dust[i].vz * dt;
         s3Dust[i].vx *= 0.94f;
         s3Dust[i].vz *= 0.94f;
-        s3Dust[i].vy -= 0.6f * dt; // Martian gravity
-        s3Dust[i].scale += 0.8f * dt; // Expands outward
+        s3Dust[i].vy -= 0.5f * dt;
+        s3Dust[i].scale += 0.7f * dt;
         s3Dust[i].life -= dt;
         s3Dust[i].alpha = (s3Dust[i].life / s3Dust[i].maxLife) * 0.75f;
         if (s3Dust[i].life <= 0.0f) {
@@ -420,9 +417,9 @@ void computeCameraScene3(float& eyeX, float& eyeY, float& eyeZ,
     // PHASE 1: HYPERSONIC CHASE CAM (44.0s - 48.0s)
     if (t < 48.0f) {
         float u = (t - 44.0f) / 4.0f;
-        eyeX = s3ShipX - s3ShipDirX * 3.8f + 1.2f;
-        eyeY = s3ShipY - s3ShipDirY * 3.8f + 0.9f;
-        eyeZ = s3ShipZ - s3ShipDirZ * 3.8f + 1.6f;
+        eyeX = s3ShipX - s3ShipDirX * 3.5f + 1.2f;
+        eyeY = s3ShipY - s3ShipDirY * 3.5f + 0.8f;
+        eyeZ = s3ShipZ - s3ShipDirZ * 3.5f + 1.5f;
 
         targetX = s3ShipX + s3ShipDirX * 1.5f;
         targetY = s3ShipY + s3ShipDirY * 1.5f;
@@ -430,7 +427,7 @@ void computeCameraScene3(float& eyeX, float& eyeY, float& eyeZ,
 
         // Supersonic entry turbulence shake
         float shakeFreq = t * 45.0f;
-        float shakeAmp = (1.0f - u * 0.4f) * 0.045f;
+        float shakeAmp = (1.0f - u * 0.4f) * 0.035f;
         eyeX += sinf(shakeFreq * 1.1f) * shakeAmp;
         eyeY += cosf(shakeFreq * 0.9f) * shakeAmp;
         eyeZ += sinf(shakeFreq * 1.3f) * shakeAmp;
@@ -441,9 +438,9 @@ void computeCameraScene3(float& eyeX, float& eyeY, float& eyeZ,
         float smoothU = smoothstep(0.0f, 1.0f, u);
 
         // Wide panoramic view framing the mountains and the descending ship
-        eyeX = lerpf(-12.0f, -4.0f, smoothU);
-        eyeY = lerpf(  9.5f,  5.8f, smoothU);
-        eyeZ = lerpf( -4.0f,  6.0f, smoothU);
+        eyeX = lerpf(-10.0f, -2.5f, smoothU);
+        eyeY = lerpf(  7.5f,  4.5f, smoothU);
+        eyeZ = lerpf( -2.0f,  6.5f, smoothU);
 
         targetX = s3ShipX;
         targetY = s3ShipY;
@@ -455,17 +452,17 @@ void computeCameraScene3(float& eyeX, float& eyeY, float& eyeZ,
         float smoothU = smoothstep(0.0f, 1.0f, u);
 
         // Low angle looking upward past the craft toward the blossoming parachute
-        eyeX = lerpf(s3ShipX + 3.2f, s3ShipX + 2.5f, smoothU);
-        eyeY = lerpf(s3ShipY - 1.2f, s3ShipY - 0.9f, smoothU);
-        eyeZ = lerpf(s3ShipZ - 3.5f, s3ShipZ - 3.0f, smoothU);
+        eyeX = lerpf(s3ShipX + 2.8f, s3ShipX + 2.2f, smoothU);
+        eyeY = lerpf(s3ShipY - 0.8f, s3ShipY - 0.5f, smoothU);
+        eyeZ = lerpf(s3ShipZ - 3.2f, s3ShipZ - 2.8f, smoothU);
 
         targetX = s3ShipX;
-        targetY = s3ShipY + 1.4f; // Look up toward canopy
+        targetY = s3ShipY + 1.2f; // Look up toward canopy
         targetZ = s3ShipZ;
 
         // Snapping jolt upon parachute opening at 53.1s - 53.6s
         if (t >= 53.1f && t <= 53.6f) {
-            float snap = sinf((t - 53.1f) * 40.0f) * 0.035f;
+            float snap = sinf((t - 53.1f) * 40.0f) * 0.028f;
             eyeY += snap;
         }
     }
@@ -475,17 +472,17 @@ void computeCameraScene3(float& eyeX, float& eyeY, float& eyeZ,
         float smoothU = smoothstep(0.0f, 1.0f, u);
 
         // Tripod angle sitting on the red plateau foreground
-        eyeX = lerpf( 2.2f,  2.8f, smoothU);
-        eyeY = -2.15f; // Just above ground level
-        eyeZ = lerpf( 5.5f,  6.2f, smoothU);
+        eyeX = lerpf( 2.4f,  2.8f, smoothU);
+        eyeY = -1.85f; // Ground tripod level
+        eyeZ = lerpf( 5.5f,  6.0f, smoothU);
 
-        targetX = lerpf( 5.0f,  5.8f, smoothU);
-        targetY = -2.25f;
-        targetZ = lerpf( 7.5f,  9.2f, smoothU);
+        targetX = lerpf( 4.8f,  5.5f, smoothU);
+        targetY = -2.05f;
+        targetZ = lerpf( 7.2f,  8.8f, smoothU);
 
-        // Subtle camera shudder when lander impacts at 61.2s - 61.8s
-        if (t >= 61.2f && t <= 61.8f) {
-            float impact = sinf((t - 61.2f) * 28.0f) * 0.022f * (1.0f - (t - 61.2f) / 0.6f);
+        // Subtle camera shudder on touchdown impact at 61.0s - 61.6s
+        if (t >= 61.0f && t <= 61.6f) {
+            float impact = sinf((t - 61.0f) * 28.0f) * 0.020f * (1.0f - (t - 61.0f) / 0.6f);
             eyeY += impact;
         }
     }
@@ -495,68 +492,37 @@ void computeCameraScene3(float& eyeX, float& eyeY, float& eyeZ,
 // SCENE 3 RENDERING
 // ============================================================================
 static void renderAtmosphericSkybox() {
+    glDisable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE);
     glDisable(GL_LIGHTING);
-    glPushMatrix();
-    glLoadIdentity();
 
-    // Deep Martian gradient sky: crimson dusk at horizon, purple-black at zenith
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
-    glOrtho(0, 1, 0, 1, -1, 1);
+    glOrtho(0.0, 1.0, 0.0, 1.0, -1.0, 1.0);
+
     glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
 
     glBegin(GL_QUADS);
-        // Horizon: rich Martian butterscotch / salmon pink
-        glColor3f(0.68f, 0.36f, 0.24f);
+        // Horizon: rich Martian salmon/butterscotch
+        glColor3f(0.72f, 0.38f, 0.22f);
         glVertex2f(0.0f, 0.0f);
         glVertex2f(1.0f, 0.0f);
-        // Zenith: deep cosmic rust-purple
-        glColor3f(0.18f, 0.08f, 0.12f);
+        // Zenith: deep cosmic rust/indigo
+        glColor3f(0.20f, 0.08f, 0.12f);
         glVertex2f(1.0f, 1.0f);
         glVertex2f(0.0f, 1.0f);
     glEnd();
 
+    glPopMatrix();
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
-    glPopMatrix();
-    glEnable(GL_LIGHTING);
-}
 
-static void renderAtmosphericCloudDeck(float shipY) {
-    if (seqTime > 51.5f || !cloudTexID) return;
-
-    float cloudAlpha = clampf((shipY - 4.0f) / 6.0f, 0.0f, 0.70f);
-    if (cloudAlpha <= 0.01f) return;
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, cloudTexID);
-    glDisable(GL_LIGHTING);
-
-    glColor4f(0.85f, 0.48f, 0.32f, cloudAlpha);
-
-    // Billowing atmospheric layers whipping past the camera
-    float t = seqTime;
-    for (int i = 0; i < 6; ++i) {
-        float cz = s3ShipZ + (float)i * 6.0f - 12.0f;
-        float cy = 9.0f + (float)i * 1.5f;
-        glPushMatrix();
-        glTranslatef(s3ShipX + sinf(t + i) * 2.0f, cy, cz);
-        glScalef(24.0f, 8.0f, 24.0f);
-        glBegin(GL_QUADS);
-            glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, 0.0f, -1.0f);
-            glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, 0.0f, -1.0f);
-            glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f, 0.0f,  1.0f);
-            glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f, 0.0f,  1.0f);
-        glEnd();
-        glPopMatrix();
-    }
-
-    glDisable(GL_TEXTURE_2D);
-    glDisable(GL_BLEND);
+    glDepthMask(GL_TRUE);
+    glEnable(GL_DEPTH_TEST);
     glEnable(GL_LIGHTING);
 }
 
@@ -597,7 +563,7 @@ static void renderParachuteWithLines() {
 
     glPushMatrix();
     glTranslatef(s3ChuteX, s3ChuteY, s3ChuteZ);
-    float pScale = 0.45f * s3ChuteDeploy;
+    float pScale = 0.40f * s3ChuteDeploy;
     glScalef(pScale, pScale, pScale);
     glCallList(parachuteDisplayList);
     glPopMatrix();
@@ -607,23 +573,23 @@ static void renderParachuteWithLines() {
         glDisable(GL_LIGHTING);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glLineWidth(1.8f);
+        glLineWidth(1.6f);
         glColor4f(0.92f, 0.90f, 0.88f, 0.75f);
 
         float canopyBottomY = s3ChuteY - 0.2f;
         glBegin(GL_LINES);
             // 4 Corner suspension cords
-            glVertex3f(s3ChuteX - 0.8f, canopyBottomY, s3ChuteZ - 0.8f);
-            glVertex3f(s3ShipX - 0.2f, s3ShipY + 0.3f, s3ShipZ - 0.2f);
+            glVertex3f(s3ChuteX - 0.7f, canopyBottomY, s3ChuteZ - 0.7f);
+            glVertex3f(s3ShipX - 0.2f, s3ShipY + 0.2f, s3ShipZ - 0.2f);
 
-            glVertex3f(s3ChuteX + 0.8f, canopyBottomY, s3ChuteZ - 0.8f);
-            glVertex3f(s3ShipX + 0.2f, s3ShipY + 0.3f, s3ShipZ - 0.2f);
+            glVertex3f(s3ChuteX + 0.7f, canopyBottomY, s3ChuteZ - 0.7f);
+            glVertex3f(s3ShipX + 0.2f, s3ShipY + 0.2f, s3ShipZ - 0.2f);
 
-            glVertex3f(s3ChuteX + 0.8f, canopyBottomY, s3ChuteZ + 0.8f);
-            glVertex3f(s3ShipX + 0.2f, s3ShipY + 0.3f, s3ShipZ + 0.2f);
+            glVertex3f(s3ChuteX + 0.7f, canopyBottomY, s3ChuteZ + 0.7f);
+            glVertex3f(s3ShipX + 0.2f, s3ShipY + 0.2f, s3ShipZ + 0.2f);
 
-            glVertex3f(s3ChuteX - 0.8f, canopyBottomY, s3ChuteZ + 0.8f);
-            glVertex3f(s3ShipX - 0.2f, s3ShipY + 0.3f, s3ShipZ + 0.2f);
+            glVertex3f(s3ChuteX - 0.7f, canopyBottomY, s3ChuteZ + 0.7f);
+            glVertex3f(s3ShipX - 0.2f, s3ShipY + 0.2f, s3ShipZ + 0.2f);
         glEnd();
 
         glDisable(GL_BLEND);
@@ -635,41 +601,51 @@ void renderScene3() {
     // 1. Martian Atmospheric Gradient Sky
     renderAtmosphericSkybox();
 
-    // 2. High-Altitude Cloud Deck
-    renderAtmosphericCloudDeck(s3ShipY);
-
-    // 3. Official NASA Gale Crater 3D Topography Mesh
+    // 2. Official NASA Gale Crater 3D Topography Mesh
     if (craterLoaded && craterDisplayList != 0) {
         glPushMatrix();
-        // Position Gale Crater terrain floor
         glTranslatef(0.0f, -4.5f, 0.0f);
 
-        GLfloat matDiff[] = { 1.25f, 1.20f, 1.15f, 1.0f };
-        GLfloat matAmb[]  = { 0.45f, 0.40f, 0.38f, 1.0f };
-        glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, matDiff);
-        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, matAmb);
+        glEnable(GL_COLOR_MATERIAL);
+        glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+
+        GLfloat matSpec[] = { 0.15f, 0.12f, 0.10f, 1.0f };
+        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, matSpec);
+        glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 8.0f);
 
         glCallList(craterDisplayList);
+        glDisable(GL_COLOR_MATERIAL);
         glPopMatrix();
     }
 
-    // 4. Parachute Canopy & Suspension Lines
+    // 3. Parachute Canopy & Suspension Lines
     renderParachuteWithLines();
 
-    // 5. Star Sparrow / Ranger Lander Craft
+    // 4. Star Sparrow / Ranger Lander Craft
     glPushMatrix();
     glTranslatef(s3ShipX, s3ShipY, s3ShipZ);
     glScalef(s3ShipScale, s3ShipScale, s3ShipScale);
 
-    // Heading orientation
+    // Orientation
     float yaw = atan2f(s3ShipDirX, s3ShipDirZ) * 180.0f / (float)M_PI;
     glRotatef(yaw, 0.0f, 1.0f, 0.0f);
     glRotatef(s3ShipPitch, 1.0f, 0.0f, 0.0f);
     glRotatef(s3ShipRoll, 0.0f, 0.0f, 1.0f);
 
-    renderRangerLander();
+    // Key & Fill lighting for crisp ship illumination
+    glEnable(GL_LIGHT2);
+    GLfloat shipKeyPos[]  = { 0.0f, 4.0f, 2.0f, 0.0f };
+    GLfloat shipKeyDiff[] = { 2.4f, 2.3f, 2.2f, 1.0f };
+    GLfloat shipKeyAmb[]  = { 0.9f, 0.9f, 0.95f, 1.0f };
+    glLightfv(GL_LIGHT2, GL_POSITION, shipKeyPos);
+    glLightfv(GL_LIGHT2, GL_DIFFUSE, shipKeyDiff);
+    glLightfv(GL_LIGHT2, GL_AMBIENT, shipKeyAmb);
+
+    renderRangerMesh();
+
+    glDisable(GL_LIGHT2);
     glPopMatrix();
 
-    // 6. Volumetric Touchdown Dust Clouds
+    // 5. Volumetric Touchdown Dust Clouds
     renderTouchdownDustParticles();
 }
