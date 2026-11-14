@@ -763,8 +763,8 @@ void renderScene3() {
     // 2. High-Altitude Atmospheric Cloud & Vapor Shreds
     renderAtmosphericVaporStreaks();
 
-    // 3. Official NASA Gale Crater 3D Topography Mesh
-    if (craterLoaded && craterDisplayList != 0) {
+    // 3. Official NASA Gale Crater 3D Topography Mesh (revealed in Shot 2 with over-the-shoulder cut at 50.0s)
+    if (seqTime >= 50.0f && craterLoaded && craterDisplayList != 0) {
         glPushMatrix();
         glTranslatef(0.0f, -4.5f, 0.0f);
 
