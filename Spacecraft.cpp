@@ -510,6 +510,17 @@ void renderRangerLander() {
     glPushMatrix();
     glTranslatef(rangerPosX, rangerPosY, rangerPosZ);
 
+    // Dedicated key light for the Ranger so its facets, heatshield and hull pop out vividly
+    glEnable(GL_LIGHT2);
+    GLfloat rangerKeyPos[4]     = { -1.5f, 3.0f, 2.5f, 0.0f }; // Directional light angled from upper-front
+    GLfloat rangerKeyDiffuse[4] = { 1.6f, 1.55f, 1.5f, 1.0f };
+    GLfloat rangerKeyAmbient[4] = { 0.45f, 0.45f, 0.50f, 1.0f };
+    GLfloat rangerKeySpec[4]    = { 0.8f, 0.8f, 0.8f, 1.0f };
+    glLightfv(GL_LIGHT2, GL_POSITION, rangerKeyPos);
+    glLightfv(GL_LIGHT2, GL_DIFFUSE, rangerKeyDiffuse);
+    glLightfv(GL_LIGHT2, GL_AMBIENT, rangerKeyAmbient);
+    glLightfv(GL_LIGHT2, GL_SPECULAR, rangerKeySpec);
+
     // Orientation: look along flight direction vector
     float yaw = atan2f(rangerDirX, rangerDirZ) * 180.0f / (float)M_PI;
     glRotatef(yaw, 0.0f, 1.0f, 0.0f);
@@ -694,6 +705,7 @@ void renderRangerLander() {
         glEnable(GL_LIGHTING);
     }
 
+    glDisable(GL_LIGHT2);
     glPopMatrix();
 }
 
