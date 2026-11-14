@@ -55,29 +55,31 @@ void updateScene2(float dt) {
         }
     }
     else if (t < 46.0f) {
-        // SHOT 2: DIAGONAL DESCENT TOWARD MARS (39.0s - 46.0s)
-        // High altitude descent from top-left deep black space towards Mars limb
+        // SHOT 2: DESCENT FROM RIGHT TO LEFT INTO DEPTH (39.0s - 46.0s)
+        // Starts on right side of screen, angled with roof tilted toward camera,
+        // and travels left and deep into Mars (-Z depth).
         float u = (t - 39.0f) / 7.0f;
         float smoothU = smoothstep(0.0f, 1.0f, u);
 
-        rangerPosX = lerpf(-4.316f, -3.196f, smoothU);
-        rangerPosY = lerpf( 0.670f,  0.154f, smoothU);
-        rangerPosZ = lerpf( 2.031f,  1.556f, smoothU);
+        rangerPosX = lerpf( 2.20f, -0.60f, smoothU);
+        rangerPosY = lerpf( 0.45f, -0.15f, smoothU);
+        rangerPosZ = lerpf( 2.50f,  0.50f, smoothU); // travels deep into Mars atmosphere
 
-        // Direction along diagonal descent path (downwards and rightwards toward Mars)
-        rangerDirX =  0.848f;
-        rangerDirY = -0.433f;
-        rangerDirZ = -0.304f;
+        // Direction: travelling left (-X), slightly down (-Y), and away into depth (-Z)
+        rangerDirX = -0.75f;
+        rangerDirY = -0.16f;
+        rangerDirZ = -0.64f;
         normalize3(rangerDirX, rangerDirY, rangerDirZ);
 
-        rangerPitchExtra = -6.0f;
-        rangerRollAngle  = 10.0f;
+        // Roof tilted toward user screen: roll around flight axis + pitch
+        rangerPitchExtra = 12.0f;
+        rangerRollAngle  = 55.0f;
 
         rcsActive = 0.0f;
         mainBurnActive = (t >= 39.2f) ? 1.0f : 0.0f;
         heatshieldThermal = 0.0f;
 
-        // Exhaust trail particles shooting backwards up and to the left
+        // Exhaust trail shooting backward (+X, +Y, +Z)
         if (mainBurnActive > 0.0f) {
             float exX = rangerPosX - rangerDirX * 0.25f;
             float exY = rangerPosY - rangerDirY * 0.25f;
@@ -95,21 +97,20 @@ void updateScene2(float dt) {
         }
     }
     else {
-        // SHOT 3: CROSSING HORIZON & SHRINKING TO PINPOINT DOT (46.0s - 56.0s)
-        // High altitude over Mars upper atmosphere (r > 2.27, never clipping into terrain)
+        // SHOT 3: RECEDING DEEP INTO MARS HORIZON -> SHRINKING TO PINPOINT DOT (46.0s - 56.0s)
         float u = (t - 46.0f) / 10.0f;
 
-        rangerPosX = lerpf(-3.196f, -1.870f, u);
-        rangerPosY = lerpf( 0.154f, -0.580f, u);
-        rangerPosZ = lerpf( 1.556f,  1.153f, u);
+        rangerPosX = lerpf(-0.60f, -1.95f, u);
+        rangerPosY = lerpf(-0.15f, -0.48f, u);
+        rangerPosZ = lerpf( 0.50f, -1.80f, u); // deep distance into Mars horizon
 
-        rangerDirX =  0.848f;
-        rangerDirY = -0.433f;
-        rangerDirZ = -0.304f;
+        rangerDirX = -0.68f;
+        rangerDirY = -0.16f;
+        rangerDirZ = -0.71f;
         normalize3(rangerDirX, rangerDirY, rangerDirZ);
 
-        rangerPitchExtra = -6.0f;
-        rangerRollAngle  = 6.0f;
+        rangerPitchExtra = 12.0f;
+        rangerRollAngle  = 50.0f;
 
         rcsActive = 0.0f;
         mainBurnActive = 1.0f;
@@ -159,25 +160,25 @@ void computeCameraScene2(float& eyeX, float& eyeY, float& eyeZ,
         targetZ = 2.45f;
     }
     else if (t < 46.0f) {
-        // SHOT 2 (39.0s - 46.0s): Mars pushed strongly to the right edge
+        // SHOT 2 (39.0s - 46.0s): Camera framing Ranger entering from right, Mars horizon
         float u = (t - 39.0f) / 7.0f;
-        eyeX = lerpf(-3.25f, -3.15f, u);
-        eyeY = lerpf( 0.90f,  0.85f, u);
-        eyeZ = lerpf( 4.05f,  3.95f, u);
+        eyeX = lerpf( 0.20f,  0.30f, u);
+        eyeY = lerpf( 0.95f,  0.90f, u);
+        eyeZ = lerpf( 4.40f,  4.20f, u);
 
-        targetX = lerpf(-3.45f, -3.35f, u);
-        targetY = -0.20f;
-        targetZ = 0.85f;
+        targetX = lerpf( 0.30f, -0.20f, u);
+        targetY = -0.10f;
+        targetZ =  0.60f;
     }
     else {
-        // SHOT 3 (46.0s - 56.0s): Receding Over Mars Surface on the right
+        // SHOT 3 (46.0s - 56.0s): Wide camera view watching Ranger recede into distant Mars curve
         float u = (t - 46.0f) / 10.0f;
-        eyeX = lerpf(-3.15f, -3.05f, u);
-        eyeY = lerpf( 0.85f,  0.80f, u);
-        eyeZ = lerpf( 3.95f,  4.00f, u);
+        eyeX = lerpf( 0.30f,  0.35f, u);
+        eyeY = lerpf( 0.90f,  0.85f, u);
+        eyeZ = lerpf( 4.20f,  4.10f, u);
 
-        targetX = lerpf(-3.35f, -3.15f, u);
-        targetY = -0.25f;
-        targetZ = 0.80f;
+        targetX = lerpf(-0.20f, -1.20f, u);
+        targetY = lerpf(-0.10f, -0.30f, u);
+        targetZ = lerpf( 0.60f, -0.60f, u);
     }
 }
