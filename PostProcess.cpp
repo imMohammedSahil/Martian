@@ -271,9 +271,9 @@ void renderCinemaPost(float flareX, float flareY, bool flareInFront, float flare
             fadeAlpha = 1.0f - smoothstep(44.0f, 44.50f, seqTime);
         }
     }
-    // Scene 3 finale cut to black (65.5s - 66.0s)
-    if (seqTime >= 65.50f) {
-        fadeAlpha = smoothstep(65.50f, 65.90f, seqTime);
+    // Scene 3 finale cut to black (68.5s - 69.0s)
+    if (seqTime >= 68.50f) {
+        fadeAlpha = smoothstep(68.50f, 68.90f, seqTime);
     }
 
     if (fadeAlpha > 0.005f) {
