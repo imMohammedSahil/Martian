@@ -539,14 +539,14 @@ void renderRangerLander() {
     glRotatef(pitch + rangerPitchExtra, 1.0f, 0.0f, 0.0f);
     glRotatef(rangerRollAngle, 0.0f, 0.0f, 1.0f);
 
-    // Dynamic scale receding into distance: massive colossal hero scale entering bottom-left -> shrinking speck -> vanishes
-    float rScale = 1.15f;
+    // Dynamic scale receding into distance: colossal foreground flyby entering bottom-left -> shrinking speck -> vanishes
+    float rScale = 2.4f;
     if (seqTime >= 39.0f && seqTime < 46.0f) {
         float u = (seqTime - 39.0f) / 7.0f;
-        rScale = lerpf(1.20f, 0.14f, smoothstep(0.0f, 1.0f, u));
+        rScale = lerpf(2.40f, 0.16f, smoothstep(0.0f, 1.0f, u));
     } else if (seqTime >= 46.0f) {
         float u = (seqTime - 46.0f) / 10.0f;
-        rScale = lerpf(0.14f, 0.0f, smoothstep(0.0f, 0.95f, u));
+        rScale = lerpf(0.16f, 0.0f, smoothstep(0.0f, 0.95f, u));
     }
     if (rScale <= 0.0001f) {
         glDisable(GL_LIGHT2);
