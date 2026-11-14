@@ -64,11 +64,12 @@ void updateScene2(float dt) {
         // Pure high initial velocity curve (u*(2 - u)) keeps it blazing fast at bottom left and smoothly coasts away
         float speedU = u * (2.0f - u);
 
-        // Extended trajectory with high velocity
+        // Exact in-screen trajectory: starts off-screen bottom-left and curves across to screen-right over Mars horizon
+        // P3 finishes at NDC X = +0.65 (clearly visible on screen over the right Mars curve)
         const float p0x =  -5.60f, p0y = -0.70f, p0z =  2.65f;
-        const float p1x =  -3.20f, p1y = -0.05f, p1z =  2.10f;
-        const float p2x =  -2.20f, p2y =  0.28f, p2z =  1.65f;
-        const float p3x =  -1.35f, p3y = -0.12f, p3z =  1.85f;
+        const float p1x =  -3.80f, p1y = -0.10f, p1z =  2.30f;
+        const float p2x =  -2.80f, p2y =  0.15f, p2z =  1.85f;
+        const float p3x =  -2.10f, p3y = -0.05f, p3z =  1.55f;
 
         float invU = 1.0f - speedU;
         float b0 = invU * invU * invU;
