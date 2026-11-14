@@ -698,23 +698,33 @@ void renderRangerLander() {
         glEnable(GL_LIGHTING);
     }
 
-    // 4. Distance Beacon Dot: When receding into the distance (Shot 3), ensure crisp visible speck
-    if (seqTime >= 46.0f) {
+    // 4. Brilliant Radiant Beacon Dot: as it recedes and disappears, it shines as an intense bright dot
+    if (seqTime >= 40.5f) {
+        float dotU = clampf((seqTime - 40.5f) / 2.7f, 0.0f, 1.0f); // glows into full brightness as it shrinks
+        float dotIntensity = smoothstep(0.0f, 1.0f, dotU);
+        float fade = (seqTime > 45.0f) ? (1.0f - smoothstep(45.0f, 47.0f, seqTime)) : 1.0f;
+
         glDisable(GL_LIGHTING);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
-        float strobe = 0.85f + 0.15f * sinf(totalTime * 12.0f);
-        glPointSize(3.5f);
+        // Core brilliant white pinpoint
+        glPointSize(6.0f);
         glBegin(GL_POINTS);
-            glColor4f(1.0f, 0.98f, 0.92f, strobe);
+            glColor4f(1.0f, 1.0f, 1.0f, dotIntensity * fade);
             glVertex3f(0.0f, 0.0f, 0.0f);
         glEnd();
 
-        glPointSize(5.0f);
+        // Radiant cyan/gold halo flare
+        glPointSize(12.0f);
         glBegin(GL_POINTS);
-            float redBlink = (fmodf(totalTime * 2.0f, 1.0f) < 0.25f) ? 0.95f : 0.20f;
-            glColor4f(1.0f, 0.35f, 0.20f, redBlink);
+            glColor4f(0.65f, 0.88f, 1.0f, 0.65f * dotIntensity * fade);
+            glVertex3f(0.0f, 0.0f, 0.0f);
+        glEnd();
+
+        glPointSize(18.0f);
+        glBegin(GL_POINTS);
+            glColor4f(0.40f, 0.70f, 1.0f, 0.30f * dotIntensity * fade);
             glVertex3f(0.0f, 0.0f, 0.0f);
         glEnd();
 
