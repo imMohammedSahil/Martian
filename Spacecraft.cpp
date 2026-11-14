@@ -539,14 +539,11 @@ void renderRangerLander() {
     glRotatef(pitch + rangerPitchExtra, 1.0f, 0.0f, 0.0f);
     glRotatef(rangerRollAngle, 0.0f, 0.0f, 1.0f);
 
-    // Dynamic scale receding into distance: titanic foreground IMAX flyby entering bottom-left -> shrinking speck -> vanishes
-    float rScale = 5.0f;
-    if (seqTime >= 39.0f && seqTime < 46.0f) {
-        float u = (seqTime - 39.0f) / 7.0f;
-        rScale = lerpf(5.20f, 0.20f, smoothstep(0.0f, 1.0f, u));
-    } else if (seqTime >= 46.0f) {
-        float u = (seqTime - 46.0f) / 10.0f;
-        rScale = lerpf(0.20f, 0.0f, smoothstep(0.0f, 0.95f, u));
+    // Dynamic scale receding into distance: titanic foreground flyby (5.20) -> continuous smooth curve -> dot -> vanishes
+    float rScale = 5.2f;
+    if (seqTime >= 39.0f) {
+        float u = (seqTime - 39.0f) / 17.0f; // matches 39s-56s continuous flight
+        rScale = lerpf(5.20f, 0.0f, smoothstep(0.0f, 0.95f, u));
     }
     if (rScale <= 0.0001f) {
         glDisable(GL_LIGHT2);

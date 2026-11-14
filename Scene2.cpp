@@ -54,75 +54,64 @@ void updateScene2(float dt) {
                           side * 0.3f, -0.1f, 0.2f, 0.5f, 2.0f, 0.85f, 0.95f, 1.0f, true);
         }
     }
-    else if (t < 46.0f) {
-        // SHOT 2: STARTS OFF-SCREEN BOTTOM-LEFT, FLIES INTO SCREEN TOWARD MARS (39.0s - 46.0s)
-        // STARTS COMPLETELY OFF-SCREEN AT BOTTOM-LEFT WITH TITANIC FOREGROUND SCALE
-        // Starts at X = -11.50, Y = -2.80 so the titanic ship enters smoothly filling the bottom-left lens
-        float u = (t - 39.0f) / 7.0f;
-        float smoothU = smoothstep(0.0f, 1.0f, u);
-
-        rangerPosX = lerpf(-11.50f, -3.10f, smoothU);
-        rangerPosY = lerpf( -2.80f,  0.15f, smoothU);
-        rangerPosZ = lerpf(  3.60f,  1.60f, smoothU);
-
-        // Direction: pointing right (+X), up (+Y), into depth (-Z)
-        rangerDirX =  0.88f;
-        rangerDirY =  0.22f;
-        rangerDirZ = -0.42f;
-        normalize3(rangerDirX, rangerDirY, rangerDirZ);
-
-        // Roof tilted toward user screen
-        rangerPitchExtra = -8.0f;
-        rangerRollAngle  = 25.0f;
-
-        rcsActive = 0.0f;
-        mainBurnActive = (t >= 39.1f) ? 1.0f : 0.0f;
-        heatshieldThermal = 0.0f;
-
-        // Exhaust trail firing backwards out the rear (to the left/down)
-        if (mainBurnActive > 0.0f && rangerPosX > -5.0f) {
-            float exX = rangerPosX - rangerDirX * 0.25f;
-            float exY = rangerPosY - rangerDirY * 0.25f;
-            float exZ = rangerPosZ - rangerDirZ * 0.25f;
-            for (int k = 0; k < 2; ++k) {
-                spawnParticle(exX + randRange(-0.015f, 0.015f),
-                              exY + randRange(-0.015f, 0.015f),
-                              exZ + randRange(-0.015f, 0.015f),
-                              -rangerDirX * 1.3f + randRange(-0.05f, 0.05f),
-                              -rangerDirY * 1.3f + randRange(-0.05f, 0.05f),
-                              -rangerDirZ * 1.3f + randRange(-0.05f, 0.05f),
-                              0.38f, randRange(2.0f, 3.5f),
-                              0.35f, 0.75f, 1.0f, true);
-            }
-        }
-    }
     else {
-        // SHOT 3: "IT KEEPS GOING ON" -> RECEDING DEEP OVER MARS UNTIL POINT VANISHES (46.0s - 56.0s)
-        float u = (t - 46.0f) / 10.0f;
+        // SHOTS 2 & 3: CONTINUOUS SMOOTH CURVING FLIGHT PATH INTO MARS (39.0s - 56.0s)
+        // 17 seconds of single continuous Bezier flight — zero cuts, zero stops, zero jerks.
+        float u = (t - 39.0f) / 17.0f; // 0.0 at 39s -> 1.0 at 56s
+        u = clampf(u, 0.0f, 1.0f);
 
-        rangerPosX = lerpf(-3.10f, -1.65f, u);
-        rangerPosY = lerpf( 0.15f, -0.45f, u);
-        rangerPosZ = lerpf( 1.60f,  0.85f, u); // deep distance into Mars horizon curve
+        // Cubic Bezier curve control points:
+        // P0: off-screen bottom-left entrance
+        // P1: smooth tangent sweeping up and into viewport
+        // P2: smooth continuous curve over the Martian horizon
+        // P3: distant destination into the horizon where it vanishes
+        const float p0x = -11.50f, p0y = -2.80f, p0z =  3.60f;
+        const float p1x =  -4.80f, p1y = -0.40f, p1z =  2.40f;
+        const float p2x =  -2.60f, p2y =  0.10f, p2z =  1.40f;
+        const float p3x =  -1.20f, p3y = -0.55f, p3z =  0.60f;
 
-        rangerDirX =  0.88f;
-        rangerDirY = -0.32f;
-        rangerDirZ = -0.35f;
+        float invU = 1.0f - u;
+        float b0 = invU * invU * invU;
+        float b1 = 3.0f * invU * invU * u;
+        float b2 = 3.0f * invU * u * u;
+        float b3 = u * u * u;
+
+        rangerPosX = b0 * p0x + b1 * p1x + b2 * p2x + b3 * p3x;
+        rangerPosY = b0 * p0y + b1 * p1y + b2 * p2y + b3 * p3y;
+        rangerPosZ = b0 * p0z + b1 * p1z + b2 * p2z + b3 * p3z;
+
+        // Exact analytical tangent vector (derivative dP/du) ensures continuous smooth heading
+        float d0 = -3.0f * invU * invU;
+        float d1 =  3.0f * invU * (1.0f - 3.0f * u);
+        float d2 =  3.0f * u * (2.0f - 3.0f * u);
+        float d3 =  3.0f * u * u;
+
+        rangerDirX = d0 * p0x + d1 * p1x + d2 * p2x + d3 * p3x;
+        rangerDirY = d0 * p0y + d1 * p1y + d2 * p2y + d3 * p3y;
+        rangerDirZ = d0 * p0z + d1 * p1z + d2 * p2z + d3 * p3z;
         normalize3(rangerDirX, rangerDirY, rangerDirZ);
 
+        // Smooth continuous roll & pitch banking into the curve
         rangerPitchExtra = -8.0f;
-        rangerRollAngle  = 20.0f;
+        rangerRollAngle  = lerpf(28.0f, 18.0f, u);
 
         rcsActive = 0.0f;
-        mainBurnActive = (t < 54.5f) ? 1.0f : 0.0f;
-        heatshieldThermal = smoothstep(48.0f, 54.0f, t) * 0.45f;
+        mainBurnActive = (t >= 39.1f && t < 55.0f) ? 1.0f : 0.0f;
+        heatshieldThermal = smoothstep(46.0f, 54.0f, t) * 0.45f;
 
-        if (mainBurnActive > 0.0f && (rand() % 2 == 0)) {
-            float exX = rangerPosX - rangerDirX * 0.20f;
-            float exY = rangerPosY - rangerDirY * 0.20f;
-            float exZ = rangerPosZ - rangerDirZ * 0.20f;
-            spawnParticle(exX, exY, exZ,
-                          -rangerDirX * 1.1f, -rangerDirY * 1.1f, -rangerDirZ * 1.1f,
-                          0.30f, 2.0f, 0.4f, 0.8f, 1.0f, true);
+        // Exhaust trail particles along the continuous curve
+        if (mainBurnActive > 0.0f && rangerPosX > -6.0f && (rand() % 2 == 0)) {
+            float exX = rangerPosX - rangerDirX * 0.22f;
+            float exY = rangerPosY - rangerDirY * 0.22f;
+            float exZ = rangerPosZ - rangerDirZ * 0.22f;
+            spawnParticle(exX + randRange(-0.015f, 0.015f),
+                          exY + randRange(-0.015f, 0.015f),
+                          exZ + randRange(-0.015f, 0.015f),
+                          -rangerDirX * 1.2f + randRange(-0.05f, 0.05f),
+                          -rangerDirY * 1.2f + randRange(-0.05f, 0.05f),
+                          -rangerDirZ * 1.2f + randRange(-0.05f, 0.05f),
+                          0.35f, randRange(2.0f, 3.5f),
+                          0.35f, 0.75f, 1.0f, true);
         }
     }
 
