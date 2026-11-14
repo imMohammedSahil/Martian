@@ -55,14 +55,14 @@ void updateScene2(float dt) {
         }
     }
     else {
-        // SHOTS 2 & 3: SUPERSONIC HIGH-SPEED JET DESCENT INTO MARS (39.0s - 46.5s)
-        // High supersonic velocity: flies past like a jet interceptor, reaching horizon dot quickly (in 6.5s)
-        const float FLIGHT_DURATION = 6.5f;
+        // SHOTS 2 & 3: SUPERSONIC HIGH-SPEED JET DESCENT INTO MARS (39.0s - 43.5s)
+        // High supersonic entry speed right from t=39.0s (no slow easing-in at bottom left)
+        const float FLIGHT_DURATION = 4.2f; // 4.2 seconds total supersonic flyby
         float elapsed = t - 39.0f;
         float u = elapsed / FLIGHT_DURATION;
         u = clampf(u, 0.0f, 1.0f);
-        // Non-linear power curve for dramatic jet acceleration: fast zip past camera, then deceleration into deep distance
-        float speedU = powf(u, 0.75f);
+        // Pure high initial velocity curve (u*(2 - u)) keeps it blazing fast at bottom left and smoothly coasts away
+        float speedU = u * (2.0f - u);
 
         // Extended trajectory with high velocity
         const float p0x =  -5.60f, p0y = -0.70f, p0z =  2.65f;

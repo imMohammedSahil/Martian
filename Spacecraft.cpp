@@ -539,15 +539,16 @@ void renderRangerLander() {
     glRotatef(pitch + rangerPitchExtra, 1.0f, 0.0f, 0.0f);
     glRotatef(rangerRollAngle, 0.0f, 0.0f, 1.0f);
 
-    // Dynamic scale: 0.50 size -> high-speed jet zip -> pinpoint speck dot -> vanishes
+    // Dynamic scale: 0.50 size -> high supersonic jet zip (4.2s) -> pinpoint speck dot -> vanishes
     float rScale = 0.50f;
     if (seqTime >= 39.0f) {
-        float u = (seqTime - 39.0f) / 6.5f; // matches fast 6.5s jet flyby
+        float u = (seqTime - 39.0f) / 4.2f; // matches fast 4.2s jet flyby
         u = clampf(u, 0.0f, 1.0f);
-        if (u < 0.85f) {
-            rScale = lerpf(0.50f, 0.012f, smoothstep(0.0f, 0.85f, u));
+        float speedU = u * (2.0f - u);
+        if (speedU < 0.88f) {
+            rScale = lerpf(0.50f, 0.012f, speedU / 0.88f);
         } else {
-            rScale = lerpf(0.012f, 0.0f, smoothstep(0.85f, 0.98f, u));
+            rScale = lerpf(0.012f, 0.0f, (speedU - 0.88f) / 0.12f);
         }
     }
     if (rScale <= 0.0001f) {
