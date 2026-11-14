@@ -63,34 +63,44 @@ void display() {
     GLfloat lightMarsPos[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
     glLightfv(GL_LIGHT1, GL_POSITION, lightMarsPos);
 
-    // 1. Stellar Skybox
-    renderStarfield();
-
-    // 2. Solar Disc & Flares (only after opening void)
     float flareX = 0.0f, flareY = 0.0f, flareZ = 0.0f;
     bool flareInFront = false;
     float sunVisibility = 0.0f;
-    if (seqTime >= 6.0f) {
-        renderSunDisc3D(flareX, flareY, flareZ, flareInFront);
-        sunVisibility = computeSunMarsOcclusion(eyeX, eyeY, eyeZ);
+
+    if (seqTime < 44.0f) {
+        // SCENES 1 & 2: DEEP SPACE & MARS ORBIT
+        // 1. Stellar Skybox
+        renderStarfield();
+
+        // 2. Solar Disc & Flares (only after opening void)
+        if (seqTime >= 6.0f) {
+            renderSunDisc3D(flareX, flareY, flareZ, flareInFront);
+            sunVisibility = computeSunMarsOcclusion(eyeX, eyeY, eyeZ);
+        }
+
+        // 3. Mars & Atmosphere (reveals smoothly at 6.0s)
+        if (seqTime >= 5.8f) {
+            renderMarsAndAtmosphere();
+            if (seqTime < 39.0f) {
+                renderEnduranceShip();
+            }
+            if (rangerDetached && seqTime >= 39.0f) {
+                renderRangerLander();
+            }
+        }
+
+        // 4. Particles & Speed Streaks
+        renderParticles();
+        if (seqTime > 41.0f) {
+            renderSpeedDustStreaks(eyeX, eyeY, eyeZ);
+        }
+    } else {
+        // SCENE 3: ATMOSPHERIC ENTRY, CLOUD BREAK & CANYON TOUCHDOWN
+        renderScene3();
+        renderParticles();
     }
 
-    // 3. Mars & Atmosphere (reveals smoothly at 6.0s)
-    if (seqTime >= 5.8f) {
-        renderMarsAndAtmosphere();
-        if (seqTime < 39.0f) {
-            renderEnduranceShip();
-        }
-        if (rangerDetached && seqTime >= 39.0f) {
-            renderRangerLander();
-        }
-    }
-
-    // 4. Particles & Speed Streaks (only active during atmospheric entry)
-    renderParticles();
-    if (seqTime > 41.0f) {
-        renderSpeedDustStreaks(eyeX, eyeY, eyeZ);
-    }
+    // 5. 2D Post: Anamorphic Lens Flare, 2.39:1 Letterbox Bars, Title & Fades
 
     // 5. 2D Post: Anamorphic Lens Flare, 2.39:1 Letterbox Bars, Title & Fades
     renderCinemaPost(flareX, flareY, flareInFront, sunVisibility);

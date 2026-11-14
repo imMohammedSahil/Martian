@@ -44,8 +44,10 @@ void updateSceneDirector(float dt) {
     // Multi-scene sequencing
     if (seqTime <= 35.0f) {
         updateScene1(dt);
-    } else {
+    } else if (seqTime < 44.0f) {
         updateScene2(dt);
+    } else {
+        updateScene3(dt);
     }
 }
 
@@ -56,8 +58,10 @@ void computeCinematicCamera(float& eyeX, float& eyeY, float& eyeZ,
 
     if (seqTime <= 35.0f) {
         computeCameraScene1(eyeX, eyeY, eyeZ, targetX, targetY, targetZ, upX, upY, upZ);
-    } else {
+    } else if (seqTime < 44.0f) {
         computeCameraScene2(eyeX, eyeY, eyeZ, targetX, targetY, targetZ, upX, upY, upZ);
+    } else {
+        computeCameraScene3(eyeX, eyeY, eyeZ, targetX, targetY, targetZ, upX, upY, upZ);
     }
 }
 

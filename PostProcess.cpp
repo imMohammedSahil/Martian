@@ -263,9 +263,17 @@ void renderCinemaPost(float flareX, float flareY, bool flareInFront, float flare
             fadeAlpha = std::max(fadeAlpha, 1.0f - smoothstep(39.0f, 39.3f, seqTime));
         }
     }
-    // Sudden cut to black exactly 0.5s after the white dot disappears at 43.20s (Cut at 43.70s)
-    if (seqTime >= 43.70f) {
-        fadeAlpha = 1.0f;
+    // Sudden cut to black at end of Scene 2 (43.70s - 44.0s) and clean reveal of Scene 3
+    if (seqTime >= 43.70f && seqTime < 44.60f) {
+        if (seqTime < 44.0f) {
+            fadeAlpha = 1.0f;
+        } else {
+            fadeAlpha = 1.0f - smoothstep(44.0f, 44.50f, seqTime);
+        }
+    }
+    // Scene 3 finale cut to black (63.5s - 64.0s)
+    if (seqTime >= 63.50f) {
+        fadeAlpha = smoothstep(63.50f, 63.80f, seqTime);
     }
 
     if (fadeAlpha > 0.005f) {
