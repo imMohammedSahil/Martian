@@ -105,38 +105,37 @@ static void loadRangerModel() {
         glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     }
 
-    glEnable(GL_COLOR_MATERIAL);
-    glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
-
-    GLfloat amb[]  = { 0.85f, 0.85f, 0.90f, 1.0f };
-    GLfloat spec[] = { 0.95f, 0.95f, 1.00f, 1.0f };
-    GLfloat emit[] = { 0.22f, 0.22f, 0.25f, 1.0f }; // subtle self-illumination so craft never looks shadowy
-    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, amb);
-    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, spec);
-    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, emit);
-    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 64.0f);
+    // High-key illuminated spacecraft material with clean diffuse reflection and specular gloss
+    GLfloat matDiff[] = { 1.55f, 1.55f, 1.60f, 1.0f };
+    GLfloat matAmb[]  = { 0.90f, 0.90f, 0.95f, 1.0f };
+    GLfloat matSpec[] = { 1.20f, 1.20f, 1.25f, 1.0f };
+    GLfloat matEmit[] = { 0.40f, 0.40f, 0.42f, 1.0f }; // Unshadowed self-illumination keeping hull crisp & radiant
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, matDiff);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, matAmb);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, matSpec);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, matEmit);
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 48.0f);
 
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_NORMAL_ARRAY);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-    glEnableClientState(GL_COLOR_ARRAY);
 
     glVertexPointer(3, GL_FLOAT, sizeof(EnduVert), &verts[0].x);
     glNormalPointer(GL_FLOAT, sizeof(EnduVert), &verts[0].nx);
     glTexCoordPointer(2, GL_FLOAT, sizeof(EnduVert), &verts[0].u);
-    glColorPointer(3, GL_FLOAT, sizeof(EnduVert), &verts[0].r);
 
     glDrawArrays(GL_TRIANGLES, 0, (GLsizei)numVerts);
 
-    glDisableClientState(GL_COLOR_ARRAY);
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
     glDisableClientState(GL_NORMAL_ARRAY);
     glDisableClientState(GL_VERTEX_ARRAY);
 
-    glDisable(GL_COLOR_MATERIAL);
     if (rangerTexID) {
         glDisable(GL_TEXTURE_2D);
     }
+
+    GLfloat zeroEmit[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, zeroEmit);
 
     glEndList();
     rangerLoaded = true;
