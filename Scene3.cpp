@@ -797,23 +797,23 @@ static void renderSmoothPlasmaSheath(bool backPass) {
 
     const int RINGS  = 44;
     const int SLICES = 52;
-    const float zApex = 1.02f; // Coincident with the Ranger nose apex (Z = 1.00)
+    const float zApex = 1.05f; // Fully encapsulates Ranger nose apex (Z = 1.00, Y = -0.0835, X = 0.0)
     const float zTail = -4.50f;
 
     auto getCrossSection = [](float z, float& w, float& h, float& x, float& y) {
-        // Grand, sweeping plasma reentry envelope (exact Shot 1 visuals for both shots)
+        // Grand, sweeping plasma reentry envelope perfectly centered on nose
         if (z > 0.85f) {
-            float frac = (1.02f - z) / 0.17f;
+            float frac = (1.05f - z) / 0.20f;
             frac = clampf(frac, 0.0f, 1.0f);
             float taper = powf(frac, 0.65f);
-            w = 0.20f * taper;
-            h = 0.15f * taper;
-            x = -0.06f * (1.0f - frac);
-            y = -0.095f + 0.010f * frac;
+            w = 0.22f * taper;
+            h = 0.16f * taper;
+            x = 0.0f;
+            y = -0.085f;
         } else if (z > -1.15f) {
             float frac = (0.85f - z) / 2.00f;
-            w = 0.20f + 1.17f * sinf(frac * 1.57079f);
-            h = 0.15f + 0.49f * sinf(frac * 1.57079f);
+            w = 0.22f + 1.15f * sinf(frac * 1.57079f);
+            h = 0.16f + 0.48f * sinf(frac * 1.57079f);
             x = 0.0f;
             y = -0.085f - 0.020f * frac;
         } else {
@@ -941,9 +941,9 @@ static void renderDetachedShockArc() {
             float frac = (float)ribbon / 2.0f;
             float zStart = 0.98f - frac * 0.25f;
             float zEnd   = zStart - 3.20f;
-            float xStart = -0.06f + (float)side * (0.16f + frac * 0.18f);
+            float xStart = (float)side * (0.16f + frac * 0.18f);
             float xEnd   = xStart + (float)side * 1.35f;
-            float yStart = -0.095f - frac * 0.02f;
+            float yStart = -0.085f - frac * 0.02f;
             float yEnd   = yStart - 0.05f;
 
             float shimmer = sinf(t * 70.0f + (float)side * 2.0f + (float)ribbon * 3.0f) * 0.015f;
