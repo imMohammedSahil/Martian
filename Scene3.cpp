@@ -998,9 +998,11 @@ static void renderDetachedShockArc() {
         glEnd();
         glLineWidth(1.0f);
     } else {
-        // Shot 2: Hypersonic Over-the-Shoulder Dive - Sharp nose Mach cone + Wing leading-edge impact shock layers
-        // A. Nose bow shock cap & compression arc
-        glLineWidth(2.2f);
+        // Shot 2: Hypersonic Over-the-Shoulder Dive - High-brilliance nose Mach cone + Radiant wing leading-edge impact layers
+        float fShot2 = flicker * 1.85f; // Amplified shock layer radiance for crisp visibility against terrain
+
+        // A. Nose bow shock cap & compression arc (dual-pass core + radiant bloom halo)
+        glLineWidth(6.5f);
         glBegin(GL_LINE_STRIP);
         for (int s = -28; s <= 28; ++s) {
             float phi = (float)s / 28.0f * 1.52f;
@@ -1010,7 +1012,22 @@ static void renderDetachedShockArc() {
             float y = -0.095f - (1.0f - cosP) * 0.10f;
             float z = 1.03f - (1.0f - cosP) * 0.32f;
             float edgeFade = 1.0f - powf(fabsf((float)s / 28.0f), 1.6f);
-            glColor4f(1.0f, 0.96f, 0.82f, flicker * 0.90f * edgeFade);
+            glColor4f(1.0f, 0.65f, 0.12f, fShot2 * 0.45f * edgeFade);
+            glVertex3f(x, y, z);
+        }
+        glEnd();
+
+        glLineWidth(2.8f);
+        glBegin(GL_LINE_STRIP);
+        for (int s = -28; s <= 28; ++s) {
+            float phi = (float)s / 28.0f * 1.52f;
+            float sinP = sinf(phi);
+            float cosP = cosf(phi);
+            float x = -0.06f + sinP * 0.14f;
+            float y = -0.095f - (1.0f - cosP) * 0.10f;
+            float z = 1.03f - (1.0f - cosP) * 0.32f;
+            float edgeFade = 1.0f - powf(fabsf((float)s / 28.0f), 1.6f);
+            glColor4f(1.0f, 0.98f, 0.90f, fShot2 * 0.95f * edgeFade);
             glVertex3f(x, y, z);
         }
         glEnd();
@@ -1030,18 +1047,18 @@ static void renderDetachedShockArc() {
         const int NUM_FP = sizeof(kFlank) / sizeof(kFlank[0]);
 
         for (int side = -1; side <= 1; side += 2) {
-            // 1. Multi-tier gradient impact veils flaring laterally along both flanks (gradient of lines)
-            for (int band = 0; band < 4; ++band) {
-                float b0 = (float)band / 4.0f;
-                float b1 = (float)(band + 1) / 4.0f;
+            // 1. Multi-tier radiant gradient impact veils flaring laterally along both flanks (high brilliance flow veils)
+            for (int band = 0; band < 5; ++band) {
+                float b0 = (float)band / 5.0f;
+                float b1 = (float)(band + 1) / 5.0f;
 
-                float flareOut0 = 0.015f + b0 * 0.12f;
-                float flareOut1 = 0.015f + b1 * 0.12f;
-                float flareBack0 = b0 * 0.22f;
-                float flareBack1 = b1 * 0.22f;
+                float flareOut0 = 0.012f + b0 * 0.15f;
+                float flareOut1 = 0.012f + b1 * 0.15f;
+                float flareBack0 = b0 * 0.25f;
+                float flareBack1 = b1 * 0.25f;
 
-                float a0 = flicker * lerpf(0.85f, 0.28f, b0);
-                float a1 = flicker * lerpf(0.85f, 0.00f, b1);
+                float a0 = fShot2 * lerpf(1.10f, 0.35f, b0);
+                float a1 = fShot2 * lerpf(1.10f, 0.00f, b1);
 
                 glBegin(GL_TRIANGLE_STRIP);
                 for (int i = 0; i < NUM_FP; ++i) {
@@ -1052,45 +1069,58 @@ static void renderDetachedShockArc() {
 
                     float shimmer = sinf(t * 60.0f + (float)side * 2.0f + (float)band * 1.6f + u * 8.0f) * 0.003f;
 
-                    // Inner sample point (hot ionization compression right at hull edge)
-                    glColor4f(1.0f, lerpf(0.96f, 0.72f, b0), lerpf(0.85f, 0.18f, b0), a0 * (1.0f - u * 0.25f));
-                    glVertex3f(pX + (float)side * flareOut0 + shimmer, pY + 0.006f * (1.0f - b0), pZ - flareBack0);
+                    // Inner sample point (brilliant incandescent solar white-gold)
+                    glColor4f(1.0f, lerpf(0.98f, 0.78f, b0), lerpf(0.90f, 0.22f, b0), a0 * (1.0f - u * 0.20f));
+                    glVertex3f(pX + (float)side * flareOut0 + shimmer, pY + 0.008f * (1.0f - b0), pZ - flareBack0);
 
                     // Outer sample point (trailing supersonic gradient fading into atmosphere)
-                    glColor4f(0.96f, lerpf(0.55f, 0.22f, b1), 0.03f, a1 * (1.0f - u * 0.25f));
-                    glVertex3f(pX + (float)side * flareOut1 + shimmer, pY - 0.008f * b1, pZ - flareBack1);
+                    glColor4f(1.0f, lerpf(0.60f, 0.25f, b1), 0.04f, a1 * (1.0f - u * 0.20f));
+                    glVertex3f(pX + (float)side * flareOut1 + shimmer, pY - 0.010f * b1, pZ - flareBack1);
                 }
                 glEnd();
             }
 
-            // 2. Luminous shock boundary core line hugging the leading edge
-            glLineWidth(2.2f);
+            // 2. Dual-pass luminous shock boundary core line (radiant bloom halo + bright white core)
+            glLineWidth(5.5f);
             glBegin(GL_LINE_STRIP);
             for (int i = 0; i < NUM_FP; ++i) {
                 float u = (float)i / (float)(NUM_FP - 1);
                 float pX = (float)side * kFlank[i].x;
                 float pY = kFlank[i].y;
                 float pZ = kFlank[i].z;
-                float edgeFade = 1.0f - u * 0.30f;
-                glColor4f(1.0f, 0.96f, 0.80f, flicker * 0.90f * edgeFade);
-                glVertex3f(pX, pY + 0.005f, pZ);
+                float edgeFade = 1.0f - u * 0.25f;
+                glColor4f(1.0f, 0.65f, 0.15f, fShot2 * 0.50f * edgeFade);
+                glVertex3f(pX, pY + 0.006f, pZ);
             }
             glEnd();
 
-            // 3. Wingtip ionization streamers peeling back into wake
-            glLineWidth(1.6f);
+            glLineWidth(2.4f);
+            glBegin(GL_LINE_STRIP);
+            for (int i = 0; i < NUM_FP; ++i) {
+                float u = (float)i / (float)(NUM_FP - 1);
+                float pX = (float)side * kFlank[i].x;
+                float pY = kFlank[i].y;
+                float pZ = kFlank[i].z;
+                float edgeFade = 1.0f - u * 0.25f;
+                glColor4f(1.0f, 0.98f, 0.88f, fShot2 * 0.98f * edgeFade);
+                glVertex3f(pX, pY + 0.007f, pZ);
+            }
+            glEnd();
+
+            // 3. Wingtip ionization streamers peeling back into wake (high luminescence)
+            glLineWidth(2.2f);
             glBegin(GL_LINES);
             for (int k = 0; k < 3; ++k) {
                 float kFrac = (float)k / 2.0f;
                 float tipX = (float)side * (0.88f + kFrac * 0.025f);
                 float tipY = 0.035f + kFrac * 0.010f;
                 float tipZ = -0.75f - kFrac * 0.08f;
-                float trailLen = 1.60f + kFrac * 0.70f;
+                float trailLen = 1.80f + kFrac * 0.80f;
 
-                glColor4f(1.0f, 0.92f, 0.60f, flicker * 0.78f * (1.0f - kFrac * 0.35f));
+                glColor4f(1.0f, 0.95f, 0.70f, fShot2 * 0.90f * (1.0f - kFrac * 0.30f));
                 glVertex3f(tipX, tipY, tipZ);
 
-                glColor4f(0.85f, 0.25f, 0.03f, 0.0f);
+                glColor4f(0.90f, 0.30f, 0.04f, 0.0f);
                 glVertex3f(tipX + (float)side * 0.05f, tipY - 0.02f, tipZ - trailLen);
             }
             glEnd();
