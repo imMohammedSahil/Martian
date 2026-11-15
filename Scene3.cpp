@@ -949,51 +949,49 @@ static void renderDetachedShockArc() {
     }
     glEnd();
 
-    // B. Multi-filament supersonic Mach lines streaming along both flanks and shock boundaries
-    glLineWidth(1.6f);
-    glBegin(GL_LINES);
+    // B. Soft-gradient shock layer sheets flaring back along both flanks (smooth gradient veil instead of sharp wireframe lines)
     for (int side = -1; side <= 1; side += 2) {
-        // Outer shock layer boundary streamlines (clearly visible in chase/over-the-shoulder view)
-        for (int ribbon = 0; ribbon < 5; ++ribbon) {
-            float frac = (float)ribbon / 4.0f;
-            float zStart = 0.98f - frac * 0.40f;
-            float zEnd   = zStart - 3.40f;
-            float xStart = -0.06f + (float)side * (0.12f + frac * 0.32f);
-            float xEnd   = xStart + (float)side * 1.45f;
-            float yStart = -0.095f + frac * 0.04f;
-            float yEnd   = yStart - 0.08f;
+        // Multi-tier smooth gradient ribbons creating a feathered, luminous oblique expansion fan
+        for (int ribbon = 0; ribbon < 6; ++ribbon) {
+            float frac0 = (float)ribbon / 6.0f;
+            float frac1 = (float)(ribbon + 1) / 6.0f;
 
-            float shimmer = sinf(t * 70.0f + (float)side * 2.0f + (float)ribbon * 2.5f) * 0.015f;
-            float lineAlpha = flicker * (0.80f - frac * 0.25f);
+            float zStart0 = 1.01f - frac0 * 0.45f;
+            float zStart1 = 1.01f - frac1 * 0.45f;
+            float zEnd0   = zStart0 - 3.20f;
+            float zEnd1   = zStart1 - 3.20f;
 
-            // Shock boundary line head (bright golden-white ion flare)
-            glColor4f(1.0f, 0.92f, 0.58f, lineAlpha);
-            glVertex3f(xStart, yStart, zStart);
+            float xStart0 = -0.06f + (float)side * (0.08f + frac0 * 0.36f);
+            float xStart1 = -0.06f + (float)side * (0.08f + frac1 * 0.36f);
+            float xEnd0   = xStart0 + (float)side * 1.30f;
+            float xEnd1   = xStart1 + (float)side * 1.30f;
 
-            // Trailing dissipation streak
-            glColor4f(0.90f, 0.26f, 0.02f, 0.0f);
-            glVertex3f(xEnd + shimmer, yEnd, zEnd);
-        }
+            float yStart0 = -0.095f + frac0 * 0.05f;
+            float yStart1 = -0.095f + frac1 * 0.05f;
+            float yEnd0   = yStart0 - 0.06f;
+            float yEnd1   = yStart1 - 0.06f;
 
-        // Upper chine shock vortex filaments (crisp lines wrapping over the hull shoulders)
-        for (int vLine = 0; vLine < 2; ++vLine) {
-            float vFrac = (float)vLine / 2.0f;
-            float zStart = 0.75f - vFrac * 0.30f;
-            float zEnd   = zStart - 2.80f;
-            float xStart = -0.06f + (float)side * (0.24f + vFrac * 0.22f);
-            float xEnd   = xStart + (float)side * 1.10f;
-            float yStart = -0.04f + vFrac * 0.06f; // Upper dorsal chine
-            float yEnd   = yStart + 0.03f;
+            float shimmer = sinf(t * 55.0f + (float)side * 2.0f + (float)ribbon * 1.8f) * 0.010f;
+            float a0 = flicker * lerpf(0.55f, 0.12f, frac0);
+            float a1 = flicker * lerpf(0.55f, 0.12f, frac1);
 
-            glColor4f(1.0f, 0.96f, 0.75f, flicker * 0.75f);
-            glVertex3f(xStart, yStart, zStart);
+            glBegin(GL_TRIANGLE_STRIP);
+                // Inner / leading edge (warm golden-white ionization)
+                glColor4f(1.0f, lerpf(0.95f, 0.82f, frac0), lerpf(0.70f, 0.30f, frac0), a0);
+                glVertex3f(xStart0, yStart0, zStart0);
 
-            glColor4f(0.85f, 0.35f, 0.05f, 0.0f);
-            glVertex3f(xEnd, yEnd, zEnd);
+                glColor4f(1.0f, lerpf(0.95f, 0.82f, frac1), lerpf(0.70f, 0.30f, frac1), a1);
+                glVertex3f(xStart1, yStart1, zStart1);
+
+                // Outer trailing boundary (smooth fading slipstream into void/atmosphere)
+                glColor4f(0.90f, 0.35f, 0.04f, 0.0f);
+                glVertex3f(xEnd0 + shimmer, yEnd0, zEnd0);
+
+                glColor4f(0.90f, 0.35f, 0.04f, 0.0f);
+                glVertex3f(xEnd1 + shimmer, yEnd1, zEnd1);
+            glEnd();
         }
     }
-    glEnd();
-    glLineWidth(1.0f);
 
     glDepthMask(GL_TRUE);
     glDisable(GL_BLEND);
