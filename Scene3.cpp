@@ -820,8 +820,34 @@ static void renderAtmosphericSkybox() {
         glMatrixMode(GL_PROJECTION);
         glPopMatrix();
         glMatrixMode(GL_MODELVIEW);
+    } else if (seqTime < 60.5f) {
+        // Shot 2 (50.5s - 60.5s): Vibrant, 100% rich warm Martian orange atmosphere (zero black patches)
+        glMatrixMode(GL_PROJECTION);
+        glPushMatrix();
+        glLoadIdentity();
+        glOrtho(0.0, 1.0, 0.0, 1.0, -1.0, 1.0);
+
+        glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
+        glLoadIdentity();
+
+        glBegin(GL_QUADS);
+            // Lower atmosphere: glowing Martian butterscotch/salmon orange
+            glColor3f(0.76f, 0.40f, 0.22f);
+            glVertex2f(0.0f, 0.0f);
+            glVertex2f(1.0f, 0.0f);
+            // Upper atmosphere: rich warm Martian rust (pure orange tones, never black)
+            glColor3f(0.52f, 0.24f, 0.14f);
+            glVertex2f(1.0f, 1.0f);
+            glVertex2f(0.0f, 1.0f);
+        glEnd();
+
+        glPopMatrix();
+        glMatrixMode(GL_PROJECTION);
+        glPopMatrix();
+        glMatrixMode(GL_MODELVIEW);
     } else {
-        // Shots 2 & 3: Accurate Photorealistic NASA Martian Sky Dome
+        // Shot 3 (60.5s - 66.5s): Accurate Photorealistic NASA Martian Sky Dome
         buildSkyDome();
         if (skyTexID && skyDomeDisplayList) {
             glEnable(GL_TEXTURE_2D);
@@ -849,7 +875,7 @@ static void renderAtmosphericSkybox() {
             glLoadIdentity();
             glBegin(GL_QUADS);
                 glColor3f(0.74f, 0.40f, 0.24f); glVertex2f(0.0f, 0.0f); glVertex2f(1.0f, 0.0f);
-                glColor3f(0.22f, 0.09f, 0.13f); glVertex2f(1.0f, 1.0f); glVertex2f(0.0f, 1.0f);
+                glColor3f(0.50f, 0.22f, 0.13f); glVertex2f(1.0f, 1.0f); glVertex2f(0.0f, 1.0f);
             glEnd();
             glPopMatrix();
             glMatrixMode(GL_PROJECTION);
