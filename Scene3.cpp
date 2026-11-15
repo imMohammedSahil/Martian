@@ -764,30 +764,33 @@ static void renderSmoothPlasmaSheath(bool backPass) {
 
     const int RINGS  = 44;
     const int SLICES = 52;
-    const float zApex = 1.05f; // Directly on the Ranger nose apex
+    const float zApex = 1.02f; // Coincident with the Ranger nose apex (Z = 1.00)
     const float zTail = -4.50f;
 
-    auto getCrossSection = [](float z, float& w, float& h, float& y) {
+    auto getCrossSection = [](float z, float& w, float& h, float& x, float& y) {
         if (z > 0.85f) {
-            // Sleek, sharp parabolic bow shock tightly hugging the narrow pointed nose
-            float frac = (1.05f - z) / 0.20f;
+            // Sleek, sharp parabolic bow shock centered right on the nose apex
+            float frac = (1.02f - z) / 0.17f;
             frac = clampf(frac, 0.0f, 1.0f);
             float taper = powf(frac, 0.65f);
-            w = 0.22f * taper;
-            h = 0.16f * taper;
-            y = -0.045f - 0.015f * frac;
+            w = 0.20f * taper;
+            h = 0.15f * taper;
+            x = -0.06f * (1.0f - frac);
+            y = -0.095f + 0.010f * frac;
         } else if (z > -1.15f) {
             // Fuselage & delta wings lifting body envelope expanding back along chines
             float frac = (0.85f - z) / 2.00f;
-            w = 0.22f + 1.15f * sinf(frac * 1.57079f);
-            h = 0.16f + 0.48f * sinf(frac * 1.57079f);
-            y = -0.060f - 0.025f * frac;
+            w = 0.20f + 1.17f * sinf(frac * 1.57079f);
+            h = 0.15f + 0.49f * sinf(frac * 1.57079f);
+            x = 0.0f;
+            y = -0.085f - 0.020f * frac;
         } else {
             // Trailing aerodynamic slipstream tube streaming into wake
             float frac = clampf((-1.15f - z) / 3.35f, 0.0f, 1.0f);
             w = 1.37f - 0.38f * frac;
             h = 0.64f - 0.24f * frac;
-            y = -0.085f + 0.02f * frac;
+            x = 0.0f;
+            y = -0.105f + 0.02f * frac;
         }
     };
 
@@ -846,9 +849,9 @@ static void renderSmoothPlasmaSheath(bool backPass) {
         float z0 = zApex - powf(f0, 1.25f) * (zApex - zTail);
         float z1 = zApex - powf(f1, 1.25f) * (zApex - zTail);
 
-        float w0, h0, y0, w1, h1, y1;
-        getCrossSection(z0, w0, h0, y0);
-        getCrossSection(z1, w1, h1, y1);
+        float w0, h0, x0, y0, w1, h1, x1, y1;
+        getCrossSection(z0, w0, h0, x0, y0);
+        getCrossSection(z1, w1, h1, x1, y1);
 
         glBegin(GL_TRIANGLE_STRIP);
         for (int s = 0; s <= SLICES; ++s) {
@@ -866,10 +869,10 @@ static void renderSmoothPlasmaSheath(bool backPass) {
             getThermalColor(f1, sinP, cr1, cg1, cb1, ca1);
 
             glColor4f(cr0, cg0, cb0, ca0);
-            glVertex3f(cosP * (w0 + flutter0), y0 + sinP * (h0 + flutter0), z0);
+            glVertex3f(x0 + cosP * (w0 + flutter0), y0 + sinP * (h0 + flutter0), z0);
 
             glColor4f(cr1, cg1, cb1, ca1);
-            glVertex3f(cosP * (w1 + flutter1), y1 + sinP * (h1 + flutter1), z1);
+            glVertex3f(x1 + cosP * (w1 + flutter1), y1 + sinP * (h1 + flutter1), z1);
         }
         glEnd();
     }
