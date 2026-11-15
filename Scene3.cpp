@@ -512,65 +512,15 @@ void updateScene3(float dt) {
         }
     }
     // ------------------------------------------------------------------------
-    // SHOT 3: WIDE CANYON REVEAL & MOUNTAIN PASS BANK (60.5s - 65.0s)
-    // ------------------------------------------------------------------------
-    else if (t < 65.0f) {
-        float u = (t - 60.5f) / 4.5f;
-        float smoothU = smoothstep(0.0f, 1.0f, u);
-
-        s3ShipX = lerpf(-2.0f, 3.2f, smoothU);
-        s3ShipY = lerpf( 3.2f, 1.2f, smoothU);
-        s3ShipZ = lerpf(-1.5f, 4.5f, smoothU);
-
-        s3ShipDirX =  0.50f;
-        s3ShipDirY = -0.25f;
-        s3ShipDirZ =  0.80f;
-        normalize3(s3ShipDirX, s3ShipDirY, s3ShipDirZ);
-
-        s3ShipPitchExtra = lerpf(4.0f, 0.0f, smoothU);
-        s3ShipRoll  = lerpf(4.0f, -6.0f, smoothU);
-        s3ShipScale = 0.50f;
-        s3HeatGlow  = 0.0f; // Cooled
-    }
-    // ------------------------------------------------------------------------
-    // SHOT 4: SUPERSONIC PARACHUTE DEPLOYMENT (65.0s - 69.5s)
-    // ------------------------------------------------------------------------
-    else if (t < 69.5f) {
-        float u = (t - 65.0f) / 4.5f;
-        float smoothU = smoothstep(0.0f, 1.0f, u);
-
-        s3ChuteDeploy = clampf((t - 65.0f) * 2.8f, 0.0f, 1.0f);
-
-        s3ShipX = lerpf( 3.2f, 5.0f, smoothU);
-        s3ShipY = lerpf( 1.2f, -0.6f, smoothU);
-        s3ShipZ = lerpf( 4.5f, 7.5f, smoothU);
-
-        s3ShipDirX = lerpf(0.50f, 0.15f, smoothU);
-        s3ShipDirY = lerpf(-0.25f, -0.10f, smoothU);
-        s3ShipDirZ = lerpf(0.80f, 0.98f, smoothU);
-        normalize3(s3ShipDirX, s3ShipDirY, s3ShipDirZ);
-
-        s3ShipPitchExtra = lerpf(0.0f, 2.0f, smoothU);
-        s3ShipRoll  = lerpf(-6.0f, 0.0f, smoothU);
-        s3ShipScale = 0.50f;
-        s3HeatGlow  = 0.0f;
-
-        s3ChuteX = s3ShipX - s3ShipDirX * 1.5f;
-        s3ChuteY = s3ShipY + 2.5f + 0.08f * sinf(t * 7.0f);
-        s3ChuteZ = s3ShipZ - s3ShipDirZ * 1.5f;
-    }
-    // ------------------------------------------------------------------------
-    // SHOT 5: RETRO-THRUSTERS & TOUCHDOWN DUST KICK (69.5s - 75.5s)
+    // SHOT 3: RETRO-THRUSTERS & GROUND-LEVEL TOUCHDOWN (60.5s - 66.5s)
     // ------------------------------------------------------------------------
     else {
-        float u = (t - 69.5f) / 5.5f;
+        float u = (t - 60.5f) / 5.5f;
         u = clampf(u, 0.0f, 1.0f);
         float landEase = smoothstep(0.0f, 1.0f, u);
 
         s3ChuteCut = true;
-        s3ChuteX += 1.6f * dt;
-        s3ChuteY += 0.6f * dt;
-        s3ChuteZ -= 2.0f * dt;
+        s3ChuteDeploy = 0.0f;
 
         s3ShipX = lerpf( 5.0f,  5.6f, landEase);
         s3ShipY = lerpf(-0.6f, -2.10f, landEase);
@@ -582,7 +532,7 @@ void updateScene3(float dt) {
         normalize3(s3ShipDirX, s3ShipDirY, s3ShipDirZ);
         s3HeatGlow = 0.0f;
 
-        if (t >= 69.5f && t <= 72.5f) {
+        if (t >= 60.5f && t <= 63.5f) {
             for (int k = 0; k < 2; ++k) {
                 float ox = randRange(-0.3f, 0.3f);
                 float oz = randRange(-0.3f, 0.3f);
@@ -592,7 +542,7 @@ void updateScene3(float dt) {
             }
         }
 
-        if (t >= 65.5f && t <= 68.5f) {
+        if (t >= 62.5f && t <= 65.5f) {
             for (int d = 0; d < 3; ++d) {
                 float ang = randRange(0.0f, 2.0f * (float)M_PI);
                 float spd = randRange(1.5f, 3.8f);
@@ -680,45 +630,10 @@ void computeCameraScene3(float& eyeX, float& eyeY, float& eyeZ,
         eyeY += cosf(t * 38.0f) * shake;
     }
     // ------------------------------------------------------------------------
-    // SHOT 3: WIDE CANYON REVEAL (60.5s - 65.0s)
-    // ------------------------------------------------------------------------
-    else if (t < 65.0f) {
-        float u = (t - 60.5f) / 4.5f;
-        float smoothU = smoothstep(0.0f, 1.0f, u);
-
-        eyeX = lerpf(-10.0f, -2.5f, smoothU);
-        eyeY = lerpf(  7.5f,  4.5f, smoothU);
-        eyeZ = lerpf( -2.0f,  6.5f, smoothU);
-
-        targetX = s3ShipX;
-        targetY = s3ShipY;
-        targetZ = s3ShipZ;
-    }
-    // ------------------------------------------------------------------------
-    // SHOT 4: LOW-ANGLE PARACHUTE TRACK (65.0s - 69.5s)
-    // ------------------------------------------------------------------------
-    else if (t < 69.5f) {
-        float u = (t - 65.0f) / 4.5f;
-        float smoothU = smoothstep(0.0f, 1.0f, u);
-
-        eyeX = lerpf(s3ShipX + 2.8f, s3ShipX + 2.2f, smoothU);
-        eyeY = lerpf(s3ShipY - 0.8f, s3ShipY - 0.5f, smoothU);
-        eyeZ = lerpf(s3ShipZ - 3.2f, s3ShipZ - 2.8f, smoothU);
-
-        targetX = s3ShipX;
-        targetY = s3ShipY + 1.2f;
-        targetZ = s3ShipZ;
-
-        if (t >= 65.1f && t <= 65.6f) {
-            float snap = sinf((t - 65.1f) * 40.0f) * 0.028f;
-            eyeY += snap;
-        }
-    }
-    // ------------------------------------------------------------------------
-    // SHOT 5: GROUND-LEVEL TOUCHDOWN (69.5s - 75.5s)
+    // SHOT 3: GROUND-LEVEL TOUCHDOWN (60.5s - 66.5s)
     // ------------------------------------------------------------------------
     else {
-        float u = (t - 69.5f) / 5.5f;
+        float u = (t - 60.5f) / 5.5f;
         float smoothU = smoothstep(0.0f, 1.0f, u);
 
         eyeX = lerpf( 2.4f,  2.8f, smoothU);
@@ -729,8 +644,8 @@ void computeCameraScene3(float& eyeX, float& eyeY, float& eyeZ,
         targetY = -2.05f;
         targetZ = lerpf( 7.5f,  9.0f, smoothU);
 
-        if (t >= 72.0f && t <= 72.6f) {
-            float impact = sinf((t - 72.0f) * 28.0f) * 0.020f * (1.0f - (t - 72.0f) / 0.6f);
+        if (t >= 63.0f && t <= 63.6f) {
+            float impact = sinf((t - 63.0f) * 28.0f) * 0.020f * (1.0f - (t - 63.0f) / 0.6f);
             eyeY += impact;
         }
     }
