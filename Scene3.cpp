@@ -764,58 +764,58 @@ static void renderSmoothPlasmaSheath(bool backPass) {
 
     const int RINGS  = 44;
     const int SLICES = 52;
-    const float zApex = 1.15f; // Clamped snug directly ahead of Ranger nose (Z ~ 1.05)
+    const float zApex = 1.05f; // Directly on the Ranger nose apex
     const float zTail = -4.50f;
 
     auto getCrossSection = [](float z, float& w, float& h, float& y) {
         if (z > 0.85f) {
-            // Snug, aerodynamic nose bow shock tightly hugging Ranger apex
-            float frac = (1.15f - z) / 0.30f;
+            // Sleek, sharp parabolic bow shock tightly hugging the narrow pointed nose
+            float frac = (1.05f - z) / 0.20f;
             frac = clampf(frac, 0.0f, 1.0f);
-            float blunt = sqrtf(clampf(1.0f - (1.0f - frac) * (1.0f - frac), 0.0f, 1.0f));
-            w = 0.52f * blunt;
-            h = 0.34f * blunt;
-            y = -0.05f - 0.015f * frac;
+            float taper = powf(frac, 0.65f);
+            w = 0.22f * taper;
+            h = 0.16f * taper;
+            y = -0.045f - 0.015f * frac;
         } else if (z > -1.15f) {
-            // Fuselage & delta wings lifting body envelope
+            // Fuselage & delta wings lifting body envelope expanding back along chines
             float frac = (0.85f - z) / 2.00f;
-            w = 0.52f + 0.85f * sinf(frac * 1.57079f);
-            h = 0.34f + 0.32f * sinf(frac * 1.57079f);
-            y = -0.065f - 0.025f * frac;
+            w = 0.22f + 1.15f * sinf(frac * 1.57079f);
+            h = 0.16f + 0.48f * sinf(frac * 1.57079f);
+            y = -0.060f - 0.025f * frac;
         } else {
             // Trailing aerodynamic slipstream tube streaming into wake
             float frac = clampf((-1.15f - z) / 3.35f, 0.0f, 1.0f);
             w = 1.37f - 0.38f * frac;
-            h = 0.66f - 0.24f * frac;
-            y = -0.090f + 0.02f * frac;
+            h = 0.64f - 0.24f * frac;
+            y = -0.085f + 0.02f * frac;
         }
     };
 
     auto getThermalColor = [&](float f, float sinP, float& cr, float& cg, float& cb, float& ca) {
-        if (f < 0.055f) {
-            // Stagnation point: Nuclear white-hot (> 6,500 K) concentrated tightly at nose apex
-            float s = f / 0.055f;
+        if (f < 0.035f) {
+            // Stagnation point: Sharp, pinpoint nuclear white-hot tip right at the nose point
+            float s = f / 0.035f;
             cr = 1.0f;
             cg = lerpf(1.0f, 0.96f, s);
             cb = lerpf(0.98f, 0.65f, s);
-            ca = flicker * lerpf(1.0f, 0.85f, s);
-        } else if (f < 0.16f) {
-            // Compression nosecap: Solar gold & radiant yellow transitioning into orange
-            float s = (f - 0.055f) / 0.105f;
+            ca = flicker * lerpf(1.0f, 0.88f, s);
+        } else if (f < 0.11f) {
+            // Tight nosecap transition: Concentrated solar gold & radiant yellow
+            float s = (f - 0.035f) / 0.075f;
             cr = 1.0f;
             cg = lerpf(0.96f, 0.60f, s);
             cb = lerpf(0.65f, 0.08f, s);
-            ca = flicker * lerpf(0.85f, 0.55f, s);
-        } else if (f < 0.48f) {
+            ca = flicker * lerpf(0.88f, 0.55f, s);
+        } else if (f < 0.42f) {
             // Chine flanks & fuselage: Deep luminous flame vermilion & amber
-            float s = (f - 0.16f) / 0.32f;
+            float s = (f - 0.11f) / 0.31f;
             cr = 1.0f;
             cg = lerpf(0.60f, 0.22f, s);
             cb = lerpf(0.08f, 0.01f, s);
             ca = flicker * lerpf(0.55f, 0.28f, s);
         } else {
             // Trailing wake slipstream: Cooling Martian crimson fading smoothly to 0
-            float s = (f - 0.48f) / 0.52f;
+            float s = (f - 0.42f) / 0.58f;
             cr = lerpf(1.0f, 0.65f, s);
             cg = lerpf(0.22f, 0.03f, s);
             cb = 0.01f;
@@ -830,7 +830,7 @@ static void renderSmoothPlasmaSheath(bool backPass) {
             ca *= 0.50f; // Soft inner cavity glow behind craft
         } else {
             // Front pass: brilliant compact nose cap, while flanks remain translucent to reveal Ranger
-            if (f < 0.055f) {
+            if (f < 0.035f) {
                 ca *= 0.85f;
             } else {
                 ca *= 0.32f;
