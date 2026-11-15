@@ -46,8 +46,10 @@ void updateSceneDirector(float dt) {
         updateScene1(dt);
     } else if (seqTime < 44.0f) {
         updateScene2(dt);
-    } else {
+    } else if (seqTime < 61.0f) {
         updateScene3(dt);
+    } else {
+        updateScene4(dt);
     }
 }
 
@@ -60,8 +62,10 @@ void computeCinematicCamera(float& eyeX, float& eyeY, float& eyeZ,
         computeCameraScene1(eyeX, eyeY, eyeZ, targetX, targetY, targetZ, upX, upY, upZ);
     } else if (seqTime < 44.0f) {
         computeCameraScene2(eyeX, eyeY, eyeZ, targetX, targetY, targetZ, upX, upY, upZ);
-    } else {
+    } else if (seqTime < 61.0f) {
         computeCameraScene3(eyeX, eyeY, eyeZ, targetX, targetY, targetZ, upX, upY, upZ);
+    } else {
+        computeCameraScene4(eyeX, eyeY, eyeZ, targetX, targetY, targetZ, upX, upY, upZ);
     }
 }
 

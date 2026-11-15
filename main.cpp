@@ -135,10 +135,13 @@ void display() {
         if (seqTime > 41.0f) {
             renderSpeedDustStreaks(eyeX, eyeY, eyeZ);
         }
-    } else {
-        // SCENE 3: ATMOSPHERIC ENTRY, CLOUD BREAK & CANYON TOUCHDOWN
+    } else if (seqTime < 61.0f) {
+        // SCENE 3: ATMOSPHERIC ENTRY, CLOUD BREAK & CANYON DIVE
         renderScene3();
         renderParticles();
+    } else {
+        // SCENE 4: CABIN INTERIOR & THE DUNE SILHOUETTE SHOT
+        renderScene4();
     }
 
     // 5. 2D Post: Anamorphic Lens Flare, 2.39:1 Letterbox Bars, Title & Fades
@@ -209,6 +212,9 @@ void keyboard(unsigned char key, int x, int y) {
         particles.clear();
     } else if (key == '3') {
         seqTime = 44.0f;
+        particles.clear();
+    } else if (key == '4') {
+        seqTime = 61.0f;
         particles.clear();
     } else if (key == 'f' || key == 'F' || key == '.' || key == '>') { // Fast-Forward 5s
         seqTime = clampf(seqTime + 5.0f, 0.0f, SEQUENCE_DURATION - 0.1f);

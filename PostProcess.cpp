@@ -188,11 +188,14 @@ void renderCinemaPost(float flareX, float flareY, bool flareInFront, float flare
     // Top Letterbox Bar
     glRectf(0.0f, (float)windowHeight - barH, (float)windowWidth, (float)windowHeight);
 
-    // 3. Panel 4 Storyboard Title Card: "M A R T I A N" (25.0s - 34.5s)
-    // Mars background fully covers the screen and locks at 22.0s, allowing exactly 3.0s before title appears
+    // 3. Storyboard Title Card: "M A R T I A N" (25.0s - 34.5s and finale 72.0s - 73.0s)
+    float titleAlpha = 0.0f;
     if (seqTime >= 25.0f && seqTime <= 34.5f) {
-        float titleAlpha = smoothstep(25.0f, 26.2f, seqTime) * (1.0f - smoothstep(33.0f, 34.5f, seqTime));
-        if (titleAlpha > 0.01f) {
+        titleAlpha = smoothstep(25.0f, 26.2f, seqTime) * (1.0f - smoothstep(33.0f, 34.5f, seqTime));
+    } else if (seqTime >= 72.0f) {
+        titleAlpha = smoothstep(72.0f, 72.6f, seqTime);
+    }
+    if (titleAlpha > 0.01f) {
             loadTitleTexture();
             if (hasTitleTexture && titleTextureID) {
                 // High-resolution geometric sans-serif title (Century Gothic Bold - 78% screen width)
@@ -248,7 +251,6 @@ void renderCinemaPost(float flareX, float flareY, bool flareInFront, float flare
                 glDisable(GL_BLEND);
             }
         }
-    }
 
     // 4. Theatrical Transitions & Fades
     float fadeAlpha = 0.0f;
@@ -271,9 +273,36 @@ void renderCinemaPost(float flareX, float flareY, bool flareInFront, float flare
             fadeAlpha = 1.0f - smoothstep(44.0f, 44.50f, seqTime);
         }
     }
-    // Scene 3 Shot 2 cut to black (60.0s - 60.5s)
-    if (seqTime >= 60.00f) {
-        fadeAlpha = smoothstep(60.00f, 60.50f, seqTime);
+    // Scene 3 Shot 2 cut to black (60.0s - 60.5s), hold black (60.5s - 61.0s), and clean reveal of Scene 4 (61.0s - 61.8s)
+    if (seqTime >= 60.00f && seqTime < 61.80f) {
+        if (seqTime < 60.50f) {
+            fadeAlpha = smoothstep(60.00f, 60.50f, seqTime);
+        } else if (seqTime < 61.00f) {
+            fadeAlpha = 1.0f;
+        } else {
+            fadeAlpha = 1.0f - smoothstep(61.00f, 61.80f, seqTime);
+        }
+    }
+    // Scene 4 final fade to black (71.5s - 73.0s)
+    if (seqTime >= 71.50f) {
+        fadeAlpha = smoothstep(71.50f, 73.00f, seqTime);
+    }
+
+    // Scene 4 Optical Exposure Bloom when ramp lowers and blinding daylight floods in (63.5s - 66.5s)
+    if (seqTime >= 63.5f && seqTime <= 66.5f) {
+        float bloom = 0.0f;
+        if (seqTime <= 64.3f) {
+            bloom = smoothstep(63.5f, 64.3f, seqTime) * 0.45f;
+        } else {
+            bloom = (1.0f - smoothstep(64.3f, 66.5f, seqTime)) * 0.45f;
+        }
+        if (bloom > 0.005f) {
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE); // Additive warm solar bloom
+            glColor4f(1.0f, 0.94f, 0.82f, bloom);
+            glRectf(0.0f, 0.0f, (float)windowWidth, (float)windowHeight);
+            glDisable(GL_BLEND);
+        }
     }
 
     if (fadeAlpha > 0.005f) {

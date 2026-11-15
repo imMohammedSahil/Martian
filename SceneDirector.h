@@ -28,5 +28,12 @@ void computeCameraScene3(float& eyeX, float& eyeY, float& eyeZ,
                         float& upX, float& upY, float& upZ);
 void renderScene3();
 
+// Scene 4 specific handlers (The Dune Shot)
+void updateScene4(float dt);
+void computeCameraScene4(float& eyeX, float& eyeY, float& eyeZ,
+                        float& targetX, float& targetY, float& targetZ,
+                        float& upX, float& upY, float& upZ);
+void renderScene4();
+
 #endif // SCENE_DIRECTOR_H
 
