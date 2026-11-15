@@ -689,8 +689,8 @@ static void renderAtmosphericSkybox() {
 
     glBegin(GL_QUADS);
     if (seqTime < 50.0f) {
-        // Shot 1 (44.0s - 50.0s): Side profile entry pierces from space black into Martian atmosphere
-        float entryProg = clampf((seqTime - 44.0f) / 3.0f, 0.0f, 1.0f);
+        // Shot 1 (44.0s - 50.0s): Pure space black for the first 1.5s, then smooth 3.0s entry into Martian atmosphere
+        float entryProg = clampf((seqTime - 45.5f) / 3.0f, 0.0f, 1.0f);
         float smoothProg = entryProg * entryProg * (3.0f - 2.0f * entryProg);
 
         // Horizon transitions from space black (0,0,0) to Martian salmon/butterscotch
