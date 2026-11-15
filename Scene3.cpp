@@ -330,7 +330,7 @@ void updateScene3(float dt) {
         s3ShipPitchExtra = 8.0f;
         s3ShipRoll  = lerpf(24.0f, 10.0f, u);
         s3ShipScale = 0.50f;
-        s3HeatGlow  = lerpf(0.50f, 1.0f, u); // High friction thermal glow
+        s3HeatGlow  = lerpf(0.85f, 1.0f, u); // High brilliant incandescence even in initial space entry
 
         float dirX = s3ShipDirX, dirY = s3ShipDirY, dirZ = s3ShipDirZ;
         float wupX = 0.0f, wupY = 1.0f, wupZ = 0.0f;
@@ -828,34 +828,37 @@ static void renderSmoothPlasmaSheath(bool backPass) {
     };
 
     auto getThermalColor = [&](float f, float sinP, float& cr, float& cg, float& cb, float& ca) {
+        // Boost contrast and radiant brilliance against dark space
+        float spaceBoost = (seqTime < 46.5f) ? 1.35f : 1.0f;
+
         if (f < 0.035f) {
             // Stagnation point: Sharp, pinpoint nuclear white-hot tip right at the nose point
             float s = f / 0.035f;
             cr = 1.0f;
             cg = lerpf(1.0f, 0.96f, s);
             cb = lerpf(0.98f, 0.65f, s);
-            ca = flicker * lerpf(1.0f, 0.88f, s);
+            ca = flicker * lerpf(1.0f, 0.92f, s) * spaceBoost;
         } else if (f < 0.11f) {
             // Tight nosecap transition: Concentrated solar gold & radiant yellow
             float s = (f - 0.035f) / 0.075f;
             cr = 1.0f;
             cg = lerpf(0.96f, 0.60f, s);
             cb = lerpf(0.65f, 0.08f, s);
-            ca = flicker * lerpf(0.88f, 0.55f, s);
+            ca = flicker * lerpf(0.92f, 0.65f, s) * spaceBoost;
         } else if (f < 0.42f) {
             // Chine flanks & fuselage: Deep luminous flame vermilion & amber
             float s = (f - 0.11f) / 0.31f;
             cr = 1.0f;
             cg = lerpf(0.60f, 0.22f, s);
             cb = lerpf(0.08f, 0.01f, s);
-            ca = flicker * lerpf(0.55f, 0.28f, s);
+            ca = flicker * lerpf(0.65f, 0.38f, s) * spaceBoost;
         } else {
             // Trailing wake slipstream: Cooling Martian crimson fading smoothly to 0
             float s = (f - 0.42f) / 0.58f;
             cr = lerpf(1.0f, 0.65f, s);
             cg = lerpf(0.22f, 0.03f, s);
             cb = 0.01f;
-            ca = flicker * (1.0f - s) * 0.26f;
+            ca = flicker * (1.0f - s) * 0.34f * spaceBoost;
         }
 
         // Underbelly compression boost (angle of attack windward compression)
@@ -928,6 +931,7 @@ static void renderDetachedShockArc() {
 
     float t = seqTime;
     float flicker = s3HeatGlow * (0.94f + 0.06f * sinf(t * 85.0f));
+    if (t < 46.5f) flicker *= 1.30f; // Boost shock brilliance against space black
 
     // A. Razor-sharp Oblique Shock Discontinuity Cone (Mach angle ~34 deg oblique boundary)
     glLineWidth(2.2f);
