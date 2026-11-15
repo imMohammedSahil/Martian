@@ -22,7 +22,7 @@ struct AstroVertex {
     float r, g, b;
 };
 
-static GLuint astroDisplayList = 0;
+static GLuint astroDisplayLists[4] = { 0, 0, 0, 0 };
 static GLuint astroTexID = 0;
 static bool   astroLoaded = false;
 static bool   astroLoadFailed = false;
@@ -66,39 +66,27 @@ static GLuint loadTextureFromFile(const char* filename, bool repeat = true) {
     return texID;
 }
 
-static void loadAstroAssets() {
-    if (astroLoaded || astroLoadFailed) return;
-
-    // 1. Texture
-    astroTexID = loadTextureFromFile("astronaut_diffuse.png", true);
-
-    // 2. Binary Mesh
-    FILE* fp = fopen("astronaut.bin", "rb");
-    if (!fp) {
-        astroLoadFailed = true;
-        return;
-    }
+static GLuint loadAstroMesh(const char* binFile) {
+    FILE* fp = fopen(binFile, "rb");
+    if (!fp) fp = fopen("astronaut.bin", "rb");
+    if (!fp) return 0;
 
     char magic[4];
     uint32_t numVerts = 0;
     if (fread(magic, 1, 4, fp) != 4 || memcmp(magic, "ASTR", 4) != 0 ||
         fread(&numVerts, sizeof(uint32_t), 1, fp) != 1 || numVerts == 0) {
         fclose(fp);
-        astroLoadFailed = true;
-        return;
+        return 0;
     }
 
     std::vector<AstroVertex> verts(numVerts);
     size_t readCount = fread(&verts[0], sizeof(AstroVertex), numVerts, fp);
     fclose(fp);
 
-    if (readCount != numVerts) {
-        astroLoadFailed = true;
-        return;
-    }
+    if (readCount != numVerts) return 0;
 
-    astroDisplayList = glGenLists(1);
-    glNewList(astroDisplayList, GL_COMPILE);
+    GLuint dList = glGenLists(1);
+    glNewList(dList, GL_COMPILE);
 
     glBegin(GL_TRIANGLES);
     for (size_t i = 0; i < verts.size(); ++i) {
@@ -108,6 +96,30 @@ static void loadAstroAssets() {
     glEnd();
 
     glEndList();
+    return dList;
+}
+
+static void loadAstroAssets() {
+    if (astroLoaded || astroLoadFailed) return;
+
+    astroTexID = loadTextureFromFile("astronaut_diffuse.png", true);
+
+    const char* poseFiles[4] = {
+        "astronaut_pose1.bin",
+        "astronaut_pose2.bin",
+        "astronaut_pose3.bin",
+        "astronaut_pose4.bin"
+    };
+
+    for (int i = 0; i < 4; ++i) {
+        astroDisplayLists[i] = loadAstroMesh(poseFiles[i]);
+    }
+
+    if (!astroDisplayLists[0]) {
+        astroLoadFailed = true;
+        return;
+    }
+
     astroLoaded = true;
 }
 
@@ -115,26 +127,26 @@ static void loadAstroAssets() {
 // HIGH-POLYGON PROCEDURAL MARTIAN DUNES & MOUNTAINS
 // ============================================================================
 static float evaluateDuneHeight(float x, float z) {
-    if (z < 5.2f) return -0.75f; // Flat ground right beneath the lowered ramp tip
+    if (z < 5.25f) return -0.74f;
 
-    // Transition smoothly from ramp tip into rolling Martian dunes
-    float blend = smoothstep(5.2f, 12.0f, z);
+    float blend = smoothstep(5.25f, 13.0f, z);
 
-    // Barchan sand dune harmonics with asymmetric leeward slipface
-    float d1 = sinf(x * 0.055f + z * 0.038f) * 2.8f;
-    float d2 = cosf(x * 0.11f - z * 0.065f) * 1.5f;
-    float slip = powf(fabsf(sinf(z * 0.032f + x * 0.012f)), 1.7f) * 3.4f;
-    float micro = sinf(x * 0.35f + z * 0.25f) * 0.22f;
+    // Multi-octave transverse and barchan sand dune waves
+    float d1 = sinf(x * 0.048f + z * 0.034f) * 3.4f;
+    float d2 = cosf(x * 0.095f - z * 0.058f) * 1.9f;
+    float slip = powf(fabsf(sinf(z * 0.028f + x * 0.010f)), 1.8f) * 4.4f; // Sharp wind-blown crests
+    float ripple1 = sinf(x * 0.28f + z * 0.20f) * 0.38f;
+    float ripple2 = cosf(x * 0.60f - z * 0.45f) * 0.16f; // Fine micro sand grain ripples
 
     // Distant mountain ramp-up
     float distMtn = 0.0f;
-    if (z > 100.0f) {
-        float fz = (z - 100.0f) / 160.0f;
-        distMtn = (sinf(x * 0.018f) * 18.0f + cosf(x * 0.035f) * 12.0f + 20.0f) * fz;
+    if (z > 90.0f) {
+        float fz = (z - 90.0f) / 160.0f;
+        distMtn = (sinf(x * 0.018f) * 24.0f + cosf(x * 0.032f) * 15.0f + 25.0f) * fz;
     }
 
-    float duneH = d1 + d2 + slip + micro + distMtn - 0.2f;
-    return -0.75f * (1.0f - blend) + duneH * blend;
+    float duneH = d1 + d2 + slip + ripple1 + ripple2 + distMtn - 0.2f;
+    return -0.74f * (1.0f - blend) + duneH * blend;
 }
 
 static void buildDuneMesh() {
@@ -147,18 +159,18 @@ static void buildDuneMesh() {
         glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     }
 
-    GLfloat matDiff[] = { 1.75f, 0.95f, 0.58f, 1.0f }; // Radiant sunlit Martian red sand
+    GLfloat matDiff[] = { 1.85f, 1.05f, 0.65f, 1.0f }; // Radiant sunlit Martian red sand
     GLfloat matAmb[]  = { 0.55f, 0.32f, 0.22f, 1.0f };
-    GLfloat matSpec[] = { 0.35f, 0.24f, 0.16f, 1.0f };
+    GLfloat matSpec[] = { 0.45f, 0.30f, 0.20f, 1.0f };
     glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, matDiff);
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, matAmb);
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, matSpec);
-    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 16.0f);
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 24.0f);
 
-    const int GRID_X = 140;
-    const int GRID_Z = 140;
-    const float MIN_X = -130.0f, MAX_X = 130.0f;
-    const float MIN_Z = 0.0f,    MAX_Z = 300.0f;
+    const int GRID_X = 160;
+    const int GRID_Z = 160;
+    const float MIN_X = -180.0f, MAX_X = 180.0f;
+    const float MIN_Z = 5.25f,   MAX_Z = 320.0f; // STRICTLY starts at ramp tip: ZERO sand inside ship!
     const float DX = (MAX_X - MIN_X) / (float)GRID_X;
     const float DZ = (MAX_Z - MIN_Z) / (float)GRID_Z;
 
@@ -174,7 +186,7 @@ static void buildDuneMesh() {
             float y1 = evaluateDuneHeight(x, z1);
 
             // Compute analytic normal at (x, z0)
-            float eps = 0.5f;
+            float eps = 0.4f;
             float hL0 = evaluateDuneHeight(x - eps, z0);
             float hR0 = evaluateDuneHeight(x + eps, z0);
             float hD0 = evaluateDuneHeight(x, z0 - eps);
@@ -194,10 +206,10 @@ static void buildDuneMesh() {
             float ny1 = 1.0f;
             normalize3(nx1, ny1, nz1);
 
-            float u0 = x * 0.045f;
-            float v0 = z0 * 0.045f;
-            float u1 = x * 0.045f;
-            float v1 = z1 * 0.045f;
+            float u0 = x * 0.085f;
+            float v0 = z0 * 0.085f;
+            float u1 = x * 0.085f;
+            float v1 = z1 * 0.085f;
 
             glNormal3f(nx0, ny0, nz0);
             glTexCoord2f(u0, v0);
@@ -330,12 +342,13 @@ static void buildCabinInterior() {
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 32.0f);
 
     // 1. Deck Floor (-Z extends inside cabin from Z=0 to Z=-16, X in [-4.5, 4.5])
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
     glNormal3f(0.0f, 1.0f, 0.0f);
     glBegin(GL_QUADS);
         glTexCoord2f(0.0f, 0.0f); glVertex3f(-4.5f, 0.0f, 0.0f);
-        glTexCoord2f(3.0f, 0.0f); glVertex3f( 4.5f, 0.0f, 0.0f);
-        glTexCoord2f(3.0f, 6.0f); glVertex3f( 4.5f, 0.0f, -16.0f);
-        glTexCoord2f(0.0f, 6.0f); glVertex3f(-4.5f, 0.0f, -16.0f);
+        glTexCoord2f(4.0f, 0.0f); glVertex3f( 4.5f, 0.0f, 0.0f);
+        glTexCoord2f(4.0f, 8.0f); glVertex3f( 4.5f, 0.0f, -16.0f);
+        glTexCoord2f(0.0f, 8.0f); glVertex3f(-4.5f, 0.0f, -16.0f);
     glEnd();
 
     // 2. Ceiling Bulkhead (-Z from 0 to -16, Y = 3.65m)
@@ -453,6 +466,8 @@ static void renderLoweringRamp(float openProg) {
     const float RW = 4.10f;  // Half-width = 4.1m (total wall-to-wall width = 8.2m)
     const float RL = 5.20f;  // Length of ramp = 5.2m
     const float THICK = 0.22f; // Thickness = 22cm armored plate
+
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 
     // 1. Walking surface (faces -Z into cabin when upright, faces upward when lowered)
     glNormal3f(0.0f, 0.0f, -1.0f);
@@ -605,7 +620,7 @@ void computeCameraScene4(float& eyeX, float& eyeY, float& eyeZ,
 // ASTRONAUT CREW RENDERING
 // ============================================================================
 static void renderAstronautCrew(float openProg) {
-    if (!astroDisplayList) return;
+    if (!astroDisplayLists[0]) return;
 
     glDisable(GL_TEXTURE_2D);
     glDisable(GL_LIGHTING);
@@ -618,10 +633,10 @@ static void renderAstronautCrew(float openProg) {
     };
 
     CrewMember crew[4] = {
-        { -1.48f, -3.45f, 0.84f, -4.0f,  0.5f }, // Member 1 (Left flank)
-        { -0.50f, -3.10f, 0.88f, -1.0f, -0.8f }, // Member 2 (Commander / Center-Left)
-        {  0.50f, -3.10f, 0.87f,  2.0f,  1.2f }, // Member 3 (Scientist / Center-Right)
-        {  1.48f, -3.45f, 0.83f,  5.0f, -0.4f }  // Member 4 (Right flank)
+        { -1.50f, -3.45f, 0.84f, -4.0f,  0.5f }, // Member 1 (Scout: hand on hip, head turned)
+        { -0.50f, -3.10f, 0.92f, -1.0f, -0.8f }, // Member 2 (Commander: parade rest, tall upright)
+        {  0.50f, -3.10f, 0.79f,  2.0f,  1.2f }, // Member 3 (Scientist: gazing up, sensor in hand, shorter)
+        {  1.50f, -3.45f, 0.85f,  5.0f, -0.4f }  // Member 4 (Engineer: high-gain comms antenna mast)
     };
 
     for (int i = 0; i < 4; ++i) {
@@ -633,24 +648,8 @@ static void renderAstronautCrew(float openProg) {
 
         // 1. Primary Solid Silhouette Pass (Deep Dark Interior Shadow)
         glColor3f(0.042f, 0.038f, 0.035f);
-        glCallList(astroDisplayList);
-
-        // 2. Inverted-Hull Radiant Golden Rim-Light Pass (Outlines helmets, shoulders & PLSS backpacks)
-        /*
-        if (openProg > 0.05f) {
-            float rimAlpha = openProg * 0.95f;
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-            glCullFace(GL_FRONT);
-            glPushMatrix();
-            glScalef(1.032f, 1.026f, 1.032f);
-            glColor4f(1.0f, 0.92f, 0.75f, rimAlpha);
-            glCallList(astroDisplayList);
-            glPopMatrix();
-            glCullFace(GL_BACK);
-            glDisable(GL_BLEND);
-        }
-        */
+        GLuint dl = astroDisplayLists[i] ? astroDisplayLists[i] : astroDisplayLists[0];
+        glCallList(dl);
 
         glPopMatrix();
     }

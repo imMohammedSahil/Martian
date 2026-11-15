@@ -289,6 +289,7 @@ void renderCinemaPost(float flareX, float flareY, bool flareInFront, float flare
     }
 
     // Scene 4 Optical Exposure Bloom when ramp lowers and blinding daylight floods in (63.5s - 66.5s)
+    // Confined strictly within the 2.39:1 cinema letterbox window (never bleeds onto black bars)
     if (seqTime >= 63.5f && seqTime <= 66.5f) {
         float bloom = 0.0f;
         if (seqTime <= 64.3f) {
@@ -300,7 +301,7 @@ void renderCinemaPost(float flareX, float flareY, bool flareInFront, float flare
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE); // Additive warm solar bloom
             glColor4f(1.0f, 0.94f, 0.82f, bloom);
-            glRectf(0.0f, 0.0f, (float)windowWidth, (float)windowHeight);
+            glRectf(0.0f, barH, (float)windowWidth, (float)windowHeight - barH);
             glDisable(GL_BLEND);
         }
     }
@@ -317,6 +318,14 @@ void renderCinemaPost(float flareX, float flareY, bool flareInFront, float flare
         glEnd();
         glDisable(GL_BLEND);
     }
+
+    // Master 2.39:1 Widescreen Cinema Letterbox Bars (Top & Bottom)
+    // Rendered as the final absolute pass to guarantee 100% solid, impenetrable black bars
+    glDisable(GL_BLEND);
+    glDisable(GL_TEXTURE_2D);
+    glColor3f(0.0f, 0.0f, 0.0f);
+    glRectf(0.0f, 0.0f, (float)windowWidth, barH);
+    glRectf(0.0f, (float)windowHeight - barH, (float)windowWidth, (float)windowHeight);
 
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
