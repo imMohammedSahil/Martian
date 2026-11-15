@@ -825,30 +825,85 @@ void renderScene4() {
     renderLoweringRamp(openProg);
 
     // 5. Volumetric Light Shaft spilling onto the cabin deck from the lowering door
-    if (openProg > 0.02f) {
+    if (openProg > 0.01f && curLight.lightShaft > 0.005f) {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE); // Additive sunbeam
         glDisable(GL_LIGHTING);
         glDepthMask(GL_FALSE);
 
-        float beamAlpha = openProg * curLight.lightShaft;
-        glBegin(GL_QUADS);
-            // Light quad projected on floor from door (Z=0) deep into cabin (Z=-5.5)
-            glColor4f(1.0f, 0.85f, 0.60f, beamAlpha);
-            glVertex3f(-2.8f, 0.02f,  0.0f);
-            glVertex3f( 2.8f, 0.02f,  0.0f);
-            glColor4f(1.0f, 0.80f, 0.50f, 0.0f);
-            glVertex3f( 3.6f, 0.02f, -5.5f);
-            glVertex3f(-3.6f, 0.02f, -5.5f);
+        float intensity = curLight.lightShaft * clampf(openProg * 1.4f, 0.0f, 1.0f);
 
-            // Volumetric air shaft through opening
-            glColor4f(1.0f, 0.90f, 0.70f, beamAlpha * 0.55f);
-            glVertex3f(-3.1f, 2.80f * openProg, 0.0f);
-            glVertex3f( 3.1f, 2.80f * openProg, 0.0f);
-            glColor4f(1.0f, 0.85f, 0.60f, 0.0f);
-            glVertex3f( 3.8f, 0.02f, -4.5f);
-            glVertex3f(-3.8f, 0.02f, -4.5f);
-        glEnd();
+        // A. Soft Volumetric Light Shafts in the air:
+        // Firmly anchored at the TOP LINTEL (Y = 2.95m, Z = 0.0m) at all times
+        const int numShaftLayers = 6;
+        for (int layer = 0; layer < numShaftLayers; ++layer) {
+            float layerFrac = (float)layer / (float)(numShaftLayers - 1);
+            float topY = 2.95f; 
+            float targetZ = lerpf(-3.8f, -6.2f, layerFrac);
+            float layerAlpha = intensity * 0.16f * (1.0f - layerFrac * 0.35f);
+
+            glBegin(GL_TRIANGLE_FAN);
+                // Center apex along top lintel
+                glColor4f(1.0f, 0.90f, 0.72f, layerAlpha);
+                glVertex3f(0.0f, topY, 0.0f);
+
+                // Outer left boundary fading to zero
+                glColor4f(1.0f, 0.88f, 0.65f, 0.0f);
+                glVertex3f(-4.0f, topY, 0.0f);
+                glVertex3f(-4.3f, 0.02f, targetZ);
+
+                // Floor interior illumination
+                glColor4f(1.0f, 0.90f, 0.70f, layerAlpha * 0.75f);
+                glVertex3f(-2.0f, 0.02f, targetZ);
+                glVertex3f( 0.0f, 0.02f, targetZ);
+                glVertex3f( 2.0f, 0.02f, targetZ);
+
+                // Outer right boundary fading to zero
+                glColor4f(1.0f, 0.88f, 0.65f, 0.0f);
+                glVertex3f( 4.3f, 0.02f, targetZ);
+                glVertex3f( 4.0f, topY, 0.0f);
+            glEnd();
+        }
+
+        // B. Floor light pool: soft trapezoid with lateral falloff
+        const int floorSlices = 5;
+        for (int i = 0; i < floorSlices; ++i) {
+            float f0 = (float)i / (float)floorSlices;
+            float f1 = (float)(i + 1) / (float)floorSlices;
+            float z0 = -f0 * 5.8f;
+            float z1 = -f1 * 5.8f;
+            float w0 = lerpf(3.6f, 4.2f, f0);
+            float w1 = lerpf(3.6f, 4.2f, f1);
+            float a0 = intensity * 0.28f * (1.0f - f0 * 0.80f);
+            float a1 = intensity * 0.28f * (1.0f - f1 * 0.80f);
+
+            glBegin(GL_QUAD_STRIP);
+                glColor4f(1.0f, 0.88f, 0.65f, 0.0f);
+                glVertex3f(-w0, 0.02f, z0);
+                glColor4f(1.0f, 0.88f, 0.65f, 0.0f);
+                glVertex3f(-w1, 0.02f, z1);
+
+                glColor4f(1.0f, 0.88f, 0.65f, a0 * 0.7f);
+                glVertex3f(-w0 * 0.6f, 0.02f, z0);
+                glColor4f(1.0f, 0.88f, 0.65f, a1 * 0.7f);
+                glVertex3f(-w1 * 0.6f, 0.02f, z1);
+
+                glColor4f(1.0f, 0.90f, 0.70f, a0);
+                glVertex3f(0.0f, 0.02f, z0);
+                glColor4f(1.0f, 0.90f, 0.70f, a1);
+                glVertex3f(0.0f, 0.02f, z1);
+
+                glColor4f(1.0f, 0.88f, 0.65f, a0 * 0.7f);
+                glVertex3f(w0 * 0.6f, 0.02f, z0);
+                glColor4f(1.0f, 0.88f, 0.65f, a1 * 0.7f);
+                glVertex3f(w1 * 0.6f, 0.02f, z1);
+
+                glColor4f(1.0f, 0.88f, 0.65f, 0.0f);
+                glVertex3f(w0, 0.02f, z0);
+                glColor4f(1.0f, 0.88f, 0.65f, 0.0f);
+                glVertex3f(w1, 0.02f, z1);
+            glEnd();
+        }
 
         glDepthMask(GL_TRUE);
         glEnable(GL_LIGHTING);
