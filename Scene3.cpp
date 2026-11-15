@@ -802,28 +802,28 @@ static void renderSmoothPlasmaSheath(bool backPass) {
 
     auto getCrossSection = [](float z, float& w, float& h, float& x, float& y) {
         if (z > 0.85f) {
-            // Sleek, sharp parabolic bow shock centered right on the nose apex (ultra-narrow)
+            // Sleek, razor-sharp parabolic bow shock hugging nose apex (tight & narrow)
             float frac = (1.02f - z) / 0.17f;
             frac = clampf(frac, 0.0f, 1.0f);
-            float taper = powf(frac, 0.75f);
-            w = 0.14f * taper;
-            h = 0.11f * taper;
+            float taper = powf(frac, 0.85f);
+            w = 0.08f * taper;
+            h = 0.06f * taper;
             x = -0.06f * (1.0f - frac);
-            y = -0.095f + 0.010f * frac;
+            y = -0.095f + 0.008f * frac;
         } else if (z > -1.15f) {
-            // Fuselage & delta wings lifting body envelope expanding back along chines
+            // Aerodynamic lifting body envelope hugging the chine edges closely
             float frac = (0.85f - z) / 2.00f;
-            w = 0.14f + 1.22f * sinf(frac * 1.57079f);
-            h = 0.11f + 0.52f * sinf(frac * 1.57079f);
+            w = 0.08f + 0.44f * sinf(frac * 1.57079f);
+            h = 0.06f + 0.20f * sinf(frac * 1.57079f);
             x = 0.0f;
-            y = -0.085f - 0.020f * frac;
+            y = -0.087f - 0.015f * frac;
         } else {
-            // Trailing aerodynamic slipstream tube streaming into wake
+            // Trailing aerodynamic wake stream
             float frac = clampf((-1.15f - z) / 3.35f, 0.0f, 1.0f);
-            w = 1.37f - 0.38f * frac;
-            h = 0.64f - 0.24f * frac;
+            w = 0.52f - 0.16f * frac;
+            h = 0.26f - 0.10f * frac;
             x = 0.0f;
-            y = -0.105f + 0.02f * frac;
+            y = -0.102f + 0.015f * frac;
         }
     };
 
@@ -933,47 +933,51 @@ static void renderDetachedShockArc() {
     float flicker = s3HeatGlow * (0.94f + 0.06f * sinf(t * 85.0f));
     if (t < 46.5f) flicker *= 1.30f; // Boost shock brilliance against space black
 
-    // A. Razor-sharp Oblique Shock Discontinuity Cone (Mach angle ~34 deg oblique boundary hugging narrow nose)
-    glLineWidth(2.2f);
+    // A. Razor-sharp Oblique Shock Discontinuity Cone (Mach angle oblique boundary hugging narrow nose)
+    glLineWidth(2.0f);
     glBegin(GL_LINE_STRIP);
     for (int s = -28; s <= 28; ++s) {
         float phi = (float)s / 28.0f * 1.52f;
         float sinP = sinf(phi);
         float cosP = cosf(phi);
-        float x = -0.06f + sinP * 0.22f;
-        float y = -0.095f - (1.0f - cosP) * 0.16f;
-        float z = 1.03f - (1.0f - cosP) * 0.42f;
+        float x = -0.06f + sinP * 0.12f;
+        float y = -0.095f - (1.0f - cosP) * 0.10f;
+        float z = 1.03f - (1.0f - cosP) * 0.30f;
         float edgeFade = 1.0f - powf(fabsf((float)s / 28.0f), 1.6f);
         glColor4f(1.0f, 0.95f, 0.78f, flicker * 0.85f * edgeFade);
         glVertex3f(x, y, z);
     }
     glEnd();
 
-    // B. Soft-gradient shock layer sheets flaring back along both flanks (smooth gradient veil instead of sharp wireframe lines)
+    // B. Soft-gradient shock layer sheets flaring back along both flanks (gradient lines of flow hugging craft)
     for (int side = -1; side <= 1; side += 2) {
-        // Multi-tier smooth gradient ribbons creating a feathered, luminous oblique expansion fan
-        for (int ribbon = 0; ribbon < 6; ++ribbon) {
-            float frac0 = (float)ribbon / 6.0f;
-            float frac1 = (float)(ribbon + 1) / 6.0f;
+        // Multi-tier gradient flow striations (8 ribbons forming smooth flow gradient lines)
+        for (int ribbon = 0; ribbon < 8; ++ribbon) {
+            float frac0 = (float)ribbon / 8.0f;
+            float frac1 = (float)(ribbon + 1) / 8.0f;
 
             float zStart0 = 1.01f - frac0 * 0.45f;
             float zStart1 = 1.01f - frac1 * 0.45f;
             float zEnd0   = zStart0 - 3.20f;
             float zEnd1   = zStart1 - 3.20f;
 
-            float xStart0 = -0.06f + (float)side * (0.08f + frac0 * 0.36f);
-            float xStart1 = -0.06f + (float)side * (0.08f + frac1 * 0.36f);
-            float xEnd0   = xStart0 + (float)side * 1.30f;
-            float xEnd1   = xStart1 + (float)side * 1.30f;
+            // Tight lateral envelope matching the narrow supersonic mach cone
+            float xStart0 = -0.06f + (float)side * (0.05f + frac0 * 0.18f);
+            float xStart1 = -0.06f + (float)side * (0.05f + frac1 * 0.18f);
+            float xEnd0   = xStart0 + (float)side * (0.24f + frac0 * 0.18f);
+            float xEnd1   = xStart1 + (float)side * (0.24f + frac1 * 0.18f);
 
-            float yStart0 = -0.095f + frac0 * 0.05f;
-            float yStart1 = -0.095f + frac1 * 0.05f;
-            float yEnd0   = yStart0 - 0.06f;
-            float yEnd1   = yStart1 - 0.06f;
+            float yStart0 = -0.095f + frac0 * 0.04f;
+            float yStart1 = -0.095f + frac1 * 0.04f;
+            float yEnd0   = yStart0 - 0.05f;
+            float yEnd1   = yStart1 - 0.05f;
 
-            float shimmer = sinf(t * 55.0f + (float)side * 2.0f + (float)ribbon * 1.8f) * 0.010f;
-            float a0 = flicker * lerpf(0.55f, 0.12f, frac0);
-            float a1 = flicker * lerpf(0.55f, 0.12f, frac1);
+            float shimmer = sinf(t * 55.0f + (float)side * 2.0f + (float)ribbon * 1.8f) * 0.006f;
+            // Density gradient modulation to create layered flow lines
+            float lineMod0 = 0.75f + 0.25f * sinf(frac0 * 18.84f);
+            float lineMod1 = 0.75f + 0.25f * sinf(frac1 * 18.84f);
+            float a0 = flicker * lerpf(0.50f, 0.10f, frac0) * lineMod0;
+            float a1 = flicker * lerpf(0.50f, 0.10f, frac1) * lineMod1;
 
             glBegin(GL_TRIANGLE_STRIP);
                 // Inner / leading edge (warm golden-white ionization)
