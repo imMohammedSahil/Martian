@@ -998,63 +998,104 @@ static void renderDetachedShockArc() {
         glEnd();
         glLineWidth(1.0f);
     } else {
-        // Shot 2: Narrow nose Mach cone with gradient density flow lines
-        glLineWidth(2.0f);
+        // Shot 2: Hypersonic Over-the-Shoulder Dive - Sharp nose Mach cone + Wing leading-edge impact shock layers
+        // A. Nose bow shock cap & compression arc
+        glLineWidth(2.2f);
         glBegin(GL_LINE_STRIP);
         for (int s = -28; s <= 28; ++s) {
             float phi = (float)s / 28.0f * 1.52f;
             float sinP = sinf(phi);
             float cosP = cosf(phi);
-            float x = -0.06f + sinP * 0.12f;
+            float x = -0.06f + sinP * 0.14f;
             float y = -0.095f - (1.0f - cosP) * 0.10f;
-            float z = 1.03f - (1.0f - cosP) * 0.30f;
+            float z = 1.03f - (1.0f - cosP) * 0.32f;
             float edgeFade = 1.0f - powf(fabsf((float)s / 28.0f), 1.6f);
-            glColor4f(1.0f, 0.95f, 0.78f, flicker * 0.85f * edgeFade);
+            glColor4f(1.0f, 0.96f, 0.82f, flicker * 0.90f * edgeFade);
             glVertex3f(x, y, z);
         }
         glEnd();
 
+        // B. Wing & Chine Leading-Edge Hypersonic Impact Layers (accurate delta-wing shock envelope framing both flanks)
+        struct FlankPoint { float z, x, y; };
+        static const FlankPoint kFlank[] = {
+            {  1.02f, 0.035f, -0.095f }, // Stagnation apex
+            {  0.80f, 0.080f, -0.090f }, // Nose cap transition
+            {  0.50f, 0.135f, -0.085f }, // Forward chine
+            {  0.20f, 0.380f, -0.110f }, // Mid-chine flare
+            {  0.00f, 0.430f, -0.090f }, // Fuselage-to-wing transition
+            { -0.30f, 0.720f,  0.025f }, // Delta wing leading edge
+            { -0.55f, 0.860f,  0.075f }, // Wingtip canted winglet root
+            { -0.75f, 0.880f,  0.035f }  // Wingtip trailing corner
+        };
+        const int NUM_FP = sizeof(kFlank) / sizeof(kFlank[0]);
+
         for (int side = -1; side <= 1; side += 2) {
-            for (int ribbon = 0; ribbon < 8; ++ribbon) {
-                float frac0 = (float)ribbon / 8.0f;
-                float frac1 = (float)(ribbon + 1) / 8.0f;
+            // 1. Multi-tier gradient impact veils flaring laterally along both flanks (gradient of lines)
+            for (int band = 0; band < 4; ++band) {
+                float b0 = (float)band / 4.0f;
+                float b1 = (float)(band + 1) / 4.0f;
 
-                float zStart0 = 1.01f - frac0 * 0.45f;
-                float zStart1 = 1.01f - frac1 * 0.45f;
-                float zEnd0   = zStart0 - 3.20f;
-                float zEnd1   = zStart1 - 3.20f;
+                float flareOut0 = 0.015f + b0 * 0.12f;
+                float flareOut1 = 0.015f + b1 * 0.12f;
+                float flareBack0 = b0 * 0.22f;
+                float flareBack1 = b1 * 0.22f;
 
-                float xStart0 = -0.06f + (float)side * (0.05f + frac0 * 0.18f);
-                float xStart1 = -0.06f + (float)side * (0.05f + frac1 * 0.18f);
-                float xEnd0   = xStart0 + (float)side * (0.24f + frac0 * 0.18f);
-                float xEnd1   = xStart1 + (float)side * (0.24f + frac1 * 0.18f);
-
-                float yStart0 = -0.095f + frac0 * 0.04f;
-                float yStart1 = -0.095f + frac1 * 0.04f;
-                float yEnd0   = yStart0 - 0.05f;
-                float yEnd1   = yStart1 - 0.05f;
-
-                float shimmer = sinf(t * 55.0f + (float)side * 2.0f + (float)ribbon * 1.8f) * 0.006f;
-                float lineMod0 = 0.75f + 0.25f * sinf(frac0 * 18.84f);
-                float lineMod1 = 0.75f + 0.25f * sinf(frac1 * 18.84f);
-                float a0 = flicker * lerpf(0.50f, 0.10f, frac0) * lineMod0;
-                float a1 = flicker * lerpf(0.50f, 0.10f, frac1) * lineMod1;
+                float a0 = flicker * lerpf(0.85f, 0.28f, b0);
+                float a1 = flicker * lerpf(0.85f, 0.00f, b1);
 
                 glBegin(GL_TRIANGLE_STRIP);
-                    glColor4f(1.0f, lerpf(0.95f, 0.82f, frac0), lerpf(0.70f, 0.30f, frac0), a0);
-                    glVertex3f(xStart0, yStart0, zStart0);
+                for (int i = 0; i < NUM_FP; ++i) {
+                    float u = (float)i / (float)(NUM_FP - 1);
+                    float pX = (float)side * kFlank[i].x;
+                    float pY = kFlank[i].y;
+                    float pZ = kFlank[i].z;
 
-                    glColor4f(1.0f, lerpf(0.95f, 0.82f, frac1), lerpf(0.70f, 0.30f, frac1), a1);
-                    glVertex3f(xStart1, yStart1, zStart1);
+                    float shimmer = sinf(t * 60.0f + (float)side * 2.0f + (float)band * 1.6f + u * 8.0f) * 0.003f;
 
-                    glColor4f(0.90f, 0.35f, 0.04f, 0.0f);
-                    glVertex3f(xEnd0 + shimmer, yEnd0, zEnd0);
+                    // Inner sample point (hot ionization compression right at hull edge)
+                    glColor4f(1.0f, lerpf(0.96f, 0.72f, b0), lerpf(0.85f, 0.18f, b0), a0 * (1.0f - u * 0.25f));
+                    glVertex3f(pX + (float)side * flareOut0 + shimmer, pY + 0.006f * (1.0f - b0), pZ - flareBack0);
 
-                    glColor4f(0.90f, 0.35f, 0.04f, 0.0f);
-                    glVertex3f(xEnd1 + shimmer, yEnd1, zEnd1);
+                    // Outer sample point (trailing supersonic gradient fading into atmosphere)
+                    glColor4f(0.96f, lerpf(0.55f, 0.22f, b1), 0.03f, a1 * (1.0f - u * 0.25f));
+                    glVertex3f(pX + (float)side * flareOut1 + shimmer, pY - 0.008f * b1, pZ - flareBack1);
+                }
                 glEnd();
             }
+
+            // 2. Luminous shock boundary core line hugging the leading edge
+            glLineWidth(2.2f);
+            glBegin(GL_LINE_STRIP);
+            for (int i = 0; i < NUM_FP; ++i) {
+                float u = (float)i / (float)(NUM_FP - 1);
+                float pX = (float)side * kFlank[i].x;
+                float pY = kFlank[i].y;
+                float pZ = kFlank[i].z;
+                float edgeFade = 1.0f - u * 0.30f;
+                glColor4f(1.0f, 0.96f, 0.80f, flicker * 0.90f * edgeFade);
+                glVertex3f(pX, pY + 0.005f, pZ);
+            }
+            glEnd();
+
+            // 3. Wingtip ionization streamers peeling back into wake
+            glLineWidth(1.6f);
+            glBegin(GL_LINES);
+            for (int k = 0; k < 3; ++k) {
+                float kFrac = (float)k / 2.0f;
+                float tipX = (float)side * (0.88f + kFrac * 0.025f);
+                float tipY = 0.035f + kFrac * 0.010f;
+                float tipZ = -0.75f - kFrac * 0.08f;
+                float trailLen = 1.60f + kFrac * 0.70f;
+
+                glColor4f(1.0f, 0.92f, 0.60f, flicker * 0.78f * (1.0f - kFrac * 0.35f));
+                glVertex3f(tipX, tipY, tipZ);
+
+                glColor4f(0.85f, 0.25f, 0.03f, 0.0f);
+                glVertex3f(tipX + (float)side * 0.05f, tipY - 0.02f, tipZ - trailLen);
+            }
+            glEnd();
         }
+        glLineWidth(1.0f);
     }
 
     glDepthMask(GL_TRUE);
