@@ -21,6 +21,7 @@
 #include "Spacecraft.h"
 #include "PostProcess.h"
 #include "SceneDirector.h"
+#include "Scene4.h"
 #include <string>
 
 // ============================================================================
@@ -147,6 +148,10 @@ void display() {
     // 5. 2D Post: Anamorphic Lens Flare, 2.39:1 Letterbox Bars, Title & Fades
     renderCinemaPost(flareX, flareY, flareInFront, sunVisibility);
 
+    if (seqTime >= 60.5f) {
+        renderScene4HUD(windowWidth, windowHeight);
+    }
+
     if (!autoScreenshotPath.empty()) {
         autoScreenshotFrames++;
         if (autoScreenshotFrames >= 4) {
@@ -216,6 +221,8 @@ void keyboard(unsigned char key, int x, int y) {
     } else if (key == '4') {
         seqTime = 61.0f;
         particles.clear();
+    } else if (handleScene4Keyboard(key)) {
+        return;
     } else if (key == 'f' || key == 'F' || key == '.' || key == '>') { // Fast-Forward 5s
         seqTime = clampf(seqTime + 5.0f, 0.0f, SEQUENCE_DURATION - 0.1f);
     } else if (key == 'b' || key == 'B' || key == ',' || key == '<') { // Rewind 5s
@@ -224,6 +231,9 @@ void keyboard(unsigned char key, int x, int y) {
 }
 
 void specialKeys(int key, int x, int y) {
+    if (handleScene4Special(key)) {
+        return;
+    }
     if (key == GLUT_KEY_RIGHT) { // Arrow Right: Forward 5s
         seqTime = clampf(seqTime + 5.0f, 0.0f, SEQUENCE_DURATION - 0.1f);
     } else if (key == GLUT_KEY_LEFT) { // Arrow Left: Backward 5s

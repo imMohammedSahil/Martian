@@ -1,5 +1,6 @@
 #include "PostProcess.h"
 #include "Common.h"
+#include "Scene4.h"
 #include "stb_image.h"
 
 static GLuint sunTextureID = 0;
@@ -292,10 +293,11 @@ void renderCinemaPost(float flareX, float flareY, bool flareInFront, float flare
     // Confined strictly within the 2.39:1 cinema letterbox window (never bleeds onto black bars)
     if (seqTime >= 63.5f && seqTime <= 66.5f) {
         float bloom = 0.0f;
+        float maxBloom = getScene4BloomStrength();
         if (seqTime <= 64.3f) {
-            bloom = smoothstep(63.5f, 64.3f, seqTime) * 0.45f;
+            bloom = smoothstep(63.5f, 64.3f, seqTime) * maxBloom;
         } else {
-            bloom = (1.0f - smoothstep(64.3f, 66.5f, seqTime)) * 0.45f;
+            bloom = (1.0f - smoothstep(64.3f, 66.5f, seqTime)) * maxBloom;
         }
         if (bloom > 0.005f) {
             glEnable(GL_BLEND);

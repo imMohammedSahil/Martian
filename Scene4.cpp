@@ -47,6 +47,117 @@ struct CabinMote {
 static std::vector<CabinMote> cabinMotes;
 
 // ============================================================================
+// INTERACTIVE LIGHTING KEYFRAME SYSTEM
+// ============================================================================
+struct LightKeyframe {
+    float time;
+    float sunBrightness;
+    float sunHeight;
+    float sunAngleX;
+    float cabinAmbient;
+    float lightShaft;
+    float doorBloom;
+    float skyWarmth;
+};
+
+static std::vector<LightKeyframe> g_keyframes;
+static LightKeyframe g_curLight = { 61.0f, 2.40f, 14.0f, 1.50f, 0.15f, 0.28f, 0.45f, 1.00f };
+static bool g_showLightingHUD = true;
+static char g_hudStatusMsg[128] = "HUD Active: [Space] Pause, [< >] Scrub, Hotkeys to tweak";
+static float g_hudMsgTimer = 4.0f;
+
+void reloadScene4Lighting() {
+    FILE* fp = fopen("scene4_lighting.txt", "r");
+    if (!fp) return;
+    g_keyframes.clear();
+    char line[256];
+    while (fgets(line, sizeof(line), fp)) {
+        if (line[0] == '#' || line[0] == '\n' || line[0] == '\r') continue;
+        LightKeyframe kf;
+        if (sscanf(line, "keyframe %f %f %f %f %f %f %f %f",
+                   &kf.time, &kf.sunBrightness, &kf.sunHeight, &kf.sunAngleX,
+                   &kf.cabinAmbient, &kf.lightShaft, &kf.doorBloom, &kf.skyWarmth) == 8) {
+            g_keyframes.push_back(kf);
+        } else {
+            char key[64];
+            float val = 0.0f;
+            if (sscanf(line, "%63[^= ] = %f", key, &val) == 2 || sscanf(line, "%63s %f", key, &val) == 2) {
+                if (strcmp(key, "sun_brightness") == 0) g_curLight.sunBrightness = val;
+                else if (strcmp(key, "sun_height") == 0) g_curLight.sunHeight = val;
+                else if (strcmp(key, "sun_angle_x") == 0) g_curLight.sunAngleX = val;
+                else if (strcmp(key, "cabin_ambient") == 0) g_curLight.cabinAmbient = val;
+                else if (strcmp(key, "light_shaft") == 0) g_curLight.lightShaft = val;
+                else if (strcmp(key, "door_bloom") == 0) g_curLight.doorBloom = val;
+                else if (strcmp(key, "sky_warmth") == 0) g_curLight.skyWarmth = val;
+            }
+        }
+    }
+    fclose(fp);
+
+    std::sort(g_keyframes.begin(), g_keyframes.end(), [](const LightKeyframe& a, const LightKeyframe& b) {
+        return a.time < b.time;
+    });
+}
+
+static void saveLightingKeyframes() {
+    FILE* fp = fopen("scene4_lighting.txt", "w");
+    if (!fp) return;
+    fprintf(fp, "# Scene 4 Interactive Lighting & Grading Keyframes\n");
+    fprintf(fp, "# Format: keyframe <time_sec> <sun_brightness> <sun_height> <sun_angle_x> <cabin_ambient> <light_shaft> <door_bloom> <sky_warmth>\n");
+    for (size_t i = 0; i < g_keyframes.size(); ++i) {
+        const LightKeyframe& k = g_keyframes[i];
+        fprintf(fp, "keyframe %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f\n",
+                k.time, k.sunBrightness, k.sunHeight, k.sunAngleX, k.cabinAmbient, k.lightShaft, k.doorBloom, k.skyWarmth);
+    }
+    fclose(fp);
+    snprintf(g_hudStatusMsg, sizeof(g_hudStatusMsg), "SAVED %d keyframes to scene4_lighting.txt!", (int)g_keyframes.size());
+    g_hudMsgTimer = 3.5f;
+}
+
+static LightKeyframe evalLighting(float t) {
+    if (g_keyframes.empty()) return g_curLight;
+    if (t <= g_keyframes.front().time) return g_keyframes.front();
+    if (t >= g_keyframes.back().time) return g_keyframes.back();
+    for (size_t i = 0; i + 1 < g_keyframes.size(); ++i) {
+        if (t >= g_keyframes[i].time && t <= g_keyframes[i+1].time) {
+            float span = g_keyframes[i+1].time - g_keyframes[i].time;
+            float f = (span > 0.001f) ? ((t - g_keyframes[i].time) / span) : 0.0f;
+            LightKeyframe out;
+            out.time = t;
+            out.sunBrightness = lerpf(g_keyframes[i].sunBrightness, g_keyframes[i+1].sunBrightness, f);
+            out.sunHeight     = lerpf(g_keyframes[i].sunHeight,     g_keyframes[i+1].sunHeight,     f);
+            out.sunAngleX     = lerpf(g_keyframes[i].sunAngleX,     g_keyframes[i+1].sunAngleX,     f);
+            out.cabinAmbient  = lerpf(g_keyframes[i].cabinAmbient,  g_keyframes[i+1].cabinAmbient,  f);
+            out.lightShaft    = lerpf(g_keyframes[i].lightShaft,    g_keyframes[i+1].lightShaft,    f);
+            out.doorBloom     = lerpf(g_keyframes[i].doorBloom,     g_keyframes[i+1].doorBloom,     f);
+            out.skyWarmth     = lerpf(g_keyframes[i].skyWarmth,     g_keyframes[i+1].skyWarmth,     f);
+            return out;
+        }
+    }
+    return g_curLight;
+}
+
+float getScene4BloomStrength() {
+    return evalLighting(seqTime).doorBloom;
+}
+
+static void setOrUpdateKeyframe(float t, const LightKeyframe& val) {
+    for (size_t i = 0; i < g_keyframes.size(); ++i) {
+        if (fabsf(g_keyframes[i].time - t) < 0.15f) {
+            g_keyframes[i] = val;
+            g_keyframes[i].time = t;
+            return;
+        }
+    }
+    LightKeyframe k = val;
+    k.time = t;
+    g_keyframes.push_back(k);
+    std::sort(g_keyframes.begin(), g_keyframes.end(), [](const LightKeyframe& a, const LightKeyframe& b) {
+        return a.time < b.time;
+    });
+}
+
+// ============================================================================
 // ASSET LOADERS
 // ============================================================================
 static GLuint loadTextureFromFile(const char* filename, bool repeat = true) {
@@ -540,6 +651,7 @@ static void renderLoweringRamp(float openProg) {
 static void initScene4() {
     if (scene4Initialized) return;
 
+    reloadScene4Lighting();
     loadAstroAssets();
     sandTexID = loadTextureFromFile("mars_dune_sand_diffuse.jpg", true);
     cabinTexID = loadTextureFromFile("cabin_metal_diffuse.jpg", true);
@@ -570,6 +682,10 @@ static void initScene4() {
 // ============================================================================
 void updateScene4(float dt) {
     initScene4();
+
+    if (g_hudMsgTimer > 0.0f) {
+        g_hudMsgTimer -= dt;
+    }
 
     // Animate floating dust motes in cabin
     for (size_t i = 0; i < cabinMotes.size(); ++i) {
@@ -676,10 +792,14 @@ void renderScene4() {
 
     // Configure Lighting for Scene 4:
     // Blinding exterior Martian sun coming from outside the ramp (+Z) shining back into cabin (-Z)
-    GLfloat sunPos[4]  = { 1.5f, 14.0f, 55.0f, 0.0f };
-    GLfloat sunDiff[4] = { 2.40f, 1.75f, 1.30f, 1.0f }; // Warm golden Martian daylight
-    GLfloat sunAmb[4]  = { 0.15f, 0.10f, 0.08f, 1.0f }; // Low interior cabin ambient
-    GLfloat sunSpec[4] = { 1.80f, 1.45f, 1.10f, 1.0f };
+    LightKeyframe curLight = evalLighting(t);
+
+    GLfloat sunPos[4]  = { curLight.sunAngleX, curLight.sunHeight, 55.0f, 0.0f };
+    float sB = curLight.sunBrightness / 2.40f;
+    float sW = curLight.skyWarmth;
+    GLfloat sunDiff[4] = { 2.40f * sB * sW, 1.75f * sB, 1.30f * sB * (2.0f - sW), 1.0f };
+    GLfloat sunAmb[4]  = { curLight.cabinAmbient, curLight.cabinAmbient * 0.67f, curLight.cabinAmbient * 0.53f, 1.0f };
+    GLfloat sunSpec[4] = { 1.80f * sB, 1.45f * sB, 1.10f * sB, 1.0f };
 
     glLightfv(GL_LIGHT0, GL_POSITION, sunPos);
     glLightfv(GL_LIGHT0, GL_DIFFUSE,  sunDiff);
@@ -711,7 +831,7 @@ void renderScene4() {
         glDisable(GL_LIGHTING);
         glDepthMask(GL_FALSE);
 
-        float beamAlpha = openProg * 0.28f;
+        float beamAlpha = openProg * curLight.lightShaft;
         glBegin(GL_QUADS);
             // Light quad projected on floor from door (Z=0) deep into cabin (Z=-5.5)
             glColor4f(1.0f, 0.85f, 0.60f, beamAlpha);
@@ -762,4 +882,213 @@ void renderScene4() {
     }
 
     glEnable(GL_LIGHT1);
+}
+
+// ============================================================================
+// ON-SCREEN INTERACTIVE LIGHTING HUD & KEYBOARD GRADING
+// ============================================================================
+static void drawHUDString(float x, float y, const char* str) {
+    glRasterPos2f(x, y);
+    while (*str) {
+        glutBitmapCharacter(GLUT_BITMAP_8_BY_13, *str++);
+    }
+}
+
+void renderScene4HUD(int windowWidth, int windowHeight) {
+    if (!g_showLightingHUD || seqTime < 60.5f) return;
+
+    glDisable(GL_LIGHTING);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    gluOrtho2D(0, windowWidth, 0, windowHeight);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    float panelW = 480.0f;
+    float panelH = 180.0f;
+    float padX = 25.0f;
+    float padY = 25.0f;
+
+    // Semi-transparent background
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glColor4f(0.04f, 0.05f, 0.08f, 0.88f);
+    glBegin(GL_QUADS);
+        glVertex2f(padX, padY);
+        glVertex2f(padX + panelW, padY);
+        glVertex2f(padX + panelW, padY + panelH);
+        glVertex2f(padX, padY + panelH);
+    glEnd();
+
+    // Golden border
+    glColor4f(0.95f, 0.50f, 0.15f, 0.95f);
+    glLineWidth(1.5f);
+    glBegin(GL_LINE_LOOP);
+        glVertex2f(padX, padY);
+        glVertex2f(padX + panelW, padY);
+        glVertex2f(padX + panelW, padY + panelH);
+        glVertex2f(padX, padY + panelH);
+    glEnd();
+
+    LightKeyframe cur = evalLighting(seqTime);
+
+    char buf[128];
+    float textX = padX + 14.0f;
+    float textY = padY + panelH - 22.0f;
+
+    glColor3f(1.0f, 0.65f, 0.20f);
+    snprintf(buf, sizeof(buf), "MARTIAN LIGHTING GRADING HUD [%s]", isPaused ? "PAUSED" : "PLAYING");
+    drawHUDString(textX, textY, buf);
+
+    textY -= 18.0f;
+    glColor3f(0.85f, 0.85f, 0.85f);
+    snprintf(buf, sizeof(buf), "Time: %.2fs / 73.00s | Keyframes Defined: %d", seqTime, (int)g_keyframes.size());
+    drawHUDString(textX, textY, buf);
+
+    textY -= 20.0f;
+    glColor3f(0.35f, 0.85f, 1.0f);
+    snprintf(buf, sizeof(buf), "[U / J] Sun Brightness:  %.2f", cur.sunBrightness);
+    drawHUDString(textX, textY, buf);
+
+    glColor3f(0.35f, 0.85f, 1.0f);
+    snprintf(buf, sizeof(buf), "[I / K] Cabin Ambient:   %.2f", cur.cabinAmbient);
+    drawHUDString(textX + 230.0f, textY, buf);
+
+    textY -= 16.0f;
+    glColor3f(0.35f, 0.85f, 1.0f);
+    snprintf(buf, sizeof(buf), "[O / 9] Sun Elevation:  %.1f", cur.sunHeight);
+    drawHUDString(textX, textY, buf);
+
+    glColor3f(0.35f, 0.85f, 1.0f);
+    snprintf(buf, sizeof(buf), "[P / ;] Door Bloom:      %.2f", cur.doorBloom);
+    drawHUDString(textX + 230.0f, textY, buf);
+
+    textY -= 16.0f;
+    glColor3f(0.35f, 0.85f, 1.0f);
+    snprintf(buf, sizeof(buf), "[Y / H] Light Shaft:     %.2f", cur.lightShaft);
+    drawHUDString(textX, textY, buf);
+
+    glColor3f(0.35f, 0.85f, 1.0f);
+    snprintf(buf, sizeof(buf), "[T / G] Sky Warmth:      %.2f", cur.skyWarmth);
+    drawHUDString(textX + 230.0f, textY, buf);
+
+    textY -= 20.0f;
+    glColor3f(0.70f, 0.70f, 0.70f);
+    snprintf(buf, sizeof(buf), "[< / >] Scrub 0.1s | [[ / ]] 1-Frame | [Space] Pause");
+    drawHUDString(textX, textY, buf);
+
+    textY -= 16.0f;
+    glColor3f(0.30f, 1.0f, 0.40f);
+    snprintf(buf, sizeof(buf), "[Enter / S] Save Keyframe | [Del] Delete | [L] Toggle HUD");
+    drawHUDString(textX, textY, buf);
+
+    if (g_hudMsgTimer > 0.0f) {
+        glColor3f(1.0f, 0.90f, 0.30f);
+        drawHUDString(padX, padY - 16.0f, g_hudStatusMsg);
+    }
+
+    glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_LIGHTING);
+
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+}
+
+bool handleScene4Keyboard(unsigned char key) {
+    if (seqTime < 60.5f) return false;
+
+    float t = seqTime;
+    LightKeyframe cur = evalLighting(t);
+    bool changed = false;
+
+    if (key == 'l' || key == 'L') {
+        g_showLightingHUD = !g_showLightingHUD;
+        return true;
+    } else if (key == 'u' || key == 'U') {
+        cur.sunBrightness += (key == 'U') ? 0.20f : 0.05f;
+        changed = true;
+    } else if (key == 'j' || key == 'J') {
+        cur.sunBrightness = std::max(0.10f, cur.sunBrightness - ((key == 'J') ? 0.20f : 0.05f));
+        changed = true;
+    } else if (key == 'i' || key == 'I') {
+        cur.cabinAmbient = std::min(0.50f, cur.cabinAmbient + 0.01f);
+        changed = true;
+    } else if (key == 'k' || key == 'K') {
+        cur.cabinAmbient = std::max(0.01f, cur.cabinAmbient - 0.01f);
+        changed = true;
+    } else if (key == 'o' || key == 'O') {
+        cur.sunHeight += 1.0f;
+        changed = true;
+    } else if (key == '9' || key == '(') {
+        cur.sunHeight = std::max(2.0f, cur.sunHeight - 1.0f);
+        changed = true;
+    } else if (key == 'p' || key == 'P') {
+        cur.doorBloom = std::min(1.50f, cur.doorBloom + 0.05f);
+        changed = true;
+    } else if (key == ';' || key == ':') {
+        cur.doorBloom = std::max(0.00f, cur.doorBloom - 0.05f);
+        changed = true;
+    } else if (key == 'y' || key == 'Y') {
+        cur.lightShaft = std::min(1.00f, cur.lightShaft + 0.03f);
+        changed = true;
+    } else if (key == 'h' || key == 'H') {
+        cur.lightShaft = std::max(0.00f, cur.lightShaft - 0.03f);
+        changed = true;
+    } else if (key == 't' || key == 'T') {
+        cur.skyWarmth = std::min(2.00f, cur.skyWarmth + 0.05f);
+        changed = true;
+    } else if (key == 'g' || key == 'G') {
+        cur.skyWarmth = std::max(0.30f, cur.skyWarmth - 0.05f);
+        changed = true;
+    } else if (key == 13 || key == 's' || key == 'S') { // Enter or S
+        setOrUpdateKeyframe(t, cur);
+        saveLightingKeyframes();
+        return true;
+    } else if (key == 8 || key == 127) { // Backspace or Del
+        for (size_t i = 0; i < g_keyframes.size(); ++i) {
+            if (fabsf(g_keyframes[i].time - t) < 0.25f) {
+                g_keyframes.erase(g_keyframes.begin() + i);
+                saveLightingKeyframes();
+                snprintf(g_hudStatusMsg, sizeof(g_hudStatusMsg), "Deleted keyframe near %.2fs", t);
+                g_hudMsgTimer = 3.0f;
+                return true;
+            }
+        }
+    } else if (key == '[' || key == '{') { // Fine frame step back (1 frame = 0.016s)
+        seqTime = clampf(seqTime - 0.01667f, 61.0f, SEQUENCE_DURATION - 0.1f);
+        return true;
+    } else if (key == ']' || key == '}') { // Fine frame step forward (1 frame = 0.016s)
+        seqTime = clampf(seqTime + 0.01667f, 61.0f, SEQUENCE_DURATION - 0.1f);
+        return true;
+    }
+
+    if (changed) {
+        setOrUpdateKeyframe(t, cur);
+        snprintf(g_hudStatusMsg, sizeof(g_hudStatusMsg), "T=%.2fs | Sun=%.2f Amb=%.2f Bloom=%.2f [S to Save]",
+                 t, cur.sunBrightness, cur.cabinAmbient, cur.doorBloom);
+        g_hudMsgTimer = 3.0f;
+        return true;
+    }
+    return false;
+}
+
+bool handleScene4Special(int key) {
+    if (seqTime < 60.5f) return false;
+    if (key == GLUT_KEY_LEFT) {
+        seqTime = clampf(seqTime - 0.10f, 61.0f, SEQUENCE_DURATION - 0.1f);
+        return true;
+    } else if (key == GLUT_KEY_RIGHT) {
+        seqTime = clampf(seqTime + 0.10f, 61.0f, SEQUENCE_DURATION - 0.1f);
+        return true;
+    }
+    return false;
 }

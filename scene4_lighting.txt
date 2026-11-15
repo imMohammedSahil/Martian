@@ -1,0 +1,10 @@
+# Scene 4 Interactive Lighting & Grading Keyframes
+# Format: keyframe <time_sec> <sun_brightness> <sun_height> <sun_angle_x> <cabin_ambient> <light_shaft> <door_bloom> <sky_warmth>
+# Hotkeys in-game:
+#   [L] Toggle HUD | [Space] Pause | [Left/Right] Scrub 0.1s | [, / .] Scrub 1 frame
+#   [U/J] Sun Brightness  [I/K] Cabin Ambient  [O/L] Sun Height  [P/;] Door Bloom  [Y/H] Light Shaft
+#   [Enter] or [S] Save Keyframe / Write file
+keyframe 61.00 2.20 14.00 1.50 0.10 0.00 0.00 1.00
+keyframe 63.80 2.60 14.00 1.50 0.14 0.35 0.50 1.00
+keyframe 66.80 2.40 14.00 1.50 0.15 0.28 0.15 1.00
+keyframe 71.50 2.30 14.00 1.50 0.15 0.25 0.05 1.00
