@@ -526,12 +526,13 @@ void updateScene3(float dt) {
         s3ChuteCut = true;
         s3ChuteDeploy = 0.0f;
 
-        s3ShipX = lerpf( 5.0f,  5.6f, landEase);
-        s3ShipY = lerpf(-0.6f, -2.10f, landEase);
-        s3ShipZ = lerpf( 7.5f,  9.0f, landEase);
+        s3ShipX = lerpf( 6.8f,  5.6f, landEase);
+        s3ShipY = lerpf(-0.1f, -2.10f, landEase);
+        s3ShipZ = lerpf( 7.4f,  9.0f, landEase);
 
-        s3ShipPitchExtra = 0.0f;
-        s3ShipRoll  = 0.0f;
+        s3ShipPitchExtra = lerpf(3.0f, 0.0f, landEase);
+        s3ShipRoll  = lerpf(-2.5f, 0.0f, landEase);
+        s3ShipScale = 0.50f;
         s3ShipDirX = 0.08f; s3ShipDirY = -0.04f; s3ShipDirZ = 0.99f;
         normalize3(s3ShipDirX, s3ShipDirY, s3ShipDirZ);
         s3HeatGlow = 0.0f;
@@ -646,9 +647,9 @@ void computeCameraScene3(float& eyeX, float& eyeY, float& eyeZ,
         eyeY = lerpf(-1.2f, -1.85f, smoothU);
         eyeZ = lerpf( 5.0f,  6.0f, smoothU);
 
-        targetX = s3ShipX;
-        targetY = s3ShipY + 0.30f;
-        targetZ = s3ShipZ;
+        targetX = lerpf( 5.6f,  s3ShipX, smoothU * 0.7f);
+        targetY = lerpf(-1.55f, s3ShipY + 0.35f, smoothU);
+        targetZ = lerpf( 8.8f,  s3ShipZ, smoothU * 0.7f);
 
         if (t >= 63.0f && t <= 64.0f) {
             float impact = sinf((t - 63.0f) * 28.0f) * 0.035f * (1.0f - (t - 63.0f) / 1.0f);
