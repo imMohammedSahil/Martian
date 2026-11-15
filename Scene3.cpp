@@ -310,10 +310,10 @@ void updateScene3(float dt) {
     }
 
     // ------------------------------------------------------------------------
-    // SHOT 1: SIDE-PROFILE ATMOSPHERIC PIERCE & HEATSHIELD TEAR (44.0s - 50.0s)
+    // SHOT 1: SIDE-PROFILE ATMOSPHERIC PIERCE & HEATSHIELD TEAR (44.0s - 51.5s)
     // ------------------------------------------------------------------------
-    if (t < 50.0f) {
-        float u = (t - 44.0f) / 6.0f; // Extended 6.0s cinematic hero shot
+    if (t < 51.5f) {
+        float u = (t - 44.0f) / 7.5f; // Extended 7.5s cinematic hero shot (holding pure red atmosphere at end)
 
         // Plunging steep downward descent into upper Martian atmosphere
         s3ShipX = lerpf(-18.0f, -9.0f, u);
@@ -405,10 +405,10 @@ void updateScene3(float dt) {
         }
     }
     // ------------------------------------------------------------------------
-    // SHOT 2: HYPERSONIC OVER-THE-SHOULDER DIVE (50.0s - 54.0s)
+    // SHOT 2: HYPERSONIC OVER-THE-SHOULDER DIVE (51.5s - 54.0s)
     // ------------------------------------------------------------------------
     else if (t < 54.0f) {
-        float u = (t - 50.0f) / 4.0f;
+        float u = (t - 51.5f) / 2.5f;
         float ease = u * u;
 
         s3ShipX = lerpf(-9.0f, -2.0f, u);
@@ -576,10 +576,10 @@ void computeCameraScene3(float& eyeX, float& eyeY, float& eyeZ,
     float t = seqTime;
 
     // ------------------------------------------------------------------------
-    // SHOT 1: SIDE-PROFILE HERO SHOT (44.0s - 50.0s)
+    // SHOT 1: SIDE-PROFILE HERO SHOT (44.0s - 51.5s)
     // ------------------------------------------------------------------------
-    if (t < 50.0f) {
-        float u = (t - 44.0f) / 6.0f; // Extended 6.0s hero view
+    if (t < 51.5f) {
+        float u = (t - 44.0f) / 7.5f; // Extended 7.5s hero view with complete atmospheric immersion at end
 
         // Position camera to the side-above the diving ship (side profile)
         eyeX = s3ShipX + 2.4f;
@@ -597,10 +597,10 @@ void computeCameraScene3(float& eyeX, float& eyeY, float& eyeZ,
         eyeZ += sinf(t * 72.0f) * shake;
     }
     // ------------------------------------------------------------------------
-    // SHOT 2: HYPERSONIC CHASE DIVE (50.0s - 54.0s)
+    // SHOT 2: HYPERSONIC CHASE DIVE (51.5s - 54.0s)
     // ------------------------------------------------------------------------
     else if (t < 54.0f) {
-        float u = (t - 50.0f) / 4.0f;
+        float u = (t - 51.5f) / 2.5f;
         eyeX = s3ShipX - s3ShipDirX * 3.4f + 1.1f;
         eyeY = s3ShipY - s3ShipDirY * 3.4f + 0.7f;
         eyeZ = s3ShipZ - s3ShipDirZ * 3.4f + 1.4f;
@@ -688,9 +688,9 @@ static void renderAtmosphericSkybox() {
     glLoadIdentity();
 
     glBegin(GL_QUADS);
-    if (seqTime < 50.0f) {
-        // Shot 1 (44.0s - 50.0s): Pure space black for the first 1.5s, then smooth 3.0s entry into Martian atmosphere
-        float entryProg = clampf((seqTime - 45.5f) / 3.0f, 0.0f, 1.0f);
+    if (seqTime < 51.5f) {
+        // Shot 1 (44.0s - 51.5s): Pure space black for first 1.5s, then smooth 2.5s transition into complete red/orange atmosphere held for final 3.5s
+        float entryProg = clampf((seqTime - 45.5f) / 2.5f, 0.0f, 1.0f);
         float smoothProg = entryProg * entryProg * (3.0f - 2.0f * entryProg);
 
         // Horizon transitions from space black (0,0,0) to Martian salmon/butterscotch
@@ -1161,8 +1161,8 @@ void renderScene3() {
     // 2. High-Altitude Atmospheric Cloud & Vapor Shreds
     renderAtmosphericVaporStreaks();
 
-    // 3. Official NASA Gale Crater 3D Topography Mesh (revealed in Shot 2 with over-the-shoulder cut at 50.0s)
-    if (seqTime >= 50.0f && craterLoaded && craterDisplayList != 0) {
+    // 3. Official NASA Gale Crater 3D Topography Mesh (revealed in Shot 2 with over-the-shoulder cut at 51.5s)
+    if (seqTime >= 51.5f && craterLoaded && craterDisplayList != 0) {
         glPushMatrix();
         glTranslatef(0.0f, -4.5f, 0.0f);
 
