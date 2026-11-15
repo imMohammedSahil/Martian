@@ -475,116 +475,61 @@ void updateScene3(float dt) {
         }
     }
     // ------------------------------------------------------------------------
-    // SHOT 2: HYPERSONIC OVER-THE-SHOULDER DIVE (50.5s - 60.5s, 10.0s total: 6s clouds, 4s surface)
+    // SHOT 2: HYPERSONIC OVER-THE-SHOULDER DIVE & HIGH-SPEED BREAKAWAY (50.5s - 63.0s)
     // ------------------------------------------------------------------------
-    else if (t < 60.5f) {
-        float u = (t - 50.5f) / 10.0f;
-        float ease = u * u;
-
-        s3ShipX = lerpf(-9.0f, -2.0f, u);
-        s3ShipY = lerpf( 7.5f,  3.2f, ease);
-        s3ShipZ = lerpf(-9.0f, -1.5f, u);
-
+    else {
+        // Hypersonic downward dive vector
         s3ShipDirX =  0.60f;
         s3ShipDirY = -0.42f;
         s3ShipDirZ =  0.75f;
         normalize3(s3ShipDirX, s3ShipDirY, s3ShipDirZ);
 
-        s3ShipPitchExtra = lerpf(8.0f, 4.0f, u);
-        s3ShipRoll  = lerpf(10.0f, 4.0f, u);
+        if (t < 60.5f) {
+            float u = (t - 50.5f) / 10.0f;
+            float ease = u * u;
+
+            s3ShipX = lerpf(-9.0f, -2.0f, u);
+            s3ShipY = lerpf( 7.5f,  3.2f, ease);
+            s3ShipZ = lerpf(-9.0f, -1.5f, u);
+
+            s3ShipPitchExtra = lerpf(8.0f, 4.0f, u);
+            s3ShipRoll  = lerpf(10.0f, 4.0f, u);
+            s3HeatGlow  = lerpf(1.0f, 0.20f, u);
+        } else {
+            // Breakaway: Camera stops following; Ranger dives away down into Gale Crater at high speed
+            float dtBreak = t - 60.5f;
+            float plungeDist = dtBreak * 2.80f;
+
+            s3ShipX = -2.0f + s3ShipDirX * plungeDist;
+            s3ShipY =  3.2f + s3ShipDirY * plungeDist;
+            s3ShipZ = -1.5f + s3ShipDirZ * plungeDist;
+
+            s3ShipPitchExtra = 3.5f;
+            s3ShipRoll  = 3.5f;
+            s3HeatGlow  = std::max(0.0f, 0.20f - dtBreak * 0.08f);
+        }
         s3ShipScale = 0.50f;
-        s3HeatGlow  = lerpf(1.0f, 0.20f, u);
 
         // Residual sparks fading out
-        for (int f = 0; f < 2; ++f) {
-            ReentrySpark sp;
-            sp.x = s3ShipX + randRange(-0.3f, 0.3f);
-            sp.y = s3ShipY - 0.08f;
-            sp.z = s3ShipZ + randRange(-0.2f, 0.2f);
-            float spd = randRange(14.0f, 22.0f);
-            sp.vx = -s3ShipDirX * spd;
-            sp.vy = -s3ShipDirY * spd;
-            sp.vz = -s3ShipDirZ * spd;
-            sp.len = randRange(0.6f, 1.4f);
-            sp.maxLife = randRange(0.15f, 0.25f);
-            sp.life = sp.maxLife;
-            sp.size = randRange(2.0f, 3.5f);
-            sp.r = 1.0f;
-            sp.g = 0.65f;
-            sp.b = 0.15f;
-            s3Sparks.push_back(sp);
-        }
-    }
-    // ------------------------------------------------------------------------
-    // SHOT 3: RETRO-THRUSTERS & GROUND-LEVEL TOUCHDOWN (60.5s - 66.5s)
-    // ------------------------------------------------------------------------
-    else {
-        float u = (t - 60.5f) / 5.5f;
-        u = clampf(u, 0.0f, 1.0f);
-        float landEase = smoothstep(0.0f, 1.0f, u);
-
-        s3ChuteCut = true;
-        s3ChuteDeploy = 0.0f;
-
-        s3ShipX = lerpf( 6.8f,  5.6f, landEase);
-        s3ShipY = lerpf(-0.1f, -2.10f, landEase);
-        s3ShipZ = lerpf( 7.4f,  9.0f, landEase);
-
-        s3ShipPitchExtra = lerpf(3.0f, 0.0f, landEase);
-        s3ShipRoll  = lerpf(-2.5f, 0.0f, landEase);
-        s3ShipScale = 0.50f;
-        s3ShipDirX = 0.08f; s3ShipDirY = -0.04f; s3ShipDirZ = 0.99f;
-        normalize3(s3ShipDirX, s3ShipDirY, s3ShipDirZ);
-        s3HeatGlow = 0.0f;
-
-        if (t >= 60.5f && t <= 63.5f) {
-            for (int k = 0; k < 2; ++k) {
-                float ox = randRange(-0.3f, 0.3f);
-                float oz = randRange(-0.3f, 0.3f);
-                spawnParticle(s3ShipX + ox, s3ShipY - 0.2f, s3ShipZ + oz,
-                              randRange(-0.2f, 0.2f), -5.0f, randRange(-0.2f, 0.2f),
-                              0.15f, 1.0f, 0.2f, 0.85f, 1.0f, true);
+        if (t < 61.2f) {
+            for (int f = 0; f < 2; ++f) {
+                ReentrySpark sp;
+                sp.x = s3ShipX + randRange(-0.3f, 0.3f);
+                sp.y = s3ShipY - 0.08f;
+                sp.z = s3ShipZ + randRange(-0.2f, 0.2f);
+                float spd = randRange(14.0f, 22.0f);
+                sp.vx = -s3ShipDirX * spd;
+                sp.vy = -s3ShipDirY * spd;
+                sp.vz = -s3ShipDirZ * spd;
+                sp.len = randRange(0.6f, 1.4f);
+                sp.maxLife = randRange(0.15f, 0.25f);
+                sp.life = sp.maxLife;
+                sp.size = randRange(2.0f, 3.5f);
+                sp.r = 1.0f;
+                sp.g = 0.65f;
+                sp.b = 0.15f;
+                s3Sparks.push_back(sp);
             }
-        }
-
-        if (t >= 61.5f && t <= 66.5f) {
-            int numDust = (t >= 63.0f) ? 10 : 5;
-            for (int d = 0; d < numDust; ++d) {
-                float ang = randRange(0.0f, 2.0f * (float)M_PI);
-                float dist = randRange(0.2f, 1.4f);
-                float spd = randRange(2.0f, 5.5f);
-                TouchdownDust p;
-                p.x = s3ShipX + cosf(ang) * dist;
-                p.y = -2.10f;
-                p.z = s3ShipZ + sinf(ang) * dist;
-                p.vx = cosf(ang) * spd + randRange(-0.4f, 0.4f);
-                p.vy = randRange(0.8f, 3.2f);
-                p.vz = sinf(ang) * spd + randRange(-0.4f, 0.4f);
-                p.scale = randRange(0.8f, 2.2f);
-                p.alpha = 0.95f;
-                p.maxLife = randRange(2.4f, 3.8f);
-                p.life = p.maxLife;
-                s3Dust.push_back(p);
-            }
-        }
-    }
-
-    // Update touchdown dust particles
-    for (size_t i = 0; i < s3Dust.size(); ) {
-        s3Dust[i].x += s3Dust[i].vx * dt;
-        s3Dust[i].y += s3Dust[i].vy * dt;
-        s3Dust[i].z += s3Dust[i].vz * dt;
-        s3Dust[i].vx *= 0.94f;
-        s3Dust[i].vz *= 0.94f;
-        s3Dust[i].vy -= 0.5f * dt;
-        s3Dust[i].scale += 0.7f * dt;
-        s3Dust[i].life -= dt;
-        s3Dust[i].alpha = (s3Dust[i].life / s3Dust[i].maxLife) * 0.75f;
-        if (s3Dust[i].life <= 0.0f) {
-            s3Dust[i] = s3Dust.back();
-            s3Dust.pop_back();
-        } else {
-            ++i;
         }
     }
 }
@@ -620,40 +565,45 @@ void computeCameraScene3(float& eyeX, float& eyeY, float& eyeZ,
         eyeZ += sinf(t * 72.0f) * shake;
     }
     // ------------------------------------------------------------------------
-    // SHOT 2: HYPERSONIC CHASE DIVE (50.5s - 60.5s, 10.0s total: 6s clouds, 4s surface)
-    // ------------------------------------------------------------------------
-    else if (t < 60.5f) {
-        float u = (t - 50.5f) / 10.0f;
-        eyeX = s3ShipX - s3ShipDirX * 3.4f + 1.1f;
-        eyeY = s3ShipY - s3ShipDirY * 3.4f + 0.7f;
-        eyeZ = s3ShipZ - s3ShipDirZ * 3.4f + 1.4f;
-
-        targetX = s3ShipX + s3ShipDirX * 1.5f;
-        targetY = s3ShipY + s3ShipDirY * 1.5f;
-        targetZ = s3ShipZ + s3ShipDirZ * 1.5f;
-
-        float shake = (1.0f - u * 0.5f) * 0.020f;
-        eyeX += sinf(t * 42.0f) * shake;
-        eyeY += cosf(t * 38.0f) * shake;
-    }
-    // ------------------------------------------------------------------------
-    // SHOT 3: GROUND-LEVEL TOUCHDOWN (60.5s - 66.5s)
+    // SHOT 2: HYPERSONIC CHASE DIVE & OVER-THE-SHOULDER HOLD (50.5s - 63.0s)
     // ------------------------------------------------------------------------
     else {
-        float u = (t - 60.5f) / 5.5f;
-        float smoothU = smoothstep(0.0f, 1.0f, u);
+        float dirX =  0.60f, dirY = -0.42f, dirZ =  0.75f;
+        normalize3(dirX, dirY, dirZ);
 
-        eyeX = lerpf( 2.4f,  2.8f, smoothU);
-        eyeY = lerpf(-1.2f, -1.85f, smoothU);
-        eyeZ = lerpf( 5.0f,  6.0f, smoothU);
+        if (t < 60.5f) {
+            float u = (t - 50.5f) / 10.0f;
+            eyeX = s3ShipX - dirX * 3.4f + 1.1f;
+            eyeY = s3ShipY - dirY * 3.4f + 0.7f;
+            eyeZ = s3ShipZ - dirZ * 3.4f + 1.4f;
 
-        targetX = lerpf( 5.6f,  s3ShipX, smoothU * 0.7f);
-        targetY = lerpf(-1.55f, s3ShipY + 0.35f, smoothU);
-        targetZ = lerpf( 8.8f,  s3ShipZ, smoothU * 0.7f);
+            targetX = s3ShipX + dirX * 1.5f;
+            targetY = s3ShipY + dirY * 1.5f;
+            targetZ = s3ShipZ + dirZ * 1.5f;
 
-        if (t >= 63.0f && t <= 64.0f) {
-            float impact = sinf((t - 63.0f) * 28.0f) * 0.035f * (1.0f - (t - 63.0f) / 1.0f);
-            eyeY += impact;
+            float shake = (1.0f - u * 0.5f) * 0.020f;
+            eyeX += sinf(t * 42.0f) * shake;
+            eyeY += cosf(t * 38.0f) * shake;
+        } else {
+            // Camera stops following the Ranger, locking at its over-the-shoulder vantage
+            float dtBreak = t - 60.5f;
+            float camDrift = clampf(dtBreak * 0.10f, 0.0f, 0.30f);
+
+            const float baseShipX = -2.0f;
+            const float baseShipY =  3.2f;
+            const float baseShipZ = -1.5f;
+
+            eyeX = (baseShipX - dirX * 3.4f + 1.1f) + dirX * camDrift;
+            eyeY = (baseShipY - dirY * 3.4f + 0.7f) + dirY * camDrift;
+            eyeZ = (baseShipZ - dirZ * 3.4f + 1.4f) + dirZ * camDrift;
+
+            targetX = baseShipX + dirX * 1.5f;
+            targetY = baseShipY + dirY * 1.5f;
+            targetZ = baseShipZ + dirZ * 1.5f;
+
+            float shake = std::max(0.003f, 0.010f - dtBreak * 0.003f);
+            eyeX += sinf(t * 30.0f) * shake;
+            eyeY += cosf(t * 26.0f) * shake;
         }
     }
 }
@@ -661,94 +611,7 @@ void computeCameraScene3(float& eyeX, float& eyeY, float& eyeZ,
 // ============================================================================
 // SCENE 3 RENDERING
 // ============================================================================
-// ============================================================================
-// ACCURATE 3D MARTIAN SKY DOME & CIRCULAR EXTENDED HORIZON
-// ============================================================================
-static void buildSkyDome() {
-    if (skyDomeDisplayList != 0) return;
-    skyDomeDisplayList = glGenLists(1);
-    glNewList(skyDomeDisplayList, GL_COMPILE);
 
-    const int RINGS = 36;
-    const int SEGS  = 64;
-    const float domeRadius = 260.0f;
-
-    for (int r = 0; r < RINGS; ++r) {
-        float phi0 = (float)r / (float)RINGS * (float)M_PI * 0.58f;
-        float phi1 = (float)(r + 1) / (float)RINGS * (float)M_PI * 0.58f;
-        float v0 = (float)r / (float)RINGS;
-        float v1 = (float)(r + 1) / (float)RINGS;
-
-        glBegin(GL_TRIANGLE_STRIP);
-        for (int s = 0; s <= SEGS; ++s) {
-            float theta = (float)s / (float)SEGS * 2.0f * (float)M_PI;
-            float u = (float)s / (float)SEGS;
-
-            float x0 = domeRadius * sinf(phi0) * sinf(theta);
-            float y0 = domeRadius * cosf(phi0);
-            float z0 = domeRadius * sinf(phi0) * cosf(theta);
-
-            float x1 = domeRadius * sinf(phi1) * sinf(theta);
-            float y1 = domeRadius * cosf(phi1);
-            float z1 = domeRadius * sinf(phi1) * cosf(theta);
-
-            glTexCoord2f(u, 1.0f - v0 * 0.95f); glVertex3f(x0, y0, z0);
-            glTexCoord2f(u, 1.0f - v1 * 0.95f); glVertex3f(x1, y1, z1);
-        }
-        glEnd();
-    }
-    glEndList();
-}
-
-static void buildHorizonDisk() {
-    if (horizonDiskDisplayList != 0) return;
-    horizonDiskDisplayList = glGenLists(1);
-    glNewList(horizonDiskDisplayList, GL_COMPILE);
-
-    const int RINGS = 24;
-    const int SEGS  = 128;
-    const float R_IN  = 22.0f;
-    const float R_OUT = 260.0f;
-
-    for (int r = 0; r < RINGS; ++r) {
-        float f0 = (float)r / (float)RINGS;
-        float f1 = (float)(r + 1) / (float)RINGS;
-
-        float diskR0 = lerpf(R_IN, R_OUT, powf(f0, 1.75f));
-        float diskR1 = lerpf(R_IN, R_OUT, powf(f1, 1.75f));
-
-        // Curving gently down to true circular planetary horizon
-        float y0 = -0.10f - f0 * f0 * 16.0f;
-        float y1 = -0.10f - f1 * f1 * 16.0f;
-
-        glBegin(GL_TRIANGLE_STRIP);
-        for (int s = 0; s <= SEGS; ++s) {
-            float theta = (float)s / (float)SEGS * 2.0f * (float)M_PI;
-            float cosT = cosf(theta);
-            float sinT = sinf(theta);
-
-            float x0 = diskR0 * sinT;
-            float z0 = diskR0 * cosT;
-            float x1 = diskR1 * sinT;
-            float z1 = diskR1 * cosT;
-
-            float u0 = x0 * 0.035f;
-            float v0 = z0 * 0.035f;
-            float u1 = x1 * 0.035f;
-            float v1 = z1 * 0.035f;
-
-            glNormal3f(sinT * 0.06f, 0.998f, cosT * 0.06f);
-            glColor3f(0.65f, 0.28f, 0.16f);
-            glTexCoord2f(u0, v0); glVertex3f(x0, y0, z0);
-
-            glNormal3f(sinT * 0.06f, 0.998f, cosT * 0.06f);
-            glColor3f(0.58f, 0.24f, 0.13f);
-            glTexCoord2f(u1, v1); glVertex3f(x1, y1, z1);
-        }
-        glEnd();
-    }
-    glEndList();
-}
 
 static void renderAtmosphericSkybox() {
     glDisable(GL_DEPTH_TEST);
@@ -791,8 +654,8 @@ static void renderAtmosphericSkybox() {
         glMatrixMode(GL_PROJECTION);
         glPopMatrix();
         glMatrixMode(GL_MODELVIEW);
-    } else if (seqTime < 60.5f) {
-        // Shot 2 (50.5s - 60.5s): Vibrant, 100% rich warm Martian orange atmosphere (zero black patches)
+    } else {
+        // Shot 2 (50.5s - 61.5s): Vibrant, 100% rich warm Martian orange atmosphere (zero black patches)
         glMatrixMode(GL_PROJECTION);
         glPushMatrix();
         glLoadIdentity();
@@ -817,42 +680,6 @@ static void renderAtmosphericSkybox() {
         glMatrixMode(GL_PROJECTION);
         glPopMatrix();
         glMatrixMode(GL_MODELVIEW);
-    } else {
-        // Shot 3 (60.5s - 66.5s): Accurate Photorealistic NASA Martian Sky Dome
-        buildSkyDome();
-        if (skyTexID && skyDomeDisplayList) {
-            glEnable(GL_TEXTURE_2D);
-            glBindTexture(GL_TEXTURE_2D, skyTexID);
-            glDisable(GL_CULL_FACE);
-            glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-
-            glPushMatrix();
-            // Center sky dome on camera so it forms an infinite background
-            float curEyeX, curEyeY, curEyeZ, curTarX, curTarY, curTarZ, curUpX, curUpY, curUpZ;
-            computeCameraScene3(curEyeX, curEyeY, curEyeZ, curTarX, curTarY, curTarZ, curUpX, curUpY, curUpZ);
-            glTranslatef(curEyeX, curEyeY * 0.2f, curEyeZ);
-            glCallList(skyDomeDisplayList);
-            glPopMatrix();
-
-            glEnable(GL_CULL_FACE);
-            glDisable(GL_TEXTURE_2D);
-        } else {
-            glMatrixMode(GL_PROJECTION);
-            glPushMatrix();
-            glLoadIdentity();
-            glOrtho(0.0, 1.0, 0.0, 1.0, -1.0, 1.0);
-            glMatrixMode(GL_MODELVIEW);
-            glPushMatrix();
-            glLoadIdentity();
-            glBegin(GL_QUADS);
-                glColor3f(0.74f, 0.40f, 0.24f); glVertex2f(0.0f, 0.0f); glVertex2f(1.0f, 0.0f);
-                glColor3f(0.50f, 0.22f, 0.13f); glVertex2f(1.0f, 1.0f); glVertex2f(0.0f, 1.0f);
-            glEnd();
-            glPopMatrix();
-            glMatrixMode(GL_PROJECTION);
-            glPopMatrix();
-            glMatrixMode(GL_MODELVIEW);
-        }
     }
 
     glDepthMask(GL_TRUE);
@@ -1289,194 +1116,7 @@ static void renderReentrySparks() {
     glEnable(GL_LIGHTING);
 }
 
-static void renderTouchdownDustParticles() {
-    if (s3Dust.empty() || !smokeTexID) return;
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, smokeTexID);
-    glDisable(GL_LIGHTING);
-    glDepthMask(GL_FALSE);
-
-    // Camera billboarding vectors so 3D dust particles face viewer
-    float curEyeX, curEyeY, curEyeZ, curTarX, curTarY, curTarZ, curUpX, curUpY, curUpZ;
-    computeCameraScene3(curEyeX, curEyeY, curEyeZ, curTarX, curTarY, curTarZ, curUpX, curUpY, curUpZ);
-    float fwdX = curTarX - curEyeX, fwdY = curTarY - curEyeY, fwdZ = curTarZ - curEyeZ;
-    normalize3(fwdX, fwdY, fwdZ);
-    float rightX = fwdY * curUpZ - fwdZ * curUpY;
-    float rightY = fwdZ * curUpX - fwdX * curUpZ;
-    float rightZ = fwdX * curUpY - fwdY * curUpX;
-    normalize3(rightX, rightY, rightZ);
-    float cUpX = rightY * fwdZ - rightZ * fwdY;
-    float cUpY = rightZ * fwdX - rightX * fwdZ;
-    float cUpZ = rightX * fwdY - rightY * fwdX;
-    normalize3(cUpX, cUpY, cUpZ);
-
-    for (size_t i = 0; i < s3Dust.size(); ++i) {
-        const TouchdownDust& p = s3Dust[i];
-        glColor4f(0.74f, 0.32f, 0.17f, p.alpha);
-        float s = p.scale;
-        glBegin(GL_QUADS);
-            glTexCoord2f(0.0f, 0.0f);
-            glVertex3f(p.x - (rightX + cUpX) * s, p.y - (rightY + cUpY) * s, p.z - (rightZ + cUpZ) * s);
-            glTexCoord2f(1.0f, 0.0f);
-            glVertex3f(p.x + (rightX - cUpX) * s, p.y + (rightY - cUpY) * s, p.z + (rightZ - cUpZ) * s);
-            glTexCoord2f(1.0f, 1.0f);
-            glVertex3f(p.x + (rightX + cUpX) * s, p.y + (rightY + cUpY) * s, p.z + (rightZ + cUpZ) * s);
-            glTexCoord2f(0.0f, 1.0f);
-            glVertex3f(p.x - (rightX - cUpX) * s, p.y - (rightY - cUpY) * s, p.z - (rightZ - cUpZ) * s);
-        glEnd();
-    }
-
-    glDepthMask(GL_TRUE);
-    glDisable(GL_TEXTURE_2D);
-    glDisable(GL_BLEND);
-    glEnable(GL_LIGHTING);
-}
-
-static void renderScreenEngulfingSmoke() {
-    if (seqTime < 63.4f) return;
-    float t = seqTime;
-
-    // Progression of screen engulfment:
-    // 63.4s - 64.4s: Retro blast plumes hit regolith, swirling dust rushes at camera (0.0 -> 0.40)
-    // 64.4s - 65.5s: Thick turbulent billowing dust engulfs screen (0.40 -> 0.95)
-    // 65.5s - 66.5s: 100% complete screen engulfment in rich Martian dust before fade to black
-    float progress = 0.0f;
-    if (t < 64.4f) {
-        progress = smoothstep(63.4f, 64.4f, t) * 0.40f;
-    } else if (t < 65.5f) {
-        progress = 0.40f + smoothstep(64.4f, 65.5f, t) * 0.55f;
-    } else {
-        progress = 0.95f + clampf((t - 65.5f) / 0.5f, 0.0f, 0.05f);
-    }
-    progress = clampf(progress, 0.0f, 1.0f);
-
-    GLuint tex = smokeTexID ? smokeTexID : cloudTexID;
-    if (!tex) return;
-
-    glDisable(GL_DEPTH_TEST);
-    glDepthMask(GL_FALSE);
-    glDisable(GL_LIGHTING);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, tex);
-
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
-    glOrtho(0.0, (GLdouble)windowWidth, 0.0, (GLdouble)windowHeight, -1.0, 1.0);
-
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
-
-    float cx = (float)windowWidth * 0.5f;
-    float cy = (float)windowHeight * 0.5f;
-    float w = (float)windowWidth;
-    float h = (float)windowHeight;
-
-    struct SmokeLayer {
-        float ox, oy;
-        float scale;
-        float rot;
-        float r, g, b;
-        float alphaMult;
-    };
-
-    SmokeLayer layers[] = {
-        { cx, cy, 2.2f, (t - 62.0f) * 8.0f, 0.72f, 0.32f, 0.16f, 0.85f },
-        { cx * 0.8f, cy * 0.4f, 2.5f, -(t - 62.0f) * 14.0f, 0.80f, 0.38f, 0.18f, 0.90f },
-        { cx * 1.2f, cy * 0.7f, 2.4f, (t - 62.0f) * 18.0f + 45.0f, 0.65f, 0.26f, 0.12f, 0.95f },
-        { cx, cy * 0.9f, 2.0f, -(t - 62.0f) * 22.0f + 90.0f, 0.88f, 0.44f, 0.22f, 0.90f },
-        { cx * 1.1f, cy * 0.5f, 2.6f, (t - 62.0f) * 11.0f + 160.0f, 0.55f, 0.22f, 0.10f, 1.00f }
-    };
-
-    for (int i = 0; i < 5; ++i) {
-        float a = clampf(progress * layers[i].alphaMult, 0.0f, 1.0f);
-        if (a <= 0.005f) continue;
-
-        glPushMatrix();
-        glTranslatef(layers[i].ox, layers[i].oy, 0.0f);
-        glRotatef(layers[i].rot, 0.0f, 0.0f, 1.0f);
-        float s = (w > h ? w : h) * layers[i].scale;
-        glScalef(s, s, 1.0f);
-
-        glColor4f(layers[i].r, layers[i].g, layers[i].b, a);
-        glBegin(GL_QUADS);
-            glTexCoord2f(0.0f, 0.0f); glVertex2f(-0.5f, -0.5f);
-            glTexCoord2f(1.0f, 0.0f); glVertex2f( 0.5f, -0.5f);
-            glTexCoord2f(1.0f, 1.0f); glVertex2f( 0.5f,  0.5f);
-            glTexCoord2f(0.0f, 1.0f); glVertex2f(-0.5f,  0.5f);
-        glEnd();
-        glPopMatrix();
-    }
-
-    if (progress > 0.65f) {
-        float solidA = smoothstep(0.65f, 0.98f, progress);
-        glDisable(GL_TEXTURE_2D);
-        glColor4f(0.68f, 0.29f, 0.14f, solidA * 0.96f);
-        glBegin(GL_QUADS);
-            glVertex2f(0.0f, 0.0f);
-            glVertex2f(w, 0.0f);
-            glVertex2f(w, h);
-            glVertex2f(0.0f, h);
-        glEnd();
-        glEnable(GL_TEXTURE_2D);
-    }
-
-    glPopMatrix();
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-    glMatrixMode(GL_MODELVIEW);
-
-    glDisable(GL_TEXTURE_2D);
-    glDisable(GL_BLEND);
-    glEnable(GL_DEPTH_TEST);
-    glDepthMask(GL_TRUE);
-    glEnable(GL_LIGHTING);
-}
-
-
-
-static void renderParachuteWithLines() {
-    if (!parachuteLoaded || parachuteDisplayList == 0 || s3ChuteDeploy <= 0.01f) return;
-
-    glPushMatrix();
-    glTranslatef(s3ChuteX, s3ChuteY, s3ChuteZ);
-    float pScale = 0.40f * s3ChuteDeploy;
-    glScalef(pScale, pScale, pScale);
-    glCallList(parachuteDisplayList);
-    glPopMatrix();
-
-    if (!s3ChuteCut && s3ChuteDeploy > 0.5f) {
-        glDisable(GL_LIGHTING);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glLineWidth(1.6f);
-        glColor4f(0.92f, 0.90f, 0.88f, 0.75f);
-
-        float canopyBottomY = s3ChuteY - 0.2f;
-        glBegin(GL_LINES);
-            glVertex3f(s3ChuteX - 0.7f, canopyBottomY, s3ChuteZ - 0.7f);
-            glVertex3f(s3ShipX - 0.2f, s3ShipY + 0.2f, s3ShipZ - 0.2f);
-
-            glVertex3f(s3ChuteX + 0.7f, canopyBottomY, s3ChuteZ - 0.7f);
-            glVertex3f(s3ShipX + 0.2f, s3ShipY + 0.2f, s3ShipZ - 0.2f);
-
-            glVertex3f(s3ChuteX + 0.7f, canopyBottomY, s3ChuteZ + 0.7f);
-            glVertex3f(s3ShipX + 0.2f, s3ShipY + 0.2f, s3ShipZ + 0.2f);
-
-            glVertex3f(s3ChuteX - 0.7f, canopyBottomY, s3ChuteZ + 0.7f);
-            glVertex3f(s3ShipX - 0.2f, s3ShipY + 0.2f, s3ShipZ + 0.2f);
-        glEnd();
-
-        glDisable(GL_BLEND);
-        glEnable(GL_LIGHTING);
-    }
-}
 
 void renderScene3() {
     // 1. Martian Atmospheric Gradient Sky
@@ -1499,7 +1139,7 @@ void renderScene3() {
 
     if (craterLoaded && craterDisplayList != 0 && craterReveal > 0.01f) {
         glPushMatrix();
-        float terrainY = (seqTime < 60.5f) ? -4.80f : -2.10f;
+        float terrainY = -4.80f;
         glTranslatef(0.0f, terrainY, 0.0f);
 
         if (craterTexID) {
@@ -1511,18 +1151,7 @@ void renderScene3() {
         glEnable(GL_LIGHTING);
         glEnable(GL_LIGHT0);
         // Direct sunlight shining from high behind the camera in Shot 2 to eliminate all terrain shadows
-        GLfloat terrainSunPos[4];
-        if (seqTime < 60.5f) {
-            terrainSunPos[0] = -15.0f;
-            terrainSunPos[1] =  45.0f;
-            terrainSunPos[2] = -25.0f;
-            terrainSunPos[3] =   0.0f;
-        } else {
-            terrainSunPos[0] =  18.0f;
-            terrainSunPos[1] =  22.0f;
-            terrainSunPos[2] =  12.0f;
-            terrainSunPos[3] =   0.0f;
-        }
+        GLfloat terrainSunPos[4] = { -15.0f, 45.0f, -25.0f, 0.0f };
         GLfloat terrainSunDiff[] = { 1.65f * craterReveal, 1.15f * craterReveal, 0.85f * craterReveal, 1.0f };
         GLfloat terrainSunAmb[]  = { 0.75f * craterReveal, 0.48f * craterReveal, 0.32f * craterReveal, 1.0f };
         glLightfv(GL_LIGHT0, GL_POSITION, terrainSunPos);
@@ -1546,14 +1175,6 @@ void renderScene3() {
 
         glCallList(craterDisplayList);
 
-        // Circular extended terrain horizon disk to prevent any square mesh cutoffs during landing
-        if (seqTime >= 60.5f) {
-            buildHorizonDisk();
-            if (horizonDiskDisplayList != 0) {
-                glCallList(horizonDiskDisplayList);
-            }
-        }
-
         if (craterReveal < 0.99f) {
             glDisable(GL_BLEND);
         }
@@ -1564,10 +1185,7 @@ void renderScene3() {
         glPopMatrix();
     }
 
-    // 4. Parachute Canopy & Suspension Lines
-    renderParachuteWithLines();
-
-    // 5. Star Sparrow / Ranger Lander Craft with Silky Smooth Plasma Sheath
+    // 4. Star Sparrow / Ranger Lander Craft with Silky Smooth Plasma Sheath
     glPushMatrix();
     glTranslatef(s3ShipX, s3ShipY, s3ShipZ);
     glScalef(s3ShipScale, s3ShipScale, s3ShipScale);
@@ -1622,15 +1240,9 @@ void renderScene3() {
     glDisable(GL_LIGHT3);
     glPopMatrix();
 
-    // 6. Supersonic horizontal ablation sparks (in world space)
+    // 5. Supersonic horizontal ablation sparks (in world space)
     renderReentrySparks();
 
-    // 7. Volumetric Touchdown Dust Clouds
-    renderTouchdownDustParticles();
-
-    // 8. Dense 3D Volumetric Cloud Deck (Surrounding Ranger in Shot 2 with Breakthrough Reveal)
+    // 6. Dense 3D Volumetric Cloud Deck (Surrounding Ranger in Shot 2 with Breakthrough Reveal)
     renderVolumetricCloudDeck();
-
-    // 9. Screen-Engulfing Swirling Martian Regolith Dust Plume (Touchdown finale)
-    renderScreenEngulfingSmoke();
 }
