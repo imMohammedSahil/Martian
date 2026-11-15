@@ -496,15 +496,23 @@ void updateScene3(float dt) {
             s3ShipRoll  = lerpf(10.0f, 4.0f, u);
             s3HeatGlow  = lerpf(1.0f, 0.20f, u);
         } else {
-            // Bullet Breakaway: Camera halts; Ranger rockets forward and down at hypersonic bullet speed into Gale Crater
+            // Bullet Breakaway: Camera halts; Ranger pitches down into a steep plunge at bullet speed
             float dtBreak = t - 60.5f;
+            float steepBlend = clampf(dtBreak * 2.0f, 0.0f, 1.0f);
+
+            // Steeper descent plunge vector into Gale Crater floor
+            s3ShipDirX = lerpf(0.60f,  0.48f, steepBlend);
+            s3ShipDirY = lerpf(-0.42f, -0.74f, steepBlend); // Steeper downward descent
+            s3ShipDirZ = lerpf(0.75f,  0.60f, steepBlend);
+            normalize3(s3ShipDirX, s3ShipDirY, s3ShipDirZ);
+
             float plungeDist = dtBreak * 8.5f + 5.5f * dtBreak * dtBreak;
 
             s3ShipX = -2.0f + s3ShipDirX * plungeDist;
             s3ShipY =  3.2f + s3ShipDirY * plungeDist;
             s3ShipZ = -1.5f + s3ShipDirZ * plungeDist;
 
-            s3ShipPitchExtra = 3.5f;
+            s3ShipPitchExtra = lerpf(4.0f, 8.0f, steepBlend);
             s3ShipRoll  = 3.5f;
             s3HeatGlow  = std::max(0.0f, 0.20f - dtBreak * 0.12f);
         }
