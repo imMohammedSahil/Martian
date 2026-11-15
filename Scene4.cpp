@@ -499,41 +499,65 @@ static float duneFBM(float x, float z, int oct = 3) {
     return val;
 }
 
-static float evaluateDuneHeight(float x, float z) {
+static float evaluateMacroDuneHeight(float x, float z) {
     if (z < 5.25f) return -0.74f;
 
-    // Domain warp creates organic meandering desert dune wind flows
-    float warp = duneFBM(x * 0.012f, z * 0.012f, 3) * 16.0f;
+    float warp = duneFBM(x * 0.010f, z * 0.010f, 3) * 18.0f;
     float wx = x + warp;
-    float wz = z + warp * 0.45f;
+    float wz = z + warp * 0.40f;
 
-    // 1. Primary Transverse Desert Dunes (Large sweeping waves with sharp knife-edge slipface crests)
-    float u1 = wx * 0.032f + wz * 0.020f;
+    float u1 = wx * 0.026f + wz * 0.016f;
     float s1 = sinf(u1);
-    float d1 = (s1 > 0.0f) ? (powf(s1, 0.9f) * 6.0f) : (-powf(-s1, 1.8f) * 3.4f);
+    float d1 = s1 * 5.4f + (s1 * s1 * s1) * 1.8f;
 
-    // 2. Secondary Barchan Crescent Dunes (Interlocking wind ripples with aerodynamic curvature)
-    float u2 = wx * 0.065f - wz * 0.038f;
-    float d2 = sinf(u2 + sinf(u1 * 1.5f) * 0.5f) * 2.2f;
+    float u2 = wx * 0.052f - wz * 0.028f;
+    float s2 = sinf(u2 + sinf(u1 * 1.4f) * 0.45f);
+    float d2 = s2 * 2.6f;
 
-    // 3. Fine Aeolian Wind Ripples on the sand surface
-    float r1 = sinf(x * 0.32f + z * 0.22f) * 0.20f;
-    float r2 = cosf(x * 0.65f - z * 0.42f) * 0.10f;
-
-    // 4. Distant Epic Mountain Ridge & Rim
-    float mtn = 0.0f;
-    if (z > 72.0f) {
-        float fz = (z - 72.0f) / 160.0f;
-        float r_noise = 1.0f - fabsf(duneNoise2D(x * 0.016f, z * 0.010f) * 2.0f - 1.0f);
-        mtn = (r_noise * 34.0f + sinf(x * 0.022f) * 14.0f + 16.0f) * fz;
+    float distDunes = 0.0f;
+    if (z > 60.0f) {
+        float fz = (z - 60.0f) / 160.0f;
+        float hd1 = sinf(wx * 0.014f + 0.6f) * 14.0f;
+        float hd2 = cosf(wz * 0.010f + wx * 0.008f) * 10.0f;
+        float hd3 = sinf(wx * 0.028f - wz * 0.016f) * 6.0f;
+        distDunes = (hd1 + hd2 + hd3 + 18.0f) * fz;
     }
 
-    float duneH = d1 + d2 + r1 + r2 + mtn - 2.1f;
-
-    // Smooth transition from ramp threshold (Z=5.25m, Y=-0.74m)
+    float duneH = d1 + d2 + distDunes - 2.0f;
     float t = clampf((z - 5.25f) / 9.5f, 0.0f, 1.0f);
     float blend = t * t * (3.0f - 2.0f * t);
     return -0.74f * (1.0f - blend) + duneH * blend;
+}
+
+static float evaluateDuneHeight(float x, float z) {
+    if (z < 5.25f) return -0.74f;
+
+    float baseH = evaluateMacroDuneHeight(x, z);
+
+    // Fine Aeolian Wind Ripples on the sand surface
+    float r1 = sinf(x * 0.28f + z * 0.18f) * 0.18f;
+    float r2 = cosf(x * 0.55f - z * 0.35f) * 0.08f;
+
+    float t = clampf((z - 5.25f) / 9.5f, 0.0f, 1.0f);
+    float blend = t * t * (3.0f - 2.0f * t);
+    return baseH + (r1 + r2) * blend;
+}
+
+static float computeDuneShadow(float x, float y, float z, float sunDx, float sunDy, float sunDz) {
+    float shadow = 1.0f;
+    float rayDist = 0.5f;
+    for (int step = 0; step < 28; ++step) {
+        float rx = x + sunDx * rayDist;
+        float rz = z + sunDz * rayDist;
+        float ry = y + sunDy * rayDist;
+        float h = evaluateMacroDuneHeight(rx, rz);
+        float diff = h - ry;
+        float s = clampf(0.5f - diff * 0.35f, 0.0f, 1.0f);
+        if (s < shadow) shadow = s;
+        if (shadow <= 0.0f) { shadow = 0.0f; break; }
+        rayDist += 0.8f + step * 0.04f;
+    }
+    return shadow * shadow * (3.0f - 2.0f * shadow);
 }
 
 static void buildDuneMesh() {
@@ -557,12 +581,17 @@ static void buildDuneMesh() {
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, matSpec);
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 22.0f);
 
-    const int GRID_X = 300;
-    const int GRID_Z = 280;
+    const int GRID_X = 360;
+    const int GRID_Z = 320;
     const float MIN_X = -180.0f, MAX_X = 180.0f;
     const float MIN_Z = 5.25f,   MAX_Z = 320.0f; // STRICTLY starts at ramp tip: ZERO sand inside ship!
     const float DX = (MAX_X - MIN_X) / (float)GRID_X;
     const float DZ = (MAX_Z - MIN_Z) / (float)GRID_Z;
+
+    // Fixed sun directional vector for cast shadows (sun is at { 1.5f, 14.0f, 55.0f })
+    const float sunDx = 0.0264f;
+    const float sunDy = 0.2466f;
+    const float sunDz = 0.9687f;
 
     for (int iz = 0; iz < GRID_Z; ++iz) {
         float z0 = MIN_Z + iz * DZ;
@@ -576,7 +605,7 @@ static void buildDuneMesh() {
             float y1 = evaluateDuneHeight(x, z1);
 
             // Analytic central difference normal at (x, z0)
-            float eps = 0.18f;
+            float eps = 0.22f;
             float hL0 = evaluateDuneHeight(x - eps, z0);
             float hR0 = evaluateDuneHeight(x + eps, z0);
             float hD0 = evaluateDuneHeight(x, z0 - eps);
@@ -596,18 +625,22 @@ static void buildDuneMesh() {
             float ny1 = 1.0f;
             normalize3(nx1, ny1, nz1);
 
-            // Multi-tone sand color modulation:
-            // Sunward facing slopes: luminous golden ochre
-            // Leeward shadow slopes: deep rich amber red
-            float sunDot0 = clampf(nx0 * 0.25f + ny0 * 0.45f + nz0 * 0.85f, 0.0f, 1.0f);
-            float r0 = lerpf(0.68f, 1.25f, sunDot0);
-            float g0 = lerpf(0.34f, 0.88f, sunDot0);
-            float b0 = lerpf(0.19f, 0.54f, sunDot0);
+            // Sun illumination & ray-marched cast shadows
+            float sunDot0 = clampf(nx0 * sunDx + ny0 * sunDy + nz0 * sunDz, 0.0f, 1.0f);
+            float shadow0 = computeDuneShadow(x, y0 + 0.06f, z0, sunDx, sunDy, sunDz);
+            float light0 = sunDot0 * (0.18f + 0.82f * shadow0);
 
-            float sunDot1 = clampf(nx1 * 0.25f + ny1 * 0.45f + nz1 * 0.85f, 0.0f, 1.0f);
-            float r1 = lerpf(0.68f, 1.25f, sunDot1);
-            float g1 = lerpf(0.34f, 0.88f, sunDot1);
-            float b1 = lerpf(0.19f, 0.54f, sunDot1);
+            float r0 = lerpf(0.52f, 1.28f, light0);
+            float g0 = lerpf(0.26f, 0.86f, light0);
+            float b0 = lerpf(0.15f, 0.52f, light0);
+
+            float sunDot1 = clampf(nx1 * sunDx + ny1 * sunDy + nz1 * sunDz, 0.0f, 1.0f);
+            float shadow1 = computeDuneShadow(x, y1 + 0.06f, z1, sunDx, sunDy, sunDz);
+            float light1 = sunDot1 * (0.18f + 0.82f * shadow1);
+
+            float r1 = lerpf(0.52f, 1.28f, light1);
+            float g1 = lerpf(0.26f, 0.86f, light1);
+            float b1 = lerpf(0.15f, 0.52f, light1);
 
             float u0 = x * 0.08f;
             float v0 = z0 * 0.08f;
