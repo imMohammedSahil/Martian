@@ -475,51 +475,29 @@ void updateScene3(float dt) {
         }
     }
     // ------------------------------------------------------------------------
-    // SHOT 2: HYPERSONIC OVER-THE-SHOULDER DIVE & HIGH-SPEED BREAKAWAY (50.5s - 63.0s)
+    // SHOT 2: HYPERSONIC OVER-THE-SHOULDER DIVE (50.5s - 60.5s)
     // ------------------------------------------------------------------------
     else {
-        // Hypersonic downward dive vector
+        float u = (t - 50.5f) / 10.0f;
+        u = clampf(u, 0.0f, 1.0f);
+        float ease = u * u;
+
+        s3ShipX = lerpf(-9.0f, -2.0f, u);
+        s3ShipY = lerpf( 7.5f,  3.2f, ease);
+        s3ShipZ = lerpf(-9.0f, -1.5f, u);
+
         s3ShipDirX =  0.60f;
         s3ShipDirY = -0.42f;
         s3ShipDirZ =  0.75f;
         normalize3(s3ShipDirX, s3ShipDirY, s3ShipDirZ);
 
-        if (t < 60.5f) {
-            float u = (t - 50.5f) / 10.0f;
-            float ease = u * u;
-
-            s3ShipX = lerpf(-9.0f, -2.0f, u);
-            s3ShipY = lerpf( 7.5f,  3.2f, ease);
-            s3ShipZ = lerpf(-9.0f, -1.5f, u);
-
-            s3ShipPitchExtra = lerpf(8.0f, 4.0f, u);
-            s3ShipRoll  = lerpf(10.0f, 4.0f, u);
-            s3HeatGlow  = lerpf(1.0f, 0.20f, u);
-        } else {
-            // Bullet Breakaway: Camera halts; Ranger pitches down into a steep plunge at bullet speed
-            float dtBreak = t - 60.5f;
-            float steepBlend = clampf(dtBreak * 2.0f, 0.0f, 1.0f);
-
-            // Steeper descent plunge vector into Gale Crater floor
-            s3ShipDirX = lerpf(0.60f,  0.48f, steepBlend);
-            s3ShipDirY = lerpf(-0.42f, -0.74f, steepBlend); // Steeper downward descent
-            s3ShipDirZ = lerpf(0.75f,  0.60f, steepBlend);
-            normalize3(s3ShipDirX, s3ShipDirY, s3ShipDirZ);
-
-            float plungeDist = dtBreak * 8.5f + 5.5f * dtBreak * dtBreak;
-
-            s3ShipX = -2.0f + s3ShipDirX * plungeDist;
-            s3ShipY =  3.2f + s3ShipDirY * plungeDist;
-            s3ShipZ = -1.5f + s3ShipDirZ * plungeDist;
-
-            s3ShipPitchExtra = lerpf(4.0f, 8.0f, steepBlend);
-            s3ShipRoll  = 3.5f;
-            s3HeatGlow  = std::max(0.0f, 0.20f - dtBreak * 0.12f);
-        }
+        s3ShipPitchExtra = lerpf(8.0f, 4.0f, u);
+        s3ShipRoll  = lerpf(10.0f, 4.0f, u);
         s3ShipScale = 0.50f;
+        s3HeatGlow  = lerpf(1.0f, 0.20f, u);
 
         // Residual sparks fading out
-        if (t < 62.4f) {
+        if (t <= 60.5f) {
             for (int f = 0; f < 2; ++f) {
                 ReentrySpark sp;
                 sp.x = s3ShipX + randRange(-0.3f, 0.3f);
@@ -573,46 +551,25 @@ void computeCameraScene3(float& eyeX, float& eyeY, float& eyeZ,
         eyeZ += sinf(t * 72.0f) * shake;
     }
     // ------------------------------------------------------------------------
-    // SHOT 2: HYPERSONIC CHASE DIVE & OVER-THE-SHOULDER HOLD (50.5s - 63.0s)
+    // SHOT 2: HYPERSONIC CHASE DIVE (50.5s - 60.5s)
     // ------------------------------------------------------------------------
     else {
+        float u = (t - 50.5f) / 10.0f;
+        u = clampf(u, 0.0f, 1.0f);
         float dirX =  0.60f, dirY = -0.42f, dirZ =  0.75f;
         normalize3(dirX, dirY, dirZ);
 
-        if (t < 60.5f) {
-            float u = (t - 50.5f) / 10.0f;
-            eyeX = s3ShipX - dirX * 3.4f + 1.1f;
-            eyeY = s3ShipY - dirY * 3.4f + 0.7f;
-            eyeZ = s3ShipZ - dirZ * 3.4f + 1.4f;
+        eyeX = s3ShipX - dirX * 3.4f + 1.1f;
+        eyeY = s3ShipY - dirY * 3.4f + 0.7f;
+        eyeZ = s3ShipZ - dirZ * 3.4f + 1.4f;
 
-            targetX = s3ShipX + dirX * 1.5f;
-            targetY = s3ShipY + dirY * 1.5f;
-            targetZ = s3ShipZ + dirZ * 1.5f;
+        targetX = s3ShipX + dirX * 1.5f;
+        targetY = s3ShipY + dirY * 1.5f;
+        targetZ = s3ShipZ + dirZ * 1.5f;
 
-            float shake = (1.0f - u * 0.5f) * 0.020f;
-            eyeX += sinf(t * 42.0f) * shake;
-            eyeY += cosf(t * 38.0f) * shake;
-        } else {
-            // Camera stops following the Ranger, locking at its over-the-shoulder vantage
-            float dtBreak = t - 60.5f;
-            float camDrift = clampf(dtBreak * 0.10f, 0.0f, 0.30f);
-
-            const float baseShipX = -2.0f;
-            const float baseShipY =  3.2f;
-            const float baseShipZ = -1.5f;
-
-            eyeX = (baseShipX - dirX * 3.4f + 1.1f) + dirX * camDrift;
-            eyeY = (baseShipY - dirY * 3.4f + 0.7f) + dirY * camDrift;
-            eyeZ = (baseShipZ - dirZ * 3.4f + 1.4f) + dirZ * camDrift;
-
-            targetX = baseShipX + dirX * 1.5f;
-            targetY = baseShipY + dirY * 1.5f;
-            targetZ = baseShipZ + dirZ * 1.5f;
-
-            float shake = std::max(0.003f, 0.010f - dtBreak * 0.003f);
-            eyeX += sinf(t * 30.0f) * shake;
-            eyeY += cosf(t * 26.0f) * shake;
-        }
+        float shake = (1.0f - u * 0.5f) * 0.020f;
+        eyeX += sinf(t * 42.0f) * shake;
+        eyeY += cosf(t * 38.0f) * shake;
     }
 }
 

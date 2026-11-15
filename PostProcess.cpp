@@ -271,9 +271,9 @@ void renderCinemaPost(float flareX, float flareY, bool flareInFront, float flare
             fadeAlpha = 1.0f - smoothstep(44.0f, 44.50f, seqTime);
         }
     }
-    // Scene 3 over-the-shoulder dive breakaway: smooth fade to black as Ranger dives away (61.8s - 62.4s)
-    if (seqTime >= 61.80f) {
-        fadeAlpha = smoothstep(61.80f, 62.40f, seqTime);
+    // Scene 3 Shot 2 cut to black (60.0s - 60.5s)
+    if (seqTime >= 60.00f) {
+        fadeAlpha = smoothstep(60.00f, 60.50f, seqTime);
     }
 
     if (fadeAlpha > 0.005f) {
