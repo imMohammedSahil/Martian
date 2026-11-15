@@ -23,11 +23,14 @@ struct TerrainVertex {
 };
 
 static GLuint craterDisplayList = 0;
+static GLuint horizonDiskDisplayList = 0;
 static GLuint craterTexID = 0;
 static bool   craterLoaded = false;
 static bool   craterLoadFailed = false;
 
 static GLuint cloudTexID = 0;
+static GLuint skyTexID = 0;
+static GLuint skyDomeDisplayList = 0;
 
 // Procedural 3D Volumetric Cloud Deck
 struct VolumetricCloud {
@@ -166,6 +169,36 @@ static void loadGaleCraterMesh() {
         return;
     }
 
+    // Flatten circular landing basin around touchdown point (5.6, 9.0)
+    const float landX = 5.6f;
+    const float landZ = 9.0f;
+    for (size_t i = 0; i < verts.size(); ++i) {
+        float dx = verts[i].x - landX;
+        float dz = verts[i].z - landZ;
+        float d = sqrtf(dx * dx + dz * dz);
+        if (d < 4.5f) {
+            verts[i].y = 0.0f;
+            verts[i].nx = 0.0f;
+            verts[i].ny = 1.0f;
+            verts[i].nz = 0.0f;
+        } else if (d < 11.0f) {
+            float w = (d - 4.5f) / 6.5f;
+            float blend = w * w * (3.0f - 2.0f * w);
+            verts[i].y = lerpf(0.0f, verts[i].y, blend);
+            verts[i].nx = lerpf(0.0f, verts[i].nx, blend);
+            verts[i].ny = lerpf(1.0f, verts[i].ny, blend);
+            verts[i].nz = lerpf(0.0f, verts[i].nz, blend);
+            normalize3(verts[i].nx, verts[i].ny, verts[i].nz);
+        }
+
+        // Circular perimeter blend: smoothly taper vertices outside R=22 towards circular horizon skirt
+        float r = sqrtf(verts[i].x * verts[i].x + verts[i].z * verts[i].z);
+        if (r > 22.0f) {
+            float blend = clampf((r - 22.0f) / 6.5f, 0.0f, 1.0f);
+            verts[i].y = lerpf(verts[i].y, -0.10f, blend);
+        }
+    }
+
     if (!craterTexID) {
         craterTexID = loadTextureHelper("mars_surface_4k.jpg", true);
         if (!craterTexID) craterTexID = loadTextureHelper("mars_surface.jpg", true);
@@ -274,6 +307,7 @@ static void loadParachuteMesh() {
 void initScene3() {
     loadGaleCraterMesh();
     loadParachuteMesh();
+    if (!skyTexID) skyTexID = loadTextureHelper("mars_sky_accurate.jpg", false);
     if (!smokeTexID) smokeTexID = loadTextureHelper("smoke1.png", false);
     if (!sparkTexID) sparkTexID = loadTextureHelper("spark1.png", false);
     if (!cloudTexID) cloudTexID = loadTextureHelper("cloud_volume.png", false);
@@ -542,20 +576,22 @@ void updateScene3(float dt) {
             }
         }
 
-        if (t >= 62.5f && t <= 65.5f) {
-            for (int d = 0; d < 3; ++d) {
+        if (t >= 61.5f && t <= 66.5f) {
+            int numDust = (t >= 63.0f) ? 10 : 5;
+            for (int d = 0; d < numDust; ++d) {
                 float ang = randRange(0.0f, 2.0f * (float)M_PI);
-                float spd = randRange(1.5f, 3.8f);
+                float dist = randRange(0.2f, 1.4f);
+                float spd = randRange(2.0f, 5.5f);
                 TouchdownDust p;
-                p.x = s3ShipX + cosf(ang) * 0.3f;
+                p.x = s3ShipX + cosf(ang) * dist;
                 p.y = -2.10f;
-                p.z = s3ShipZ + sinf(ang) * 0.3f;
-                p.vx = cosf(ang) * spd;
-                p.vy = randRange(0.3f, 1.4f);
-                p.vz = sinf(ang) * spd;
-                p.scale = randRange(0.4f, 0.8f);
-                p.alpha = 0.85f;
-                p.maxLife = randRange(1.8f, 2.6f);
+                p.z = s3ShipZ + sinf(ang) * dist;
+                p.vx = cosf(ang) * spd + randRange(-0.4f, 0.4f);
+                p.vy = randRange(0.8f, 3.2f);
+                p.vz = sinf(ang) * spd + randRange(-0.4f, 0.4f);
+                p.scale = randRange(0.8f, 2.2f);
+                p.alpha = 0.95f;
+                p.maxLife = randRange(2.4f, 3.8f);
                 p.life = p.maxLife;
                 s3Dust.push_back(p);
             }
@@ -637,15 +673,15 @@ void computeCameraScene3(float& eyeX, float& eyeY, float& eyeZ,
         float smoothU = smoothstep(0.0f, 1.0f, u);
 
         eyeX = lerpf( 2.4f,  2.8f, smoothU);
-        eyeY = -1.85f;
-        eyeZ = lerpf( 5.5f,  6.0f, smoothU);
+        eyeY = lerpf(-1.2f, -1.85f, smoothU);
+        eyeZ = lerpf( 5.0f,  6.0f, smoothU);
 
-        targetX = lerpf( 5.0f,  5.6f, smoothU);
-        targetY = -2.05f;
-        targetZ = lerpf( 7.5f,  9.0f, smoothU);
+        targetX = s3ShipX;
+        targetY = s3ShipY + 0.30f;
+        targetZ = s3ShipZ;
 
-        if (t >= 63.0f && t <= 63.6f) {
-            float impact = sinf((t - 63.0f) * 28.0f) * 0.020f * (1.0f - (t - 63.0f) / 0.6f);
+        if (t >= 63.0f && t <= 64.0f) {
+            float impact = sinf((t - 63.0f) * 28.0f) * 0.035f * (1.0f - (t - 63.0f) / 1.0f);
             eyeY += impact;
         }
     }
@@ -654,23 +690,112 @@ void computeCameraScene3(float& eyeX, float& eyeY, float& eyeZ,
 // ============================================================================
 // SCENE 3 RENDERING
 // ============================================================================
+// ============================================================================
+// ACCURATE 3D MARTIAN SKY DOME & CIRCULAR EXTENDED HORIZON
+// ============================================================================
+static void buildSkyDome() {
+    if (skyDomeDisplayList != 0) return;
+    skyDomeDisplayList = glGenLists(1);
+    glNewList(skyDomeDisplayList, GL_COMPILE);
+
+    const int RINGS = 36;
+    const int SEGS  = 64;
+    const float domeRadius = 260.0f;
+
+    for (int r = 0; r < RINGS; ++r) {
+        float phi0 = (float)r / (float)RINGS * (float)M_PI * 0.58f;
+        float phi1 = (float)(r + 1) / (float)RINGS * (float)M_PI * 0.58f;
+        float v0 = (float)r / (float)RINGS;
+        float v1 = (float)(r + 1) / (float)RINGS;
+
+        glBegin(GL_TRIANGLE_STRIP);
+        for (int s = 0; s <= SEGS; ++s) {
+            float theta = (float)s / (float)SEGS * 2.0f * (float)M_PI;
+            float u = (float)s / (float)SEGS;
+
+            float x0 = domeRadius * sinf(phi0) * sinf(theta);
+            float y0 = domeRadius * cosf(phi0);
+            float z0 = domeRadius * sinf(phi0) * cosf(theta);
+
+            float x1 = domeRadius * sinf(phi1) * sinf(theta);
+            float y1 = domeRadius * cosf(phi1);
+            float z1 = domeRadius * sinf(phi1) * cosf(theta);
+
+            glTexCoord2f(u, 1.0f - v0 * 0.95f); glVertex3f(x0, y0, z0);
+            glTexCoord2f(u, 1.0f - v1 * 0.95f); glVertex3f(x1, y1, z1);
+        }
+        glEnd();
+    }
+    glEndList();
+}
+
+static void buildHorizonDisk() {
+    if (horizonDiskDisplayList != 0) return;
+    horizonDiskDisplayList = glGenLists(1);
+    glNewList(horizonDiskDisplayList, GL_COMPILE);
+
+    const int RINGS = 24;
+    const int SEGS  = 128;
+    const float R_IN  = 22.0f;
+    const float R_OUT = 260.0f;
+
+    for (int r = 0; r < RINGS; ++r) {
+        float f0 = (float)r / (float)RINGS;
+        float f1 = (float)(r + 1) / (float)RINGS;
+
+        float diskR0 = lerpf(R_IN, R_OUT, powf(f0, 1.75f));
+        float diskR1 = lerpf(R_IN, R_OUT, powf(f1, 1.75f));
+
+        // Curving gently down to true circular planetary horizon
+        float y0 = -0.10f - f0 * f0 * 16.0f;
+        float y1 = -0.10f - f1 * f1 * 16.0f;
+
+        glBegin(GL_TRIANGLE_STRIP);
+        for (int s = 0; s <= SEGS; ++s) {
+            float theta = (float)s / (float)SEGS * 2.0f * (float)M_PI;
+            float cosT = cosf(theta);
+            float sinT = sinf(theta);
+
+            float x0 = diskR0 * sinT;
+            float z0 = diskR0 * cosT;
+            float x1 = diskR1 * sinT;
+            float z1 = diskR1 * cosT;
+
+            float u0 = x0 * 0.035f;
+            float v0 = z0 * 0.035f;
+            float u1 = x1 * 0.035f;
+            float v1 = z1 * 0.035f;
+
+            glNormal3f(sinT * 0.06f, 0.998f, cosT * 0.06f);
+            glColor3f(0.65f, 0.28f, 0.16f);
+            glTexCoord2f(u0, v0); glVertex3f(x0, y0, z0);
+
+            glNormal3f(sinT * 0.06f, 0.998f, cosT * 0.06f);
+            glColor3f(0.58f, 0.24f, 0.13f);
+            glTexCoord2f(u1, v1); glVertex3f(x1, y1, z1);
+        }
+        glEnd();
+    }
+    glEndList();
+}
+
 static void renderAtmosphericSkybox() {
     glDisable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE);
     glDisable(GL_LIGHTING);
 
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
-    glOrtho(0.0, 1.0, 0.0, 1.0, -1.0, 1.0);
-
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
-
-    glBegin(GL_QUADS);
     if (seqTime < 50.5f) {
         // Shot 1 (44.0s - 50.5s): Pure space black for first 1.5s, then smooth 2.5s transition into complete red/orange atmosphere held for final 2.5s
+        glMatrixMode(GL_PROJECTION);
+        glPushMatrix();
+        glLoadIdentity();
+        glOrtho(0.0, 1.0, 0.0, 1.0, -1.0, 1.0);
+
+        glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
+        glLoadIdentity();
+
+        glBegin(GL_QUADS);
         float entryProg = clampf((seqTime - 45.5f) / 2.5f, 0.0f, 1.0f);
         float smoothProg = entryProg * entryProg * (3.0f - 2.0f * entryProg);
 
@@ -689,23 +814,49 @@ static void renderAtmosphericSkybox() {
         glColor3f(zR, zG, zB);
         glVertex2f(1.0f, 1.0f);
         glVertex2f(0.0f, 1.0f);
-    } else {
-        // Shots 2..5: In-atmosphere skybox
-        // Horizon: rich Martian salmon/butterscotch
-        glColor3f(0.72f, 0.38f, 0.22f);
-        glVertex2f(0.0f, 0.0f);
-        glVertex2f(1.0f, 0.0f);
-        // Zenith: deep cosmic rust/indigo
-        glColor3f(0.20f, 0.08f, 0.12f);
-        glVertex2f(1.0f, 1.0f);
-        glVertex2f(0.0f, 1.0f);
-    }
-    glEnd();
+        glEnd();
 
-    glPopMatrix();
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-    glMatrixMode(GL_MODELVIEW);
+        glPopMatrix();
+        glMatrixMode(GL_PROJECTION);
+        glPopMatrix();
+        glMatrixMode(GL_MODELVIEW);
+    } else {
+        // Shots 2 & 3: Accurate Photorealistic NASA Martian Sky Dome
+        buildSkyDome();
+        if (skyTexID && skyDomeDisplayList) {
+            glEnable(GL_TEXTURE_2D);
+            glBindTexture(GL_TEXTURE_2D, skyTexID);
+            glDisable(GL_CULL_FACE);
+            glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+
+            glPushMatrix();
+            // Center sky dome on camera so it forms an infinite background
+            float curEyeX, curEyeY, curEyeZ, curTarX, curTarY, curTarZ, curUpX, curUpY, curUpZ;
+            computeCameraScene3(curEyeX, curEyeY, curEyeZ, curTarX, curTarY, curTarZ, curUpX, curUpY, curUpZ);
+            glTranslatef(curEyeX, curEyeY * 0.2f, curEyeZ);
+            glCallList(skyDomeDisplayList);
+            glPopMatrix();
+
+            glEnable(GL_CULL_FACE);
+            glDisable(GL_TEXTURE_2D);
+        } else {
+            glMatrixMode(GL_PROJECTION);
+            glPushMatrix();
+            glLoadIdentity();
+            glOrtho(0.0, 1.0, 0.0, 1.0, -1.0, 1.0);
+            glMatrixMode(GL_MODELVIEW);
+            glPushMatrix();
+            glLoadIdentity();
+            glBegin(GL_QUADS);
+                glColor3f(0.74f, 0.40f, 0.24f); glVertex2f(0.0f, 0.0f); glVertex2f(1.0f, 0.0f);
+                glColor3f(0.22f, 0.09f, 0.13f); glVertex2f(1.0f, 1.0f); glVertex2f(0.0f, 1.0f);
+            glEnd();
+            glPopMatrix();
+            glMatrixMode(GL_PROJECTION);
+            glPopMatrix();
+            glMatrixMode(GL_MODELVIEW);
+        }
+    }
 
     glDepthMask(GL_TRUE);
     glEnable(GL_DEPTH_TEST);
@@ -1151,25 +1302,143 @@ static void renderTouchdownDustParticles() {
     glDisable(GL_LIGHTING);
     glDepthMask(GL_FALSE);
 
+    // Camera billboarding vectors so 3D dust particles face viewer
+    float curEyeX, curEyeY, curEyeZ, curTarX, curTarY, curTarZ, curUpX, curUpY, curUpZ;
+    computeCameraScene3(curEyeX, curEyeY, curEyeZ, curTarX, curTarY, curTarZ, curUpX, curUpY, curUpZ);
+    float fwdX = curTarX - curEyeX, fwdY = curTarY - curEyeY, fwdZ = curTarZ - curEyeZ;
+    normalize3(fwdX, fwdY, fwdZ);
+    float rightX = fwdY * curUpZ - fwdZ * curUpY;
+    float rightY = fwdZ * curUpX - fwdX * curUpZ;
+    float rightZ = fwdX * curUpY - fwdY * curUpX;
+    normalize3(rightX, rightY, rightZ);
+    float cUpX = rightY * fwdZ - rightZ * fwdY;
+    float cUpY = rightZ * fwdX - rightX * fwdZ;
+    float cUpZ = rightX * fwdY - rightY * fwdX;
+    normalize3(cUpX, cUpY, cUpZ);
+
     for (size_t i = 0; i < s3Dust.size(); ++i) {
         const TouchdownDust& p = s3Dust[i];
-        glColor4f(0.72f, 0.32f, 0.18f, p.alpha);
-
-        glPushMatrix();
-        glTranslatef(p.x, p.y, p.z);
-        glScalef(p.scale, p.scale, p.scale);
+        glColor4f(0.74f, 0.32f, 0.17f, p.alpha);
+        float s = p.scale;
         glBegin(GL_QUADS);
-            glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f, 0.0f);
-            glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, -1.0f, 0.0f);
-            glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  1.0f, 0.0f);
-            glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  1.0f, 0.0f);
+            glTexCoord2f(0.0f, 0.0f);
+            glVertex3f(p.x - (rightX + cUpX) * s, p.y - (rightY + cUpY) * s, p.z - (rightZ + cUpZ) * s);
+            glTexCoord2f(1.0f, 0.0f);
+            glVertex3f(p.x + (rightX - cUpX) * s, p.y + (rightY - cUpY) * s, p.z + (rightZ - cUpZ) * s);
+            glTexCoord2f(1.0f, 1.0f);
+            glVertex3f(p.x + (rightX + cUpX) * s, p.y + (rightY + cUpY) * s, p.z + (rightZ + cUpZ) * s);
+            glTexCoord2f(0.0f, 1.0f);
+            glVertex3f(p.x - (rightX - cUpX) * s, p.y - (rightY - cUpY) * s, p.z - (rightZ - cUpZ) * s);
         glEnd();
-        glPopMatrix();
     }
 
     glDepthMask(GL_TRUE);
     glDisable(GL_TEXTURE_2D);
     glDisable(GL_BLEND);
+    glEnable(GL_LIGHTING);
+}
+
+static void renderScreenEngulfingSmoke() {
+    if (seqTime < 63.4f) return;
+    float t = seqTime;
+
+    // Progression of screen engulfment:
+    // 63.4s - 64.4s: Retro blast plumes hit regolith, swirling dust rushes at camera (0.0 -> 0.40)
+    // 64.4s - 65.5s: Thick turbulent billowing dust engulfs screen (0.40 -> 0.95)
+    // 65.5s - 66.5s: 100% complete screen engulfment in rich Martian dust before fade to black
+    float progress = 0.0f;
+    if (t < 64.4f) {
+        progress = smoothstep(63.4f, 64.4f, t) * 0.40f;
+    } else if (t < 65.5f) {
+        progress = 0.40f + smoothstep(64.4f, 65.5f, t) * 0.55f;
+    } else {
+        progress = 0.95f + clampf((t - 65.5f) / 0.5f, 0.0f, 0.05f);
+    }
+    progress = clampf(progress, 0.0f, 1.0f);
+
+    GLuint tex = smokeTexID ? smokeTexID : cloudTexID;
+    if (!tex) return;
+
+    glDisable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE);
+    glDisable(GL_LIGHTING);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, tex);
+
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    glOrtho(0.0, (GLdouble)windowWidth, 0.0, (GLdouble)windowHeight, -1.0, 1.0);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    float cx = (float)windowWidth * 0.5f;
+    float cy = (float)windowHeight * 0.5f;
+    float w = (float)windowWidth;
+    float h = (float)windowHeight;
+
+    struct SmokeLayer {
+        float ox, oy;
+        float scale;
+        float rot;
+        float r, g, b;
+        float alphaMult;
+    };
+
+    SmokeLayer layers[] = {
+        { cx, cy, 2.2f, (t - 62.0f) * 8.0f, 0.72f, 0.32f, 0.16f, 0.85f },
+        { cx * 0.8f, cy * 0.4f, 2.5f, -(t - 62.0f) * 14.0f, 0.80f, 0.38f, 0.18f, 0.90f },
+        { cx * 1.2f, cy * 0.7f, 2.4f, (t - 62.0f) * 18.0f + 45.0f, 0.65f, 0.26f, 0.12f, 0.95f },
+        { cx, cy * 0.9f, 2.0f, -(t - 62.0f) * 22.0f + 90.0f, 0.88f, 0.44f, 0.22f, 0.90f },
+        { cx * 1.1f, cy * 0.5f, 2.6f, (t - 62.0f) * 11.0f + 160.0f, 0.55f, 0.22f, 0.10f, 1.00f }
+    };
+
+    for (int i = 0; i < 5; ++i) {
+        float a = clampf(progress * layers[i].alphaMult, 0.0f, 1.0f);
+        if (a <= 0.005f) continue;
+
+        glPushMatrix();
+        glTranslatef(layers[i].ox, layers[i].oy, 0.0f);
+        glRotatef(layers[i].rot, 0.0f, 0.0f, 1.0f);
+        float s = (w > h ? w : h) * layers[i].scale;
+        glScalef(s, s, 1.0f);
+
+        glColor4f(layers[i].r, layers[i].g, layers[i].b, a);
+        glBegin(GL_QUADS);
+            glTexCoord2f(0.0f, 0.0f); glVertex2f(-0.5f, -0.5f);
+            glTexCoord2f(1.0f, 0.0f); glVertex2f( 0.5f, -0.5f);
+            glTexCoord2f(1.0f, 1.0f); glVertex2f( 0.5f,  0.5f);
+            glTexCoord2f(0.0f, 1.0f); glVertex2f(-0.5f,  0.5f);
+        glEnd();
+        glPopMatrix();
+    }
+
+    if (progress > 0.65f) {
+        float solidA = smoothstep(0.65f, 0.98f, progress);
+        glDisable(GL_TEXTURE_2D);
+        glColor4f(0.68f, 0.29f, 0.14f, solidA * 0.96f);
+        glBegin(GL_QUADS);
+            glVertex2f(0.0f, 0.0f);
+            glVertex2f(w, 0.0f);
+            glVertex2f(w, h);
+            glVertex2f(0.0f, h);
+        glEnd();
+        glEnable(GL_TEXTURE_2D);
+    }
+
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+
+    glDisable(GL_TEXTURE_2D);
+    glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
+    glDepthMask(GL_TRUE);
     glEnable(GL_LIGHTING);
 }
 
@@ -1233,7 +1502,7 @@ void renderScene3() {
 
     if (craterLoaded && craterDisplayList != 0 && craterReveal > 0.01f) {
         glPushMatrix();
-        glTranslatef(0.0f, -4.5f, 0.0f);
+        glTranslatef(0.0f, -2.10f, 0.0f);
 
         if (craterTexID) {
             glEnable(GL_TEXTURE_2D);
@@ -1267,6 +1536,12 @@ void renderScene3() {
         }
 
         glCallList(craterDisplayList);
+
+        // Circular extended terrain horizon disk to prevent any square mesh cutoffs
+        buildHorizonDisk();
+        if (horizonDiskDisplayList != 0) {
+            glCallList(horizonDiskDisplayList);
+        }
 
         if (craterReveal < 0.99f) {
             glDisable(GL_BLEND);
@@ -1344,4 +1619,7 @@ void renderScene3() {
 
     // 8. Dense 3D Volumetric Cloud Deck (Surrounding Ranger in Shot 2 with Breakthrough Reveal)
     renderVolumetricCloudDeck();
+
+    // 9. Screen-Engulfing Swirling Martian Regolith Dust Plume (Touchdown finale)
+    renderScreenEngulfingSmoke();
 }
