@@ -502,28 +502,39 @@ static float duneFBM(float x, float z, int oct = 3) {
 static float evaluateMacroDuneHeight(float x, float z) {
     if (z < 5.25f) return -0.74f;
 
-    float warp = duneFBM(x * 0.010f, z * 0.010f, 3) * 18.0f;
+    float warp = duneFBM(x * 0.012f, z * 0.012f, 3) * 16.0f;
     float wx = x + warp;
-    float wz = z + warp * 0.40f;
+    float wz = z + warp * 0.45f;
 
-    float u1 = wx * 0.026f + wz * 0.016f;
+    // 1. Primary Transverse Desert Dunes (Large sweeping waves with majestic barchan crests)
+    float u1 = wx * 0.032f + wz * 0.020f;
     float s1 = sinf(u1);
-    float d1 = s1 * 5.4f + (s1 * s1 * s1) * 1.8f;
+    float d1 = (s1 > 0.0f) ? (powf(s1, 0.95f) * 6.5f) : (-powf(-s1, 1.6f) * 4.0f);
 
-    float u2 = wx * 0.052f - wz * 0.028f;
-    float s2 = sinf(u2 + sinf(u1 * 1.4f) * 0.45f);
-    float d2 = s2 * 2.6f;
+    // 2. Secondary Interlocking Crescent Dunes
+    float u2 = wx * 0.065f - wz * 0.038f;
+    float d2 = sinf(u2 + sinf(u1 * 1.5f) * 0.5f) * 2.8f;
 
-    float distDunes = 0.0f;
-    if (z > 60.0f) {
-        float fz = (z - 60.0f) / 160.0f;
-        float hd1 = sinf(wx * 0.014f + 0.6f) * 14.0f;
-        float hd2 = cosf(wz * 0.010f + wx * 0.008f) * 10.0f;
-        float hd3 = sinf(wx * 0.028f - wz * 0.016f) * 6.0f;
-        distDunes = (hd1 + hd2 + hd3 + 18.0f) * fz;
+    // 4. Distant Epic Mountain Ridges & Towering Crater Rim
+    float mtn = 0.0f;
+    if (z > 70.0f) {
+        float fz = (z - 70.0f) / 160.0f;
+        // Deep central sun pass so the blazing solar disc shines through between the peaks
+        float centerPass = clampf((fabsf(x + 5.0f) - 6.0f) / 22.0f, 0.0f, 1.0f);
+        float passCurve = centerPass * centerPass * (3.0f - 2.0f * centerPass);
+
+        float n1 = duneNoise2D(x * 0.016f, z * 0.010f);
+        float n2 = duneNoise2D(x * 0.035f, z * 0.022f);
+        float r_noise = (n1 * 0.65f + n2 * 0.35f) * 2.4f;
+
+        float rightRise = clampf((x - 8.0f) / 35.0f, 0.0f, 1.0f);
+        float leftRise  = clampf((-x - 30.0f) / 45.0f, 0.0f, 1.0f);
+        float wallRise  = (rightRise * 26.0f + leftRise * 18.0f);
+
+        mtn = (r_noise * 22.0f + wallRise) * fz * passCurve;
     }
 
-    float duneH = d1 + d2 + distDunes - 2.0f;
+    float duneH = d1 + d2 + mtn - 2.1f;
     float t = clampf((z - 5.25f) / 9.5f, 0.0f, 1.0f);
     float blend = t * t * (3.0f - 2.0f * t);
     return -0.74f * (1.0f - blend) + duneH * blend;
@@ -545,17 +556,21 @@ static float evaluateDuneHeight(float x, float z) {
 
 static inline float evaluateFastDuneHeight(float x, float z) {
     if (z < 5.25f) return -0.74f;
-    float u1 = x * 0.026f + z * 0.016f;
+    float u1 = x * 0.032f + z * 0.020f;
     float s1 = sinf(u1);
-    float d1 = s1 * 5.4f + (s1 * s1 * s1) * 1.8f;
-    float u2 = x * 0.052f - z * 0.028f;
-    float d2 = sinf(u2 + sinf(u1 * 1.4f) * 0.45f) * 2.6f;
-    float distDunes = 0.0f;
-    if (z > 60.0f) {
-        float fz = (z - 60.0f) / 160.0f;
-        distDunes = (sinf(x * 0.014f + 0.6f) * 14.0f + cosf(z * 0.010f) * 10.0f + 18.0f) * fz;
+    float d1 = (s1 > 0.0f) ? (powf(s1, 0.95f) * 6.5f) : (-powf(-s1, 1.6f) * 4.0f);
+    float u2 = x * 0.065f - z * 0.038f;
+    float d2 = sinf(u2 + sinf(u1 * 1.5f) * 0.5f) * 2.8f;
+    float mtn = 0.0f;
+    if (z > 70.0f) {
+        float fz = (z - 70.0f) / 160.0f;
+        float centerPass = clampf((fabsf(x + 5.0f) - 6.0f) / 22.0f, 0.0f, 1.0f);
+        float passCurve = centerPass * centerPass * (3.0f - 2.0f * centerPass);
+        float rightRise = clampf((x - 8.0f) / 35.0f, 0.0f, 1.0f);
+        float leftRise  = clampf((-x - 30.0f) / 45.0f, 0.0f, 1.0f);
+        mtn = (rightRise * 26.0f + leftRise * 18.0f) * fz * passCurve;
     }
-    float h = d1 + d2 + distDunes - 2.0f;
+    float h = d1 + d2 + mtn - 2.1f;
     float t = clampf((z - 5.25f) / 9.5f, 0.0f, 1.0f);
     return -0.74f * (1.0f - t * t * (3.0f - 2.0f * t)) + h * (t * t * (3.0f - 2.0f * t));
 }
