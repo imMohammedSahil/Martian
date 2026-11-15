@@ -352,7 +352,7 @@ void updateScene3(float dt) {
     }
 
     // Update 3D Volumetric Cloud Deck streaming past Ranger in Shot 2
-    if (t >= 50.0f && t < 57.0f) {
+    if (t >= 50.0f && t < 63.5f) {
         for (size_t i = 0; i < s3VolumetricClouds.size(); ++i) {
             VolumetricCloud& c = s3VolumetricClouds[i];
             c.x -= s3ShipDirX * c.speed * dt;
@@ -471,10 +471,10 @@ void updateScene3(float dt) {
         }
     }
     // ------------------------------------------------------------------------
-    // SHOT 2: HYPERSONIC OVER-THE-SHOULDER DIVE (51.5s - 54.0s)
+    // SHOT 2: HYPERSONIC OVER-THE-SHOULDER DIVE (51.5s - 61.5s, 10.0s total: 6s clouds, 4s surface)
     // ------------------------------------------------------------------------
-    else if (t < 54.0f) {
-        float u = (t - 51.5f) / 2.5f;
+    else if (t < 61.5f) {
+        float u = (t - 51.5f) / 10.0f;
         float ease = u * u;
 
         s3ShipX = lerpf(-9.0f, -2.0f, u);
@@ -489,7 +489,7 @@ void updateScene3(float dt) {
         s3ShipPitchExtra = lerpf(8.0f, 4.0f, u);
         s3ShipRoll  = lerpf(10.0f, 4.0f, u);
         s3ShipScale = 0.50f;
-        s3HeatGlow  = lerpf(1.0f, 0.25f, u);
+        s3HeatGlow  = lerpf(1.0f, 0.20f, u);
 
         // Residual sparks fading out
         for (int f = 0; f < 2; ++f) {
@@ -512,10 +512,10 @@ void updateScene3(float dt) {
         }
     }
     // ------------------------------------------------------------------------
-    // SHOT 3: WIDE CANYON REVEAL & MOUNTAIN PASS BANK (54.0s - 58.5s)
+    // SHOT 3: WIDE CANYON REVEAL & MOUNTAIN PASS BANK (61.5s - 66.0s)
     // ------------------------------------------------------------------------
-    else if (t < 58.5f) {
-        float u = (t - 54.0f) / 4.5f;
+    else if (t < 66.0f) {
+        float u = (t - 61.5f) / 4.5f;
         float smoothU = smoothstep(0.0f, 1.0f, u);
 
         s3ShipX = lerpf(-2.0f, 3.2f, smoothU);
@@ -533,13 +533,13 @@ void updateScene3(float dt) {
         s3HeatGlow  = 0.0f; // Cooled
     }
     // ------------------------------------------------------------------------
-    // SHOT 4: SUPERSONIC PARACHUTE DEPLOYMENT (58.5s - 63.0s)
+    // SHOT 4: SUPERSONIC PARACHUTE DEPLOYMENT (66.0s - 70.5s)
     // ------------------------------------------------------------------------
-    else if (t < 63.0f) {
-        float u = (t - 58.5f) / 4.5f;
+    else if (t < 70.5f) {
+        float u = (t - 66.0f) / 4.5f;
         float smoothU = smoothstep(0.0f, 1.0f, u);
 
-        s3ChuteDeploy = clampf((t - 58.5f) * 2.8f, 0.0f, 1.0f);
+        s3ChuteDeploy = clampf((t - 66.0f) * 2.8f, 0.0f, 1.0f);
 
         s3ShipX = lerpf( 3.2f, 5.0f, smoothU);
         s3ShipY = lerpf( 1.2f, -0.6f, smoothU);
@@ -560,10 +560,10 @@ void updateScene3(float dt) {
         s3ChuteZ = s3ShipZ - s3ShipDirZ * 1.5f;
     }
     // ------------------------------------------------------------------------
-    // SHOT 5: RETRO-THRUSTERS & TOUCHDOWN DUST KICK (63.0s - 69.0s)
+    // SHOT 5: RETRO-THRUSTERS & TOUCHDOWN DUST KICK (70.5s - 76.5s)
     // ------------------------------------------------------------------------
     else {
-        float u = (t - 63.0f) / 5.5f;
+        float u = (t - 70.5f) / 5.5f;
         u = clampf(u, 0.0f, 1.0f);
         float landEase = smoothstep(0.0f, 1.0f, u);
 
@@ -582,7 +582,7 @@ void updateScene3(float dt) {
         normalize3(s3ShipDirX, s3ShipDirY, s3ShipDirZ);
         s3HeatGlow = 0.0f;
 
-        if (t >= 63.0f && t <= 66.0f) {
+        if (t >= 70.5f && t <= 73.5f) {
             for (int k = 0; k < 2; ++k) {
                 float ox = randRange(-0.3f, 0.3f);
                 float oz = randRange(-0.3f, 0.3f);
@@ -663,10 +663,10 @@ void computeCameraScene3(float& eyeX, float& eyeY, float& eyeZ,
         eyeZ += sinf(t * 72.0f) * shake;
     }
     // ------------------------------------------------------------------------
-    // SHOT 2: HYPERSONIC CHASE DIVE (51.5s - 54.0s)
+    // SHOT 2: HYPERSONIC CHASE DIVE (51.5s - 61.5s, 10.0s total: 6s clouds, 4s surface)
     // ------------------------------------------------------------------------
-    else if (t < 54.0f) {
-        float u = (t - 51.5f) / 2.5f;
+    else if (t < 61.5f) {
+        float u = (t - 51.5f) / 10.0f;
         eyeX = s3ShipX - s3ShipDirX * 3.4f + 1.1f;
         eyeY = s3ShipY - s3ShipDirY * 3.4f + 0.7f;
         eyeZ = s3ShipZ - s3ShipDirZ * 3.4f + 1.4f;
@@ -680,10 +680,10 @@ void computeCameraScene3(float& eyeX, float& eyeY, float& eyeZ,
         eyeY += cosf(t * 38.0f) * shake;
     }
     // ------------------------------------------------------------------------
-    // SHOT 3: WIDE CANYON REVEAL (54.0s - 58.5s)
+    // SHOT 3: WIDE CANYON REVEAL (61.5s - 66.0s)
     // ------------------------------------------------------------------------
-    else if (t < 58.5f) {
-        float u = (t - 54.0f) / 4.5f;
+    else if (t < 66.0f) {
+        float u = (t - 61.5f) / 4.5f;
         float smoothU = smoothstep(0.0f, 1.0f, u);
 
         eyeX = lerpf(-10.0f, -2.5f, smoothU);
@@ -695,10 +695,10 @@ void computeCameraScene3(float& eyeX, float& eyeY, float& eyeZ,
         targetZ = s3ShipZ;
     }
     // ------------------------------------------------------------------------
-    // SHOT 4: LOW-ANGLE PARACHUTE TRACK (58.5s - 63.0s)
+    // SHOT 4: LOW-ANGLE PARACHUTE TRACK (66.0s - 70.5s)
     // ------------------------------------------------------------------------
-    else if (t < 63.0f) {
-        float u = (t - 58.5f) / 4.5f;
+    else if (t < 70.5f) {
+        float u = (t - 66.0f) / 4.5f;
         float smoothU = smoothstep(0.0f, 1.0f, u);
 
         eyeX = lerpf(s3ShipX + 2.8f, s3ShipX + 2.2f, smoothU);
@@ -709,16 +709,16 @@ void computeCameraScene3(float& eyeX, float& eyeY, float& eyeZ,
         targetY = s3ShipY + 1.2f;
         targetZ = s3ShipZ;
 
-        if (t >= 58.6f && t <= 59.1f) {
-            float snap = sinf((t - 58.6f) * 40.0f) * 0.028f;
+        if (t >= 66.1f && t <= 66.6f) {
+            float snap = sinf((t - 66.1f) * 40.0f) * 0.028f;
             eyeY += snap;
         }
     }
     // ------------------------------------------------------------------------
-    // SHOT 5: GROUND-LEVEL TOUCHDOWN (63.0s - 69.0s)
+    // SHOT 5: GROUND-LEVEL TOUCHDOWN (70.5s - 76.5s)
     // ------------------------------------------------------------------------
     else {
-        float u = (t - 63.0f) / 5.5f;
+        float u = (t - 70.5f) / 5.5f;
         float smoothU = smoothstep(0.0f, 1.0f, u);
 
         eyeX = lerpf( 2.4f,  2.8f, smoothU);
@@ -729,8 +729,8 @@ void computeCameraScene3(float& eyeX, float& eyeY, float& eyeZ,
         targetY = -2.05f;
         targetZ = lerpf( 7.5f,  9.0f, smoothU);
 
-        if (t >= 65.5f && t <= 66.1f) {
-            float impact = sinf((t - 65.5f) * 28.0f) * 0.020f * (1.0f - (t - 65.5f) / 0.6f);
+        if (t >= 73.0f && t <= 73.6f) {
+            float impact = sinf((t - 73.0f) * 28.0f) * 0.020f * (1.0f - (t - 73.0f) / 0.6f);
             eyeY += impact;
         }
     }
@@ -846,7 +846,7 @@ static void renderAtmosphericVaporStreaks() {
 // DENSE 3D VOLUMETRIC CLOUD DECK (Surrounding Ranger in Shot 2 with Breakthrough Reveal)
 // ============================================================================
 static void renderVolumetricCloudDeck() {
-    if (seqTime < 51.5f || seqTime > 56.5f || s3VolumetricClouds.empty()) return;
+    if (seqTime < 51.5f || seqTime > 63.5f || s3VolumetricClouds.empty()) return;
 
     GLuint tex = cloudTexID ? cloudTexID : smokeTexID;
     if (!tex) return;
@@ -864,10 +864,10 @@ static void renderVolumetricCloudDeck() {
     float camRightX = mv[0], camRightY = mv[4], camRightZ = mv[8];
     float camUpX    = mv[1], camUpY    = mv[5], camUpZ    = mv[9];
 
-    // Breakthrough factor: 51.5s - 53.0s is inside dense clouds; 53.0s - 53.8s breaks through
+    // Breakthrough factor: 51.5s - 57.5s (6s) is inside dense clouds; 57.5s - 58.35s breaks through
     float breakthrough = 0.0f;
-    if (seqTime >= 53.0f) {
-        breakthrough = clampf((seqTime - 53.0f) / 0.85f, 0.0f, 1.0f);
+    if (seqTime >= 57.5f) {
+        breakthrough = clampf((seqTime - 57.5f) / 0.85f, 0.0f, 1.0f);
         breakthrough = breakthrough * breakthrough * (3.0f - 2.0f * breakthrough);
     }
 
@@ -1305,12 +1305,12 @@ void renderScene3() {
     renderAtmosphericVaporStreaks();
 
     // 3. Official NASA Gale Crater 3D Topography Mesh
-    // Completely shrouded by dense cloud deck initially in Shot 2, then dramatically revealed at 53.0s as Ranger punches through
+    // Completely shrouded by dense cloud deck for first 6 seconds (51.5s - 57.5s), then dramatically revealed at 57.5s
     float craterReveal = 1.0f;
-    if (seqTime < 51.5f || seqTime < 53.0f) {
+    if (seqTime < 51.5f || seqTime < 57.5f) {
         craterReveal = 0.0f;
-    } else if (seqTime < 53.85f) {
-        float u = (seqTime - 53.0f) / 0.85f;
+    } else if (seqTime < 58.35f) {
+        float u = (seqTime - 57.5f) / 0.85f;
         craterReveal = u * u * (3.0f - 2.0f * u);
     } else {
         craterReveal = 1.0f;
