@@ -814,14 +814,14 @@ static void renderSmoothPlasmaSheath(bool backPass) {
                 y = -0.095f + 0.008f * frac;
             } else if (z > -1.15f) {
                 float frac = (0.85f - z) / 2.00f;
-                w = 0.08f + 0.44f * sinf(frac * 1.57079f);
-                h = 0.06f + 0.20f * sinf(frac * 1.57079f);
+                w = 0.12f + 0.72f * sinf(frac * 1.57079f);
+                h = 0.09f + 0.28f * sinf(frac * 1.57079f);
                 x = 0.0f;
                 y = -0.087f - 0.015f * frac;
             } else {
                 float frac = clampf((-1.15f - z) / 3.35f, 0.0f, 1.0f);
-                w = 0.52f - 0.16f * frac;
-                h = 0.26f - 0.10f * frac;
+                w = 0.84f - 0.24f * frac;
+                h = 0.37f - 0.12f * frac;
                 x = 0.0f;
                 y = -0.102f + 0.015f * frac;
             }
@@ -1047,6 +1047,31 @@ static void renderDetachedShockArc() {
         const int NUM_FP = sizeof(kFlank) / sizeof(kFlank[0]);
 
         for (int side = -1; side <= 1; side += 2) {
+            // 0. Inward wing deck & chine plasma blanket filling the volume between fuselage and shock boundary
+            glBegin(GL_TRIANGLE_STRIP);
+            for (int i = 0; i < NUM_FP; ++i) {
+                float u = (float)i / (float)(NUM_FP - 1);
+                float pX = (float)side * kFlank[i].x;
+                float pY = kFlank[i].y;
+                float pZ = kFlank[i].z;
+
+                // Fuselage junction coordinates
+                float spineX = (float)side * lerpf(0.02f, 0.22f, u);
+                float spineY = lerpf(-0.045f, 0.080f, u);
+                float spineZ = pZ;
+
+                float shimmer = sinf(t * 50.0f + (float)side * 1.5f + u * 6.0f) * 0.003f;
+
+                // Fuselage side: intense solar gold / white
+                glColor4f(1.0f, lerpf(0.95f, 0.70f, u), lerpf(0.80f, 0.15f, u), fShot2 * 0.85f * (1.0f - u * 0.20f));
+                glVertex3f(spineX + shimmer, spineY + 0.008f, spineZ);
+
+                // Leading edge / chine side: brilliant radiant orange-gold
+                glColor4f(1.0f, lerpf(0.85f, 0.45f, u), 0.08f, fShot2 * 0.90f * (1.0f - u * 0.15f));
+                glVertex3f(pX + shimmer, pY + 0.008f, pZ);
+            }
+            glEnd();
+
             // 1. Multi-tier radiant gradient impact veils flaring laterally along both flanks (high brilliance flow veils)
             for (int band = 0; band < 5; ++band) {
                 float b0 = (float)band / 5.0f;
