@@ -306,17 +306,18 @@ void updateScene3(float dt) {
         s3ShipScale = 0.50f;
         s3HeatGlow  = lerpf(0.50f, 1.0f, u); // High friction thermal glow
 
-        // Trailing plasma sparks whipped backwards from underbelly & nose
-        for (int k = 0; k < 5; ++k) {
-            float ox = randRange(-0.2f, 0.2f);
-            float oy = randRange(-0.2f, -0.05f); // Underbelly heatshield
-            float oz = randRange(-0.3f, 0.4f);
+        // Trailing thermal spallation embers & supersonic plasma sparks
+        for (int k = 0; k < 12; ++k) {
+            float ox = randRange(-0.25f, 0.25f);
+            float oy = randRange(-0.22f, -0.04f); // Underbelly heatshield tiles
+            float oz = randRange(-0.35f, 0.45f);
+            float speed = randRange(14.0f, 24.0f);
             spawnParticle(s3ShipX + ox, s3ShipY + oy, s3ShipZ + oz,
-                          -s3ShipDirX * 12.0f + randRange(-1.0f, 1.0f),
-                          -s3ShipDirY * 12.0f + randRange(-0.8f, 0.8f),
-                          -s3ShipDirZ * 12.0f + randRange(-1.0f, 1.0f),
-                          randRange(0.15f, 0.35f), randRange(1.4f, 2.5f),
-                          1.0f, randRange(0.6f, 0.95f), 0.2f, true);
+                          -s3ShipDirX * speed + randRange(-1.2f, 1.2f),
+                          -s3ShipDirY * speed + randRange(-0.8f, 0.8f),
+                          -s3ShipDirZ * speed + randRange(-1.2f, 1.2f),
+                          randRange(0.12f, 0.32f), randRange(1.4f, 2.8f),
+                          1.0f, randRange(0.65f, 0.98f), randRange(0.15f, 0.40f), true);
         }
     }
     // ------------------------------------------------------------------------
@@ -651,36 +652,147 @@ static void renderHeatshieldGlow() {
 
     glDisable(GL_LIGHTING);
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE); // Pure additive incandescent radiance
     glDepthMask(GL_FALSE);
 
-    // Realistic aerodynamic bow-shock plasma halo wrapped tightly on nosecone
-    glPushMatrix();
-    glTranslatef(0.0f, -0.04f, 0.92f); // Nosecone apex
+    float t = seqTime;
 
-    // 1. Pure white core shock apex
-    glColor4f(1.0f, 0.98f, 0.85f, s3HeatGlow * 0.70f);
+    // ========================================================================
+    // 1. HYPERBOLIC AERODYNAMIC BOW-SHOCK MEMBRANE
+    // ========================================================================
+    // A detached bow-shock envelope wrapping tightly around the blunt nose and
+    // expanding backward along the underbelly with blackbody thermal falloff.
+    const int SLICES = 20;
+    const int RINGS  = 12;
+
+    for (int r = 0; r < RINGS; ++r) {
+        float frac0 = (float)r / (float)RINGS;
+        float frac1 = (float)(r + 1) / (float)RINGS;
+
+        // Shock curve along Z (from nose tip +1.02 down along fuselage to -1.35)
+        float z0 = 1.02f - 2.37f * powf(frac0, 1.25f);
+        float z1 = 1.02f - 2.37f * powf(frac1, 1.25f);
+
+        // Hyperbolic radius expanding backward
+        float dist0 = 1.02f - z0;
+        float dist1 = 1.02f - z1;
+        float radius0 = 0.52f * sqrtf(std::max(0.0f, dist0));
+        float radius1 = 0.52f * sqrtf(std::max(0.0f, dist1));
+
+        // Flatten to fit the Star Sparrow lifting-body profile (wider X, flatter Y)
+        float w0 = radius0 * 1.18f;
+        float h0 = radius0 * 0.44f;
+        float yCenter0 = -0.06f - 0.035f * dist0; // Biased toward underbelly compression
+
+        float w1 = radius1 * 1.18f;
+        float h1 = radius1 * 0.44f;
+        float yCenter1 = -0.06f - 0.035f * dist1;
+
+        // Thermal color transition along the shockwave
+        float red0, green0, blue0, alpha0;
+        float red1, green1, blue1, alpha1;
+
+        auto calcThermalColor = [&](float frac, float& cr, float& cg, float& cb, float& ca) {
+            if (frac < 0.15f) {
+                // Stagnation apex: dazzling white-hot
+                float sub = frac / 0.15f;
+                cr = 1.0f;
+                cg = lerpf(1.0f, 0.90f, sub);
+                cb = lerpf(0.95f, 0.45f, sub);
+                ca = s3HeatGlow * lerpf(0.85f, 0.65f, sub);
+            } else if (frac < 0.55f) {
+                // Primary compression zone: blazing golden-orange
+                float sub = (frac - 0.15f) / 0.40f;
+                cr = 1.0f;
+                cg = lerpf(0.90f, 0.42f, sub);
+                cb = lerpf(0.45f, 0.06f, sub);
+                ca = s3HeatGlow * lerpf(0.65f, 0.38f, sub);
+            } else {
+                // Dissipating wake envelope: deep burning crimson into transparent
+                float sub = (frac - 0.55f) / 0.45f;
+                cr = lerpf(1.0f, 0.55f, sub);
+                cg = lerpf(0.42f, 0.08f, sub);
+                cb = 0.02f;
+                ca = s3HeatGlow * (1.0f - sub) * 0.38f;
+            }
+        };
+
+        calcThermalColor(frac0, red0, green0, blue0, alpha0);
+        calcThermalColor(frac1, red1, green1, blue1, alpha1);
+
+        glBegin(GL_TRIANGLE_STRIP);
+        for (int s = 0; s <= SLICES; ++s) {
+            float phi = (float)s / (float)SLICES * 2.0f * (float)M_PI;
+            float cosP = cosf(phi);
+            float sinP = sinf(phi);
+
+            // Aerodynamic high-frequency boundary layer flutter
+            float flutter0 = sinf(t * 52.0f + phi * 4.0f + frac0 * 12.0f) * 0.015f;
+            float flutter1 = sinf(t * 52.0f + phi * 4.0f + frac1 * 12.0f) * 0.015f;
+
+            glColor4f(red0, green0, blue0, alpha0);
+            glVertex3f(cosP * (w0 + flutter0), yCenter0 + sinP * (h0 + flutter0), z0);
+
+            glColor4f(red1, green1, blue1, alpha1);
+            glVertex3f(cosP * (w1 + flutter1), yCenter1 + sinP * (h1 + flutter1), z1);
+        }
+        glEnd();
+    }
+
+    // ========================================================================
+    // 2. STAGNATION POINT BLINDING CORE (Nose Apex Plasma Disk)
+    // ========================================================================
     glPushMatrix();
-    glScalef(0.18f, 0.08f, 0.22f);
-    glutSolidSphere(1.0, 10, 8);
+    glTranslatef(0.0f, -0.06f, 0.98f);
+    glScalef(0.14f, 0.07f, 0.12f);
+    glColor4f(1.0f, 1.0f, 0.95f, s3HeatGlow * 0.95f);
+    glutSolidSphere(1.0, 12, 10);
     glPopMatrix();
 
-    // 2. Fiery orange-red bow shock envelope
-    glColor4f(1.0f, 0.45f, 0.10f, s3HeatGlow * 0.45f);
-    glPushMatrix();
-    glScalef(0.32f, 0.14f, 0.42f);
-    glutSolidSphere(1.0, 12, 8);
-    glPopMatrix();
+    // ========================================================================
+    // 3. UNDERBELLY THERMAL TILE INCANDESCENCE (Radiant Underbody Glow)
+    // ========================================================================
+    glBegin(GL_QUADS);
+        // Quad 1: Forward belly tiles (nose to mid-fuselage)
+        glColor4f(1.0f, 0.85f, 0.30f, s3HeatGlow * 0.55f);
+        glVertex3f(-0.18f, -0.08f, 0.85f);
+        glVertex3f( 0.18f, -0.08f, 0.85f);
+        glColor4f(0.98f, 0.40f, 0.08f, s3HeatGlow * 0.40f);
+        glVertex3f( 0.38f, -0.09f, 0.0f);
+        glVertex3f(-0.38f, -0.09f, 0.0f);
 
-    // 3. Radiant underbelly thermal compression sheath
-    glTranslatef(0.0f, -0.06f, -0.55f);
-    glColor4f(0.95f, 0.35f, 0.05f, s3HeatGlow * 0.35f);
-    glPushMatrix();
-    glScalef(0.42f, 0.08f, 0.85f);
-    glutSolidSphere(1.0, 12, 8);
-    glPopMatrix();
+        // Quad 2: Aft belly tiles (mid-fuselage to engine nozzles)
+        glColor4f(0.98f, 0.40f, 0.08f, s3HeatGlow * 0.40f);
+        glVertex3f(-0.38f, -0.09f, 0.0f);
+        glVertex3f( 0.38f, -0.09f, 0.0f);
+        glColor4f(0.70f, 0.15f, 0.02f, s3HeatGlow * 0.15f);
+        glVertex3f( 0.42f, -0.10f, -0.90f);
+        glVertex3f(-0.42f, -0.10f, -0.90f);
+    glEnd();
 
-    glPopMatrix();
+    // ========================================================================
+    // 4. CHINE & WING-EDGE PLASMA FILAMENT RIBBONS (Trailing Streamlines)
+    // ========================================================================
+    // Luminous supersonic filaments curling off the port and starboard leading edges
+    glLineWidth(2.2f);
+    glBegin(GL_LINES);
+    for (int side = -1; side <= 1; side += 2) {
+        float sx = (float)side * 0.36f;
+        for (int line = 0; line < 4; ++line) {
+            float zStart = 0.55f - (float)line * 0.35f;
+            float zEnd   = zStart - 1.8f;
+            float lineY  = -0.06f - (float)line * 0.015f;
+            float wave   = sinf(t * 44.0f + (float)line * 2.5f) * 0.025f;
+
+            glColor4f(1.0f, 0.85f, 0.35f, s3HeatGlow * 0.70f);
+            glVertex3f(sx + wave, lineY, zStart);
+
+            glColor4f(0.85f, 0.25f, 0.04f, 0.0f);
+            glVertex3f(sx * 1.35f + wave * 2.0f, lineY - 0.04f, zEnd);
+        }
+    }
+    glEnd();
+    glLineWidth(1.0f);
 
     glDepthMask(GL_TRUE);
     glDisable(GL_BLEND);
@@ -807,12 +919,26 @@ void renderScene3() {
     glLightfv(GL_LIGHT2, GL_DIFFUSE, shipKeyDiff);
     glLightfv(GL_LIGHT2, GL_AMBIENT, shipKeyAmb);
 
+    // Dynamic underbelly heatshield incandescence illumination
+    if (s3HeatGlow > 0.05f) {
+        glEnable(GL_LIGHT3);
+        GLfloat heatPos[]  = { 0.0f, -1.2f, 0.3f, 1.0f }; // Directly below the forward heatshield tiles
+        GLfloat heatDiff[] = { 3.8f * s3HeatGlow, 1.8f * s3HeatGlow, 0.25f * s3HeatGlow, 1.0f };
+        GLfloat heatAmb[]  = { 0.50f * s3HeatGlow, 0.20f * s3HeatGlow, 0.02f * s3HeatGlow, 1.0f };
+        glLightfv(GL_LIGHT3, GL_POSITION, heatPos);
+        glLightfv(GL_LIGHT3, GL_DIFFUSE, heatDiff);
+        glLightfv(GL_LIGHT3, GL_AMBIENT, heatAmb);
+    } else {
+        glDisable(GL_LIGHT3);
+    }
+
     renderRangerMesh();
 
     // Aerodynamic bow-shock & underbelly thermal glow
     renderHeatshieldGlow();
 
     glDisable(GL_LIGHT2);
+    glDisable(GL_LIGHT3);
     glPopMatrix();
 
     // 6. Volumetric Touchdown Dust Clouds
