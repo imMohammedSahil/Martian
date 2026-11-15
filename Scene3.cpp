@@ -68,18 +68,17 @@ struct VaporStreak {
 };
 static std::vector<VaporStreak> s3Vapor;
 
-// Volumetric Supersonic Plasma Fire Sheath Particles
-struct PlasmaFlame {
+// Supersonic Reentry Ablation Sparks (Horizontal streaks matching reference)
+struct ReentrySpark {
     float x, y, z;
     float vx, vy, vz;
-    float size;
-    float growth;
+    float len;
     float life;
     float maxLife;
-    float angle;
-    float rotSpeed;
+    float r, g, b;
+    float size;
 };
-static std::vector<PlasmaFlame> s3PlasmaFlames;
+static std::vector<ReentrySpark> s3Sparks;
 
 // ============================================================================
 // ASSET LOADERS
@@ -296,17 +295,15 @@ void updateScene3(float dt) {
         }
     }
 
-    // Update volumetric supersonic plasma fire billows
-    for (size_t i = 0; i < s3PlasmaFlames.size(); ) {
-        s3PlasmaFlames[i].x += s3PlasmaFlames[i].vx * dt;
-        s3PlasmaFlames[i].y += s3PlasmaFlames[i].vy * dt;
-        s3PlasmaFlames[i].z += s3PlasmaFlames[i].vz * dt;
-        s3PlasmaFlames[i].size += s3PlasmaFlames[i].growth * dt;
-        s3PlasmaFlames[i].angle += s3PlasmaFlames[i].rotSpeed * dt;
-        s3PlasmaFlames[i].life -= dt;
-        if (s3PlasmaFlames[i].life <= 0.0f) {
-            s3PlasmaFlames[i] = s3PlasmaFlames.back();
-            s3PlasmaFlames.pop_back();
+    // Update supersonic ablation streak sparks
+    for (size_t i = 0; i < s3Sparks.size(); ) {
+        s3Sparks[i].x += s3Sparks[i].vx * dt;
+        s3Sparks[i].y += s3Sparks[i].vy * dt;
+        s3Sparks[i].z += s3Sparks[i].vz * dt;
+        s3Sparks[i].life -= dt;
+        if (s3Sparks[i].life <= 0.0f) {
+            s3Sparks[i] = s3Sparks.back();
+            s3Sparks.pop_back();
         } else {
             ++i;
         }
@@ -318,78 +315,84 @@ void updateScene3(float dt) {
     if (t < 50.0f) {
         float u = (t - 44.0f) / 6.0f; // Extended 6.0s cinematic hero shot
 
-        // Plunging steep downward descent into upper Martian atmosphere
-        s3ShipX = lerpf(-18.0f, -9.0f, u);
-        s3ShipY = lerpf( 16.5f,  7.5f, u * u);
-        s3ShipZ = lerpf(-20.0f, -9.0f, u);
+        // Horizontal hypersonic cruise across upper Martian atmosphere
+        s3ShipX = lerpf(-14.0f, -6.0f, u);
+        s3ShipY = lerpf( 12.0f, 10.5f, u); // Gentle shallow glide
+        s3ShipZ = -12.0f;
 
-        // Vector plunging downward along the diagonal
-        s3ShipDirX =  0.65f;
-        s3ShipDirY = -0.55f; // Strong downward plunge vector
-        s3ShipDirZ =  0.75f;
-        normalize3(s3ShipDirX, s3ShipDirY, s3ShipDirZ);
+        // Flying horizontally to the right across the upper atmosphere
+        s3ShipDirX =  1.0f;
+        s3ShipDirY = -0.04f;
+        s3ShipDirZ =  0.0f;
 
-        // Angle of attack: nose pitched DOWNWARD into the dive (+8.0 degrees)
-        s3ShipPitchExtra = 8.0f;
-        s3ShipRoll  = lerpf(24.0f, 10.0f, u);
+        // Spacecraft attitude: nose pitched slightly up into airflow (+8 deg alpha), slight bank
+        s3ShipPitchExtra = -8.0f;
+        s3ShipRoll  = -12.0f;
         s3ShipScale = 0.50f;
-        s3HeatGlow  = lerpf(0.50f, 1.0f, u); // High friction thermal glow
+        s3HeatGlow  = lerpf(0.75f, 1.0f, u);
 
-        // 3D Ship Coordinate Basis for authentic aerothermodynamic particle anchoring
-        float dirX = s3ShipDirX, dirY = s3ShipDirY, dirZ = s3ShipDirZ;
-        float wupX = 0.0f, wupY = 1.0f, wupZ = 0.0f;
-        float rightX = dirY * wupZ - dirZ * wupY;
-        float rightY = dirZ * wupX - dirX * wupZ;
-        float rightZ = dirX * wupY - dirY * wupX;
-        normalize3(rightX, rightY, rightZ);
-        float upX = rightY * dirZ - rightZ * dirY;
-        float upY = rightZ * dirX - rightX * dirZ;
-        float upZ = rightX * dirY - rightY * dirX;
+        // Pre-warm sparks for instant steady-state wake stream across visible screen
+        if (s3Sparks.empty()) {
+            for (int i = 0; i < 55; ++i) {
+                float ang = randRange(0.0f, 6.28318f);
+                float rad = randRange(0.20f, 0.70f);
+                float lAlong = randRange(-1.30f, 0.10f);
+                float ly = sinf(ang) * rad * 0.50f - 0.04f;
+                float lz = cosf(ang) * rad * 0.85f;
 
-        // 1. Spallation embers and supersonic ablation sparks peeling into slipstream
-        for (int k = 0; k < 22; ++k) {
-            float lLateral = randRange(-0.40f, 0.40f);
-            float lAlong   = randRange(-0.40f, 0.95f);
-            float lHeight  = randRange(-0.10f, -0.02f); // Underbelly and leading edges
+                float speed = randRange(4.5f, 9.5f);
+                float maxLife = randRange(0.60f, 1.20f);
+                float age = randRange(0.01f, maxLife * 0.95f);
 
-            float spawnX = s3ShipX + (rightX * lLateral + upX * lHeight + dirX * lAlong) * s3ShipScale;
-            float spawnY = s3ShipY + (rightY * lLateral + upY * lHeight + dirY * lAlong) * s3ShipScale;
-            float spawnZ = s3ShipZ + (rightZ * lLateral + upZ * lHeight + dirZ * lAlong) * s3ShipScale;
-
-            float speed = randRange(20.0f, 38.0f);
-            spawnParticle(spawnX, spawnY, spawnZ,
-                          -dirX * speed + rightX * randRange(-1.2f, 1.2f) + upX * randRange(-0.8f, 0.8f),
-                          -dirY * speed + rightY * randRange(-1.2f, 1.2f) + upY * randRange(-0.8f, 0.8f),
-                          -dirZ * speed + rightZ * randRange(-1.2f, 1.2f) + upZ * randRange(-0.8f, 0.8f),
-                          randRange(0.06f, 0.16f), randRange(1.8f, 3.2f),
-                          1.0f, randRange(0.85f, 1.0f), randRange(0.30f, 0.60f), true);
+                ReentrySpark sp;
+                sp.vx = -speed;
+                sp.vy = randRange(-0.15f, 0.15f);
+                sp.vz = randRange(-0.25f, 0.25f);
+                sp.x = (s3ShipX + lAlong * s3ShipScale) + sp.vx * age;
+                sp.y = (s3ShipY + ly * s3ShipScale) + sp.vy * age;
+                sp.z = (s3ShipZ + lz * s3ShipScale) + sp.vz * age;
+                sp.len = randRange(0.8f, 2.2f);
+                sp.maxLife = maxLife;
+                sp.life = maxLife - age;
+                sp.size = randRange(2.5f, 4.5f);
+                sp.r = 1.0f;
+                sp.g = randRange(0.75f, 0.98f);
+                sp.b = randRange(0.20f, 0.55f);
+                s3Sparks.push_back(sp);
+            }
         }
 
-        // 2. Volumetric Supersonic Plasma Fire Tail (sleek, multi-layered trailing wake)
-        for (int f = 0; f < 14; ++f) {
-            float lLateral = randRange(-0.55f, 0.55f);
-            float lAlong   = randRange(0.10f, 0.98f); // Originates at nose apex & along chines
-            float lHeight  = -0.06f + randRange(-0.04f, 0.02f);
+        // Supersonic spallation embers & horizontal ablation sparks (matching reference image)
+        for (int k = 0; k < 4; ++k) {
+            float ang = randRange(0.0f, 6.28318f);
+            float rad = randRange(0.20f, 0.65f);
+            // Spawn strictly along the heatshield and mid-body (behind the nose!)
+            float lAlong = randRange(-1.10f, 0.10f);
+            float ly = sinf(ang) * rad * 0.48f - 0.04f;
+            float lz = cosf(ang) * rad * 0.90f;
 
-            float spawnX = s3ShipX + (rightX * lLateral + upX * lHeight + dirX * lAlong) * s3ShipScale;
-            float spawnY = s3ShipY + (rightY * lLateral + upY * lHeight + dirY * lAlong) * s3ShipScale;
-            float spawnZ = s3ShipZ + (rightZ * lLateral + upZ * lHeight + dirZ * lAlong) * s3ShipScale;
+            // In world space: ship forward is +X, up is +Y, lateral is Z
+            float spawnX = s3ShipX + lAlong * s3ShipScale;
+            float spawnY = s3ShipY + ly * s3ShipScale;
+            float spawnZ = s3ShipZ + lz * s3ShipScale;
 
-            float fireSpd = randRange(22.0f, 38.0f);
-            PlasmaFlame flame;
-            flame.x = spawnX;
-            flame.y = spawnY;
-            flame.z = spawnZ;
-            flame.vx = -dirX * fireSpd + rightX * randRange(-0.6f, 0.6f) - upX * randRange(0.2f, 0.8f);
-            flame.vy = -dirY * fireSpd + rightY * randRange(-0.6f, 0.6f) - upY * randRange(0.2f, 0.8f);
-            flame.vz = -dirZ * fireSpd + rightZ * randRange(-0.6f, 0.6f) - upZ * randRange(0.2f, 0.8f);
-            flame.size = randRange(0.10f, 0.20f);
-            flame.growth = randRange(1.8f, 3.2f); // Smooth aerodynamic expansion into trailing plasma plume
-            flame.maxLife = randRange(0.18f, 0.32f);
-            flame.life = flame.maxLife;
-            flame.angle = randRange(0.0f, 6.28f);
-            flame.rotSpeed = randRange(-4.0f, 4.0f);
-            s3PlasmaFlames.push_back(flame);
+            ReentrySpark sp;
+            sp.x = spawnX;
+            sp.y = spawnY;
+            sp.z = spawnZ;
+            float speed = randRange(4.5f, 9.5f);
+            // Shooting horizontally to the left into the wake slipstream
+            sp.vx = -speed;
+            sp.vy = randRange(-0.15f, 0.15f);
+            sp.vz = randRange(-0.25f, 0.25f);
+            sp.len = randRange(0.8f, 2.2f);
+            sp.maxLife = randRange(0.60f, 1.20f);
+            sp.life = sp.maxLife;
+            sp.size = randRange(2.5f, 4.5f);
+            sp.r = 1.0f;
+            sp.g = randRange(0.75f, 0.98f);
+            sp.b = randRange(0.20f, 0.55f);
+            s3Sparks.push_back(sp);
         }
     }
     // ------------------------------------------------------------------------
@@ -413,23 +416,24 @@ void updateScene3(float dt) {
         s3ShipScale = 0.50f;
         s3HeatGlow  = lerpf(1.0f, 0.25f, u);
 
-        // Residual plasma billows fading out
-        for (int f = 0; f < 4; ++f) {
-            float fireSpd = randRange(12.0f, 20.0f);
-            PlasmaFlame flame;
-            flame.x = s3ShipX + randRange(-0.3f, 0.3f);
-            flame.y = s3ShipY - 0.08f;
-            flame.z = s3ShipZ + randRange(-0.2f, 0.2f);
-            flame.vx = -s3ShipDirX * fireSpd;
-            flame.vy = -s3ShipDirY * fireSpd;
-            flame.vz = -s3ShipDirZ * fireSpd;
-            flame.size = randRange(0.25f, 0.45f);
-            flame.growth = 4.0f;
-            flame.maxLife = randRange(0.18f, 0.30f);
-            flame.life = flame.maxLife;
-            flame.angle = randRange(0.0f, 6.28f);
-            flame.rotSpeed = randRange(-3.0f, 3.0f);
-            s3PlasmaFlames.push_back(flame);
+        // Residual sparks fading out
+        for (int f = 0; f < 2; ++f) {
+            ReentrySpark sp;
+            sp.x = s3ShipX + randRange(-0.3f, 0.3f);
+            sp.y = s3ShipY - 0.08f;
+            sp.z = s3ShipZ + randRange(-0.2f, 0.2f);
+            float spd = randRange(14.0f, 22.0f);
+            sp.vx = -s3ShipDirX * spd;
+            sp.vy = -s3ShipDirY * spd;
+            sp.vz = -s3ShipDirZ * spd;
+            sp.len = randRange(0.6f, 1.4f);
+            sp.maxLife = randRange(0.15f, 0.25f);
+            sp.life = sp.maxLife;
+            sp.size = randRange(2.0f, 3.5f);
+            sp.r = 1.0f;
+            sp.g = 0.65f;
+            sp.b = 0.15f;
+            s3Sparks.push_back(sp);
         }
     }
     // ------------------------------------------------------------------------
@@ -563,25 +567,45 @@ void computeCameraScene3(float& eyeX, float& eyeY, float& eyeZ,
     float t = seqTime;
 
     // ------------------------------------------------------------------------
-    // SHOT 1: SIDE-PROFILE HERO SHOT (44.0s - 50.0s)
+    // SHOT 1: CINEMATIC FLANK HERO SHOT (44.0s - 50.0s)
     // ------------------------------------------------------------------------
-    // Cinematic side flank: Ranger plunges downward from upper-right toward lower-left.
-    // Framed with open Martian salmon sky and vapor shreds tearing beside it.
+    // Majestic cinematic widescreen side-profile matching Apollo/Orion/reference footage:
+    // Ranger cruises horizontally rightward across the frame with blunt nose/heatshield leading on the right,
+    // silky smooth plasma sheath & ablation sparks streaming leftward into the cosmic void,
+    // and the curved atmospheric horizon of Mars arcing across the lower third of the viewport.
     if (t < 50.0f) {
         float u = (t - 44.0f) / 6.0f; // Extended 6.0s hero view
 
-        // Position camera to the side-above the diving ship
-        eyeX = s3ShipX + 2.4f;
-        eyeY = s3ShipY + 0.65f;
-        eyeZ = s3ShipZ - 0.40f;
+        float dirX = s3ShipDirX, dirY = s3ShipDirY, dirZ = s3ShipDirZ;
+        float wupX = 0.0f, wupY = 1.0f, wupZ = 0.0f;
+        // Lateral side vector perpendicular to flight direction and world up
+        float sideX = dirY * wupZ - dirZ * wupY;
+        float sideY = dirZ * wupX - dirX * wupZ;
+        float sideZ = dirX * wupY - dirY * wupX;
+        normalize3(sideX, sideY, sideZ);
 
-        targetX = s3ShipX - 0.35f;
-        targetY = s3ShipY - 0.60f; // Look downward along the plunge trajectory
-        targetZ = s3ShipZ + 0.55f;
+        // Position camera to the port flank of the ship
+        // With +side, the flight direction projects towards the RIGHT of the screen:
+        // - Leading front / bow shock on the right
+        // - Silky trailing wake and sparks streaming to the left
+        // - Deep cosmic void above
+        // - Curved Martian planetary horizon below
+        float sideDist = 2.25f;
+        float upDist   = 0.30f;
+        float backDist = 0.35f;
 
-        // Aerodynamic buffeting shudder
-        float freq = t * 62.0f;
-        float amp  = (1.0f - u * 0.2f) * 0.022f;
+        eyeX = s3ShipX + sideX * sideDist - dirX * backDist + wupX * upDist;
+        eyeY = s3ShipY + sideY * sideDist - dirY * backDist + wupY * upDist;
+        eyeZ = s3ShipZ + sideZ * sideDist - dirZ * backDist + wupZ * upDist;
+
+        // Target: framed so the glowing fireball and ship fill the hero view
+        targetX = s3ShipX + dirX * 0.28f;
+        targetY = s3ShipY + dirY * 0.28f - 0.03f;
+        targetZ = s3ShipZ + dirZ * 0.28f;
+
+        // Subtle high-speed hypersonic buffeting vibration
+        float freq = t * 65.0f;
+        float amp  = (1.0f - u * 0.2f) * 0.010f;
         eyeX += sinf(freq * 1.05f) * amp;
         eyeY += cosf(freq * 0.95f) * amp;
         eyeZ += sinf(freq * 1.25f) * amp;
@@ -677,16 +701,101 @@ static void renderAtmosphericSkybox() {
     glPushMatrix();
     glLoadIdentity();
 
-    glBegin(GL_QUADS);
-        // Horizon: rich Martian salmon/butterscotch
-        glColor3f(0.72f, 0.38f, 0.22f);
-        glVertex2f(0.0f, 0.0f);
-        glVertex2f(1.0f, 0.0f);
-        // Zenith: deep cosmic rust/indigo
-        glColor3f(0.20f, 0.08f, 0.12f);
-        glVertex2f(1.0f, 1.0f);
-        glVertex2f(0.0f, 1.0f);
-    glEnd();
+    float t = seqTime;
+
+    if (t < 50.0f) {
+        // ====================================================================
+        // SHOT 1: CINEMATIC PLANETARY LIMB & UPPER ATMOSPHERE (Matching Reference)
+        // ====================================================================
+        // 1. Cosmic Void background (pitch black with deep cosmic gradient)
+        glBegin(GL_QUADS);
+            glColor3f(0.003f, 0.005f, 0.010f); // Pure cosmic blackness
+            glVertex2f(0.0f, 1.0f);
+            glVertex2f(1.0f, 1.0f);
+            glColor3f(0.035f, 0.015f, 0.022f); // Faint cosmic glow above horizon
+            glVertex2f(1.0f, 0.32f);
+            glVertex2f(0.0f, 0.32f);
+        glEnd();
+
+        // 2. Curved Martian Horizon Arc & Atmospheric Rim Glow
+        // Circle center placed below screen to create a gentle, majestic planetary curvature
+        const int ARC_SEGS = 64;
+        const float cx = 0.50f;
+        const float cy = -2.20f;
+        const float R  = 2.44f; // Radius reaching y ~ 0.24 in the middle
+
+        // Planetary Body below the curved limb (rich Mars terrain tones)
+        glBegin(GL_QUAD_STRIP);
+        for (int i = 0; i <= ARC_SEGS; ++i) {
+            float frac = (float)i / (float)ARC_SEGS;
+            float x = frac;
+            float dx = x - cx;
+            float dySq = R * R - dx * dx;
+            float yLimb = cy + (dySq > 0.0f ? sqrtf(dySq) : R);
+
+            // Base of screen (deep shadowed Martian crust)
+            glColor3f(0.16f, 0.07f, 0.04f);
+            glVertex2f(x, 0.0f);
+
+            // Sunlit surface near limb (warm terra-cotta with subtle latitude variation)
+            float latVar = 0.03f * sinf(frac * 18.0f);
+            glColor3f(0.52f + latVar, 0.25f + latVar * 0.5f, 0.13f);
+            glVertex2f(x, yLimb);
+        }
+        glEnd();
+
+        // Atmospheric Rim Glow Layer (sunlit forward-scattering haze separating planet from space)
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+
+        // Tier A: Intense sunlit atmospheric edge (radiant pale cyan-white & golden rim)
+        glBegin(GL_QUAD_STRIP);
+        for (int i = 0; i <= ARC_SEGS; ++i) {
+            float frac = (float)i / (float)ARC_SEGS;
+            float x = frac;
+            float dx = x - cx;
+            float dySq = R * R - dx * dx;
+            float yLimb = cy + (dySq > 0.0f ? sqrtf(dySq) : R);
+
+            // Warm golden dust interface
+            glColor4f(0.98f, 0.72f, 0.45f, 0.90f);
+            glVertex2f(x, yLimb - 0.012f);
+
+            // Brilliant sunlit upper atmosphere (pale cyan/white scattering)
+            glColor4f(0.85f, 0.93f, 1.0f, 0.85f);
+            glVertex2f(x, yLimb + 0.024f);
+        }
+        glEnd();
+
+        // Tier B: Soft diffuse atmospheric haze extending smoothly into the cosmic void
+        glBegin(GL_QUAD_STRIP);
+        for (int i = 0; i <= ARC_SEGS; ++i) {
+            float frac = (float)i / (float)ARC_SEGS;
+            float x = frac;
+            float dx = x - cx;
+            float dySq = R * R - dx * dx;
+            float yLimb = cy + (dySq > 0.0f ? sqrtf(dySq) : R);
+
+            glColor4f(0.55f, 0.70f, 0.95f, 0.45f);
+            glVertex2f(x, yLimb + 0.015f);
+
+            glColor4f(0.15f, 0.10f, 0.25f, 0.0f);
+            glVertex2f(x, yLimb + 0.105f);
+        }
+        glEnd();
+
+        glDisable(GL_BLEND);
+    } else {
+        // Shots 2..5: Ground descent skybox
+        glBegin(GL_QUADS);
+            glColor3f(0.72f, 0.38f, 0.22f);
+            glVertex2f(0.0f, 0.0f);
+            glVertex2f(1.0f, 0.0f);
+            glColor3f(0.20f, 0.08f, 0.12f);
+            glVertex2f(1.0f, 1.0f);
+            glVertex2f(0.0f, 1.0f);
+        glEnd();
+    }
 
     glPopMatrix();
     glMatrixMode(GL_PROJECTION);
@@ -699,7 +808,7 @@ static void renderAtmosphericSkybox() {
 }
 
 static void renderAtmosphericVaporStreaks() {
-    if (seqTime > 51.5f || s3Vapor.empty() || !smokeTexID) return;
+    if (seqTime < 50.0f || seqTime > 53.5f || s3Vapor.empty() || !smokeTexID) return;
 
     glDisable(GL_LIGHTING);
     glEnable(GL_BLEND);
@@ -731,23 +840,194 @@ static void renderAtmosphericVaporStreaks() {
     glEnable(GL_LIGHTING);
 }
 
-static void renderHeatshieldGlow() {
+// ============================================================================
+// 1. SILKY CONTINUOUS AERODYNAMIC PLASMA SHEATH (Super-smooth flow matching reference)
+// ============================================================================
+static void renderSmoothPlasmaSheath(bool backPass) {
     if (s3HeatGlow <= 0.01f) return;
 
     glDisable(GL_LIGHTING);
+    glDisable(GL_TEXTURE_2D);
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE); // Pure radiant additive incandescent plasma
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE); // Pure radiant blackbody plasma
     glDepthMask(GL_FALSE);
 
     float t = seqTime;
     float glow = s3HeatGlow;
-    // Aerodynamic turbulent thermal flicker (high-frequency plasma combustion instability)
-    float flicker = glow * (0.92f + 0.08f * sinf(t * 73.0f) * cosf(t * 49.0f));
+    // High-frequency subtle atmospheric plasma shimmer
+    float flicker = glow * (0.95f + 0.05f * sinf(t * 70.0f) * cosf(t * 45.0f));
 
-    // ========================================================================
-    // 1. CERAMIC TILE THERMAL PROTECTION SYSTEM (TPS) UNDERBELLY INCANDESCENCE
-    // ========================================================================
-    // Direct emission from the white-hot and radiant cherry-red ceramic tiles
+    // Cull faces: backPass renders the inside/back cavity; !backPass renders front translucent sheath
+    glEnable(GL_CULL_FACE);
+    glCullFace(backPass ? GL_FRONT : GL_BACK);
+
+    const int RINGS  = 44;
+    const int SLICES = 52;
+    const float zApex = 1.40f; // Wraps generously ahead of Ranger nose (Z ~ 1.10)
+    const float zTail = -4.50f;
+
+    auto getCrossSection = [](float z, float& w, float& h, float& y) {
+        if (z > 0.80f) {
+            // Super-blunt ellipsoidal nose bow shock (matching Apollo/Orion/reference shape)
+            float frac = (1.40f - z) / 0.60f;
+            frac = clampf(frac, 0.0f, 1.0f);
+            float blunt = sqrtf(clampf(1.0f - (1.0f - frac) * (1.0f - frac), 0.0f, 1.0f));
+            w = 0.85f * blunt;
+            h = 0.54f * blunt;
+            y = -0.05f - 0.02f * frac;
+        } else if (z > -1.15f) {
+            // Fuselage & delta wings lifting body envelope
+            float frac = (0.80f - z) / 1.95f;
+            w = 0.85f + 0.58f * sinf(frac * 1.57079f);
+            h = 0.54f + 0.16f * sinf(frac * 1.57079f);
+            y = -0.07f - 0.025f * frac;
+        } else {
+            // Trailing aerodynamic slipstream tube streaming into wake
+            float frac = clampf((-1.15f - z) / 3.35f, 0.0f, 1.0f);
+            w = 1.43f - 0.40f * frac;
+            h = 0.70f - 0.25f * frac;
+            y = -0.095f + 0.02f * frac;
+        }
+    };
+
+    auto getThermalColor = [&](float f, float sinP, float& cr, float& cg, float& cb, float& ca) {
+        if (f < 0.12f) {
+            // Stagnation point: Brilliant nuclear white-hot (> 6,500 K)
+            float s = f / 0.12f;
+            cr = 1.0f;
+            cg = lerpf(1.0f, 0.95f, s);
+            cb = lerpf(0.98f, 0.55f, s);
+            ca = flicker * lerpf(1.0f, 0.82f, s);
+        } else if (f < 0.40f) {
+            // Compression & chine flanks: Incandescent solar gold & radiant amber
+            float s = (f - 0.12f) / 0.28f;
+            cr = 1.0f;
+            cg = lerpf(0.95f, 0.60f, s);
+            cb = lerpf(0.55f, 0.08f, s);
+            ca = flicker * lerpf(0.82f, 0.50f, s);
+        } else if (f < 0.72f) {
+            // Mid-body slipstream: Luminous flame vermilion
+            float s = (f - 0.40f) / 0.32f;
+            cr = 1.0f;
+            cg = lerpf(0.60f, 0.22f, s);
+            cb = lerpf(0.08f, 0.01f, s);
+            ca = flicker * lerpf(0.50f, 0.26f, s);
+        } else {
+            // Trailing wake slipstream: Cooling Martian crimson fading smoothly to 0
+            float s = (f - 0.72f) / 0.28f;
+            cr = lerpf(1.0f, 0.65f, s);
+            cg = lerpf(0.22f, 0.03f, s);
+            cb = 0.01f;
+            ca = flicker * (1.0f - s) * 0.26f;
+        }
+
+        // Underbelly compression boost (angle of attack windward compression)
+        float bellyFactor = clampf(-sinP, 0.0f, 1.0f);
+        ca *= (1.0f + bellyFactor * 0.50f);
+
+        if (backPass) {
+            ca *= 0.50f; // Soft inner cavity glow behind craft
+        } else {
+            // Front pass: brilliant nose cap, while flanks remain translucent to reveal Ranger
+            if (f < 0.12f) {
+                ca *= 0.85f;
+            } else {
+                ca *= 0.32f;
+            }
+        }
+    };
+
+    // 1. Primary Aerodynamic Sheath Pass
+    for (int r = 0; r < RINGS; ++r) {
+        float f0 = (float)r / (float)RINGS;
+        float f1 = (float)(r + 1) / (float)RINGS;
+
+        float z0 = zApex - powf(f0, 1.25f) * (zApex - zTail);
+        float z1 = zApex - powf(f1, 1.25f) * (zApex - zTail);
+
+        float w0, h0, y0, w1, h1, y1;
+        getCrossSection(z0, w0, h0, y0);
+        getCrossSection(z1, w1, h1, y1);
+
+        glBegin(GL_TRIANGLE_STRIP);
+        for (int s = 0; s <= SLICES; ++s) {
+            float phi = (float)s / (float)SLICES * 2.0f * (float)M_PI;
+            float cosP = cosf(phi);
+            float sinP = sinf(phi);
+
+            // Subtle aerodynamic boundary shimmer
+            float flutter0 = sinf(t * 60.0f + phi * 3.0f + f0 * 16.0f) * 0.005f;
+            float flutter1 = sinf(t * 60.0f + phi * 3.0f + f1 * 16.0f) * 0.005f;
+
+            float cr0, cg0, cb0, ca0;
+            float cr1, cg1, cb1, ca1;
+            getThermalColor(f0, sinP, cr0, cg0, cb0, ca0);
+            getThermalColor(f1, sinP, cr1, cg1, cb1, ca1);
+
+            glColor4f(cr0, cg0, cb0, ca0);
+            glVertex3f(cosP * (w0 + flutter0), y0 + sinP * (h0 + flutter0), z0);
+
+            glColor4f(cr1, cg1, cb1, ca1);
+            glVertex3f(cosP * (w1 + flutter1), y1 + sinP * (h1 + flutter1), z1);
+        }
+        glEnd();
+    }
+
+    glCullFace(GL_BACK);
+    glDepthMask(GL_TRUE);
+    glDisable(GL_BLEND);
+    glEnable(GL_LIGHTING);
+}
+
+// ============================================================================
+// 2. DETACHED OUTER BOW-SHOCK ARC (Sharp thin crescent ahead of nose)
+// ============================================================================
+static void renderDetachedShockArc() {
+    if (s3HeatGlow <= 0.01f) return;
+    glDisable(GL_LIGHTING);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+    glDepthMask(GL_FALSE);
+
+    float t = seqTime;
+    float flicker = s3HeatGlow * (0.95f + 0.05f * sinf(t * 85.0f));
+
+    // Outer faint detached shock crescent (matching the sharp outer line in the reference photo)
+    glLineWidth(2.4f);
+    glBegin(GL_LINE_STRIP);
+    for (int s = -24; s <= 24; ++s) {
+        float phi = (float)s / 24.0f * 1.45f;
+        float sinP = sinf(phi);
+        float cosP = cosf(phi);
+        float x = sinP * 0.74f;
+        float y = -0.06f - (1.0f - cosP) * 0.20f;
+        float z = 1.42f - (1.0f - cosP) * 0.45f;
+        float edgeFade = 1.0f - fabsf((float)s / 24.0f);
+        glColor4f(1.0f, 0.94f, 0.76f, flicker * 0.65f * edgeFade);
+        glVertex3f(x, y, z);
+    }
+    glEnd();
+    glLineWidth(1.0f);
+
+    glDepthMask(GL_TRUE);
+    glDisable(GL_BLEND);
+    glEnable(GL_LIGHTING);
+}
+
+// ============================================================================
+// 3. UNDERBELLY CERAMIC TILE INCANDESCENCE (TPS Blackbody Direct Emission)
+// ============================================================================
+static void renderHeatshieldTiles() {
+    if (s3HeatGlow <= 0.01f) return;
+
+    glDisable(GL_LIGHTING);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+    glDepthMask(GL_FALSE);
+
+    float t = seqTime;
+    float flicker = s3HeatGlow * (0.92f + 0.08f * sinf(t * 73.0f) * cosf(t * 49.0f));
+
     if (smokeTexID) {
         glEnable(GL_TEXTURE_2D);
         glBindTexture(GL_TEXTURE_2D, smokeTexID);
@@ -777,194 +1057,7 @@ static void renderHeatshieldGlow() {
         glColor4f(0.75f, 0.18f, 0.03f, flicker * 0.38f);
         glTexCoord2f(1.0f, 1.0f); glVertex3f( 0.48f, -0.098f, -0.95f);
         glTexCoord2f(0.0f, 1.0f); glVertex3f(-0.48f, -0.098f, -0.95f);
-
-        // Port & Starboard wing underbelly heat wash
-        glColor4f(1.0f, 0.65f, 0.18f, flicker * 0.55f);
-        glTexCoord2f(0.0f, 0.0f); glVertex3f( 0.34f, -0.085f, 0.45f);
-        glColor4f(0.90f, 0.30f, 0.05f, flicker * 0.35f);
-        glTexCoord2f(1.0f, 0.0f); glVertex3f( 0.82f, -0.080f, -0.40f);
-        glTexCoord2f(1.0f, 1.0f); glVertex3f( 0.44f, -0.095f, -0.20f);
-        glTexCoord2f(0.0f, 1.0f); glVertex3f( 0.34f, -0.085f, 0.10f);
-
-        glColor4f(1.0f, 0.65f, 0.18f, flicker * 0.55f);
-        glTexCoord2f(0.0f, 0.0f); glVertex3f(-0.34f, -0.085f, 0.45f);
-        glTexCoord2f(0.0f, 1.0f); glVertex3f(-0.34f, -0.085f, 0.10f);
-        glTexCoord2f(1.0f, 1.0f); glVertex3f(-0.44f, -0.095f, -0.20f);
-        glColor4f(0.90f, 0.30f, 0.05f, flicker * 0.35f);
-        glTexCoord2f(1.0f, 0.0f); glVertex3f(-0.82f, -0.080f, -0.40f);
     glEnd();
-
-    // ========================================================================
-    // 2. FLOWING TEXTURED AERODYNAMIC BOW-SHOCK VEIL (Supersonic Wave Front)
-    // ========================================================================
-    // A detached 3D hyperbolic shock envelope with hypersonic fluid texture streaming
-    // violently backward over the vehicle profile at Mach 25.
-    const int SLICES = 32;
-    const int RINGS  = 20;
-
-    for (int pass = 0; pass < 2; ++pass) {
-        float passScale = (pass == 0) ? 1.0f : 0.85f; // Outer bow shock wave, then tight inner sheath
-        float zApex     = (pass == 0) ? 1.06f : 1.02f;
-        float vFlowSpd  = (pass == 0) ? 24.0f : 36.0f;
-
-        for (int r = 0; r < RINGS; ++r) {
-            float frac0 = (float)r / (float)RINGS;
-            float frac1 = (float)(r + 1) / (float)RINGS;
-
-            float z0 = zApex - 2.40f * powf(frac0, 1.30f);
-            float z1 = zApex - 2.40f * powf(frac1, 1.30f);
-
-            float dist0 = zApex - z0;
-            float dist1 = zApex - z1;
-
-            // Lifting body aerodynamic profile: tight elliptical cross section
-            float w0 = (0.24f + 0.46f * powf(dist0, 0.65f)) * passScale;
-            float h0 = (0.10f + 0.18f * powf(dist0, 0.65f)) * passScale;
-            float y0 = -0.05f - 0.035f * dist0;
-
-            float w1 = (0.24f + 0.46f * powf(dist1, 0.65f)) * passScale;
-            float h1 = (0.10f + 0.18f * powf(dist1, 0.65f)) * passScale;
-            float y1 = -0.05f - 0.035f * dist1;
-
-            auto getPlasmaColor = [&](float f, float& cr, float& cg, float& cb, float& ca) {
-                if (f < 0.10f) {
-                    // Stagnation apex: Pure nuclear white-hot
-                    float s = f / 0.10f;
-                    cr = 1.0f;
-                    cg = lerpf(1.0f, 0.94f, s);
-                    cb = lerpf(0.98f, 0.60f, s);
-                    ca = flicker * lerpf(0.85f, 0.60f, s);
-                } else if (f < 0.45f) {
-                    // Primary compression zone: incandescent solar gold & radiant amber
-                    float s = (f - 0.10f) / 0.35f;
-                    cr = 1.0f;
-                    cg = lerpf(0.94f, 0.45f, s);
-                    cb = lerpf(0.60f, 0.05f, s);
-                    ca = flicker * lerpf(0.60f, 0.35f, s);
-                } else if (f < 0.80f) {
-                    // Shock expansion flanks: intense plasma vermilion
-                    float s = (f - 0.45f) / 0.35f;
-                    cr = 1.0f;
-                    cg = lerpf(0.45f, 0.15f, s);
-                    cb = 0.02f;
-                    ca = flicker * lerpf(0.35f, 0.12f, s);
-                } else {
-                    // Dissipating wake envelope: deep fiery crimson fading cleanly to 0
-                    float s = (f - 0.80f) / 0.20f;
-                    cr = lerpf(1.0f, 0.55f, s);
-                    cg = lerpf(0.15f, 0.02f, s);
-                    cb = 0.01f;
-                    ca = flicker * (1.0f - s) * 0.12f;
-                }
-                if (pass == 1) {
-                    ca *= 1.2f;
-                }
-            };
-
-            float cr0, cg0, cb0, ca0;
-            float cr1, cg1, cb1, ca1;
-            getPlasmaColor(frac0, cr0, cg0, cb0, ca0);
-            getPlasmaColor(frac1, cr1, cg1, cb1, ca1);
-
-            float v0 = frac0 * 3.0f - t * vFlowSpd;
-            float v1 = frac1 * 3.0f - t * vFlowSpd;
-
-            glBegin(GL_TRIANGLE_STRIP);
-            for (int s = 0; s <= SLICES; ++s) {
-                float phi = (float)s / (float)SLICES * 2.0f * (float)M_PI;
-                float cosP = cosf(phi);
-                float sinP = sinf(phi);
-                float uCoord = (float)s / (float)SLICES;
-
-                // High-frequency boundary flutter
-                float flutter0 = sinf(t * 72.0f + phi * 4.0f + frac0 * 18.0f) * 0.012f;
-                float flutter1 = sinf(t * 72.0f + phi * 4.0f + frac1 * 18.0f) * 0.012f;
-
-                glColor4f(cr0, cg0, cb0, ca0);
-                glTexCoord2f(uCoord, v0);
-                glVertex3f(cosP * (w0 + flutter0), y0 + sinP * (h0 + flutter0), z0);
-
-                glColor4f(cr1, cg1, cb1, ca1);
-                glTexCoord2f(uCoord, v1);
-                glVertex3f(cosP * (w1 + flutter1), y1 + sinP * (h1 + flutter1), z1);
-            }
-            glEnd();
-        }
-    }
-
-    // ========================================================================
-    // 3. STAGNATION POINT NOSE BLOOM & ANAMORPHIC GLARE
-    // ========================================================================
-    // Concentrated radiant bloom right at the blunt nose cap
-    glPushMatrix();
-    glTranslatef(0.0f, -0.05f, 1.03f);
-
-    // Core White Glint (tight to the nose)
-    glColor4f(1.0f, 1.0f, 0.98f, flicker * 0.88f);
-    glBegin(GL_QUADS);
-        glTexCoord2f(0.0f, 0.0f); glVertex3f(-0.16f, -0.10f, 0.0f);
-        glTexCoord2f(1.0f, 0.0f); glVertex3f( 0.16f, -0.10f, 0.0f);
-        glTexCoord2f(1.0f, 1.0f); glVertex3f( 0.16f,  0.10f, 0.0f);
-        glTexCoord2f(0.0f, 1.0f); glVertex3f(-0.16f,  0.10f, 0.0f);
-    glEnd();
-
-    // Radiant Gold Shock Corona
-    glColor4f(1.0f, 0.78f, 0.25f, flicker * 0.45f);
-    glBegin(GL_QUADS);
-        glTexCoord2f(0.0f, 0.0f); glVertex3f(-0.35f, -0.22f, -0.02f);
-        glTexCoord2f(1.0f, 0.0f); glVertex3f( 0.35f, -0.22f, -0.02f);
-        glTexCoord2f(1.0f, 1.0f); glVertex3f( 0.35f,  0.22f, -0.02f);
-        glTexCoord2f(0.0f, 1.0f); glVertex3f(-0.35f,  0.22f, -0.02f);
-    glEnd();
-
-    // Subtle Anamorphic Optical Glare Streak (proportional to nose width)
-    glBegin(GL_QUADS);
-        glColor4f(1.0f, 0.95f, 0.80f, flicker * 0.65f);
-        glTexCoord2f(0.0f, 0.0f); glVertex3f(-0.65f, -0.020f, 0.01f);
-        glTexCoord2f(1.0f, 0.0f); glVertex3f( 0.65f, -0.020f, 0.01f);
-        glTexCoord2f(1.0f, 1.0f); glVertex3f( 0.65f,  0.020f, 0.01f);
-        glTexCoord2f(0.0f, 1.0f); glVertex3f(-0.65f,  0.020f, 0.01f);
-    glEnd();
-
-    glPopMatrix();
-
-    // ========================================================================
-    // 4. CHINE & WING-EDGE SUPERSONIC IONIZATION RIBBONS
-    // ========================================================================
-    // Textured camera-facing quad ribbons peeling off delta chines and wingtips
-    for (int side = -1; side <= 1; side += 2) {
-        float sx = (float)side * 0.38f;
-        for (int ribbon = 0; ribbon < 6; ++ribbon) {
-            float frac = (float)ribbon / 5.0f;
-            float zStart = 0.75f - frac * 0.85f;
-            float zEnd   = zStart - 2.10f;
-            float lineY  = -0.065f - frac * 0.025f;
-            float wave0  = sinf(t * 52.0f + frac * 3.5f) * 0.022f;
-            float wave1  = sinf(t * 52.0f + frac * 3.5f + 2.5f) * 0.045f;
-            float lateralStart = sx + (float)side * frac * 0.38f;
-            float lateralEnd   = lateralStart * 1.55f;
-
-            float vRibbon = frac * 2.0f - t * 26.0f;
-
-            glBegin(GL_QUADS);
-                glColor4f(1.0f, 0.95f, 0.65f, flicker * 0.85f);
-                glTexCoord2f(0.0f, vRibbon);
-                glVertex3f(lateralStart + wave0, lineY - 0.025f, zStart);
-
-                glColor4f(1.0f, 0.95f, 0.65f, flicker * 0.85f);
-                glTexCoord2f(1.0f, vRibbon);
-                glVertex3f(lateralStart + wave0, lineY + 0.025f, zStart);
-
-                glColor4f(0.85f, 0.20f, 0.02f, 0.0f);
-                glTexCoord2f(1.0f, vRibbon + 2.5f);
-                glVertex3f(lateralEnd + wave1, lineY - 0.06f + 0.035f, zEnd);
-
-                glColor4f(0.85f, 0.20f, 0.02f, 0.0f);
-                glTexCoord2f(0.0f, vRibbon + 2.5f);
-                glVertex3f(lateralEnd + wave1, lineY - 0.06f - 0.035f, zEnd);
-            glEnd();
-        }
-    }
 
     if (smokeTexID) {
         glDisable(GL_TEXTURE_2D);
@@ -974,74 +1067,51 @@ static void renderHeatshieldGlow() {
     glEnable(GL_LIGHTING);
 }
 
-static void renderVolumetricPlasmaFlames() {
-    if (s3PlasmaFlames.empty() || !smokeTexID) return;
-
+// ============================================================================
+// 4. SUPERSONIC HORIZONTAL ABLATION SPARK STREAKS (Matching reference image)
+// ============================================================================
+static void renderReentrySparks() {
+    if (s3Sparks.empty()) return;
     glDisable(GL_LIGHTING);
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE); // Pure radiant additive flame
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, smokeTexID);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE); // Pure radiant additive streaks
     glDepthMask(GL_FALSE);
 
-    // Extract billboard right and up from ModelView matrix
-    GLfloat m[16];
-    glGetFloatv(GL_MODELVIEW_MATRIX, m);
-    float rx = m[0], ry = m[4], rz = m[8]; // Camera Right
-    float ux = m[1], uy = m[5], uz = m[9]; // Camera Up
+    glLineWidth(2.2f);
+    glBegin(GL_LINES);
+    for (size_t i = 0; i < s3Sparks.size(); ++i) {
+        const ReentrySpark& s = s3Sparks[i];
+        float norm = s.life / s.maxLife; // 1.0 -> 0.0
+        float alpha = norm * 0.92f;
 
-    for (size_t i = 0; i < s3PlasmaFlames.size(); ++i) {
-        const PlasmaFlame& p = s3PlasmaFlames[i];
-        float normLife = p.life / p.maxLife; // 1.0 (newborn) -> 0.0 (death)
+        // In Shot 1, flight is to the right (+X), so trailing wake is to the LEFT (-X)
+        // Trail extends to the left, behind the spark head
+        float trailLen = std::min(s.len, (s.maxLife - s.life) * 28.0f);
+        float tailX = s.x - trailLen;
 
-        float r, g, b, a;
-        if (normLife > 0.85f) {
-            // White-hot stagnation flame core
-            float sub = (normLife - 0.85f) / 0.15f;
-            r = 1.0f;
-            g = lerpf(0.88f, 0.96f, sub);
-            b = lerpf(0.35f, 0.80f, sub);
-            a = lerpf(0.40f, 0.58f, sub);
-        } else if (normLife > 0.35f) {
-            // Incandescent solar plasma gold & deep atmospheric orange
-            float sub = (normLife - 0.35f) / 0.50f;
-            r = 1.0f;
-            g = lerpf(0.38f, 0.88f, sub);
-            b = lerpf(0.03f, 0.35f, sub);
-            a = lerpf(0.24f, 0.40f, sub);
-        } else {
-            // Cooling trailing crimson wake
-            float sub = normLife / 0.35f;
-            r = lerpf(0.75f, 1.0f, sub);
-            g = lerpf(0.10f, 0.38f, sub);
-            b = 0.02f;
-            a = sub * 0.24f;
-        }
+        // Head (bright white-gold)
+        glColor4f(s.r, s.g, s.b, alpha);
+        glVertex3f(s.x, s.y, s.z);
 
-        glColor4f(r, g, b, a * s3HeatGlow);
-
-        float s = p.size;
-        float cosA = cosf(p.angle) * s;
-        float sinA = sinf(p.angle) * s;
-
-        float dx0 =  rx * cosA - ux * sinA;
-        float dy0 =  ry * cosA - uy * sinA;
-        float dz0 =  rz * cosA - uz * sinA;
-
-        float dx1 =  rx * sinA + ux * cosA;
-        float dy1 =  ry * sinA + uy * cosA;
-        float dz1 =  rz * sinA + uz * cosA;
-
-        glBegin(GL_QUADS);
-            glTexCoord2f(0.0f, 0.0f); glVertex3f(p.x - dx0 - dx1, p.y - dy0 - dy1, p.z - dz0 - dz1);
-            glTexCoord2f(1.0f, 0.0f); glVertex3f(p.x + dx0 - dx1, p.y + dy0 - dy1, p.z + dz0 - dz1);
-            glTexCoord2f(1.0f, 1.0f); glVertex3f(p.x + dx0 + dx1, p.y + dy0 + dy1, p.z + dz0 + dz1);
-            glTexCoord2f(0.0f, 1.0f); glVertex3f(p.x - dx0 + dx1, p.y - dy0 + dy1, p.z - dz0 + dz1);
-        glEnd();
+        // Tail (trailing streak fading into orange-crimson at alpha 0)
+        glColor4f(1.0f, s.g * 0.35f, 0.02f, 0.0f);
+        glVertex3f(tailX, s.y, s.z);
     }
+    glEnd();
+    glLineWidth(1.0f);
+
+    glPointSize(3.5f);
+    glBegin(GL_POINTS);
+    for (size_t i = 0; i < s3Sparks.size(); ++i) {
+        const ReentrySpark& s = s3Sparks[i];
+        float norm = s.life / s.maxLife;
+        glColor4f(1.0f, 0.98f, 0.85f, norm * 0.95f);
+        glVertex3f(s.x, s.y, s.z);
+    }
+    glEnd();
+    glPointSize(1.0f);
 
     glDepthMask(GL_TRUE);
-    glDisable(GL_TEXTURE_2D);
     glDisable(GL_BLEND);
     glEnable(GL_LIGHTING);
 }
@@ -1142,7 +1212,7 @@ void renderScene3() {
     // 4. Parachute Canopy & Suspension Lines
     renderParachuteWithLines();
 
-    // 5. Star Sparrow / Ranger Lander Craft with Heatshield Thermal Glow
+    // 5. Star Sparrow / Ranger Lander Craft with Silky Smooth Plasma Sheath
     glPushMatrix();
     glTranslatef(s3ShipX, s3ShipY, s3ShipZ);
     glScalef(s3ShipScale, s3ShipScale, s3ShipScale);
@@ -1153,15 +1223,17 @@ void renderScene3() {
     float flightPitch = -atan2f(s3ShipDirY, horizLen) * 180.0f / (float)M_PI;
 
     glRotatef(yaw, 0.0f, 1.0f, 0.0f);
-    // Positive pitch angles the nose DOWNWARD into the descent
     glRotatef(flightPitch + s3ShipPitchExtra, 1.0f, 0.0f, 0.0f);
     glRotatef(s3ShipRoll, 0.0f, 0.0f, 1.0f);
 
-    // Key & Fill lighting for crisp ship illumination
+    // Pass A: Render Inside / Back Wall of the silky plasma envelope
+    renderSmoothPlasmaSheath(true);
+
+    // Pass B: Key & Fill lighting for crisp, brilliant Ranger spacecraft illumination
     glEnable(GL_LIGHT2);
-    GLfloat shipKeyPos[]  = { 0.0f, 4.0f, 2.0f, 0.0f };
+    GLfloat shipKeyPos[]  = { 1.5f, 3.5f, 2.0f, 0.0f };
     GLfloat shipKeyDiff[] = { 2.4f, 2.3f, 2.2f, 1.0f };
-    GLfloat shipKeyAmb[]  = { 0.9f, 0.9f, 0.95f, 1.0f };
+    GLfloat shipKeyAmb[]  = { 0.95f, 0.95f, 1.0f, 1.0f };
     glLightfv(GL_LIGHT2, GL_POSITION, shipKeyPos);
     glLightfv(GL_LIGHT2, GL_DIFFUSE, shipKeyDiff);
     glLightfv(GL_LIGHT2, GL_AMBIENT, shipKeyAmb);
@@ -1169,9 +1241,9 @@ void renderScene3() {
     // Dynamic underbelly heatshield incandescence illumination
     if (s3HeatGlow > 0.05f) {
         glEnable(GL_LIGHT3);
-        GLfloat heatPos[]  = { 0.0f, -1.2f, 0.3f, 1.0f }; // Directly below the forward heatshield tiles
-        GLfloat heatDiff[] = { 3.8f * s3HeatGlow, 1.8f * s3HeatGlow, 0.25f * s3HeatGlow, 1.0f };
-        GLfloat heatAmb[]  = { 0.50f * s3HeatGlow, 0.20f * s3HeatGlow, 0.02f * s3HeatGlow, 1.0f };
+        GLfloat heatPos[]  = { 0.0f, -1.0f, 0.35f, 1.0f };
+        GLfloat heatDiff[] = { 3.4f * s3HeatGlow, 1.9f * s3HeatGlow, 0.35f * s3HeatGlow, 1.0f };
+        GLfloat heatAmb[]  = { 0.65f * s3HeatGlow, 0.30f * s3HeatGlow, 0.05f * s3HeatGlow, 1.0f };
         glLightfv(GL_LIGHT3, GL_POSITION, heatPos);
         glLightfv(GL_LIGHT3, GL_DIFFUSE, heatDiff);
         glLightfv(GL_LIGHT3, GL_AMBIENT, heatAmb);
@@ -1179,17 +1251,21 @@ void renderScene3() {
         glDisable(GL_LIGHT3);
     }
 
+    // Ranger spacecraft model (clearly visible inside the cocoon)
     renderRangerMesh();
 
-    // Aerodynamic bow-shock & underbelly thermal glow
-    renderHeatshieldGlow();
+    // Pass C: Ceramic tile underbelly blackbody direct emission
+    renderHeatshieldTiles();
+
+    // Pass D: Render Outside / Front Wall of the silky plasma envelope with feathered boundary
+    renderSmoothPlasmaSheath(false);
 
     glDisable(GL_LIGHT2);
     glDisable(GL_LIGHT3);
     glPopMatrix();
 
-    // 6. Volumetric Supersonic Plasma Fire Sheath & Trail (in world space)
-    renderVolumetricPlasmaFlames();
+    // 6. Supersonic horizontal ablation sparks (in world space)
+    renderReentrySparks();
 
     // 7. Volumetric Touchdown Dust Clouds
     renderTouchdownDustParticles();
