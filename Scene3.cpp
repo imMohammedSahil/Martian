@@ -732,7 +732,7 @@ static void renderAtmosphericSkybox() {
 }
 
 static void renderAtmosphericVaporStreaks() {
-    if (seqTime < 44.0f || seqTime > 53.5f || s3Vapor.empty() || !smokeTexID) return;
+    if (seqTime < 46.0f || seqTime > 53.5f || s3Vapor.empty() || !smokeTexID) return;
 
     glDisable(GL_LIGHTING);
     glEnable(GL_BLEND);
@@ -740,6 +740,9 @@ static void renderAtmosphericVaporStreaks() {
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, smokeTexID);
     glDepthMask(GL_FALSE);
+
+    // Fade clouds in smoothly with atmospheric entry
+    float cloudFade = clampf((seqTime - 46.0f) / 1.5f, 0.0f, 1.0f);
 
     // Billowing Martian high-altitude wisps & dust vapor strands (warm atmospheric rust/salmon)
     for (size_t i = 0; i < s3Vapor.size(); ++i) {
@@ -749,7 +752,7 @@ static void renderAtmosphericVaporStreaks() {
         float cr = lerpf(0.68f, 0.82f, tint);
         float cg = lerpf(0.32f, 0.44f, tint);
         float cb = lerpf(0.18f, 0.24f, tint);
-        float ca = v.alpha * 0.32f;
+        float ca = v.alpha * 0.32f * cloudFade;
 
         glColor4f(cr, cg, cb, ca);
 
