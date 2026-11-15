@@ -23,8 +23,23 @@ struct TerrainVertex {
 };
 
 static GLuint craterDisplayList = 0;
+static GLuint craterTexID = 0;
 static bool   craterLoaded = false;
 static bool   craterLoadFailed = false;
+
+static GLuint cloudTexID = 0;
+
+// Procedural 3D Volumetric Cloud Deck
+struct VolumetricCloud {
+    float x, y, z;
+    float speed;
+    float scale;
+    float rot;
+    float rotSpeed;
+    float alpha;
+    float tint;
+};
+static std::vector<VolumetricCloud> s3VolumetricClouds;
 
 static GLuint parachuteDisplayList = 0;
 static GLuint parachuteTexID = 0;
@@ -151,19 +166,27 @@ static void loadGaleCraterMesh() {
         return;
     }
 
+    if (!craterTexID) {
+        craterTexID = loadTextureHelper("mars_surface_4k.jpg", true);
+        if (!craterTexID) craterTexID = loadTextureHelper("mars_surface.jpg", true);
+    }
+
     craterDisplayList = glGenLists(1);
     glNewList(craterDisplayList, GL_COMPILE);
 
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_NORMAL_ARRAY);
     glEnableClientState(GL_COLOR_ARRAY);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
     glVertexPointer(3, GL_FLOAT, sizeof(TerrainVertex), &verts[0].x);
     glNormalPointer(GL_FLOAT, sizeof(TerrainVertex), &verts[0].nx);
     glColorPointer(3, GL_FLOAT, sizeof(TerrainVertex), &verts[0].r);
+    glTexCoordPointer(2, GL_FLOAT, sizeof(TerrainVertex), &verts[0].u);
 
     glDrawArrays(GL_TRIANGLES, 0, (GLsizei)numVerts);
 
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
     glDisableClientState(GL_COLOR_ARRAY);
     glDisableClientState(GL_NORMAL_ARRAY);
     glDisableClientState(GL_VERTEX_ARRAY);
@@ -253,6 +276,9 @@ void initScene3() {
     loadParachuteMesh();
     if (!smokeTexID) smokeTexID = loadTextureHelper("smoke1.png", false);
     if (!sparkTexID) sparkTexID = loadTextureHelper("spark1.png", false);
+    if (!cloudTexID) cloudTexID = loadTextureHelper("cloud_volume.png", false);
+    if (!cloudTexID) cloudTexID = loadTextureHelper("cloud.png", false);
+    if (!cloudTexID) cloudTexID = smokeTexID;
 
     if (s3Vapor.empty()) {
         for (int i = 0; i < 180; ++i) {
@@ -265,6 +291,22 @@ void initScene3() {
             v.alpha  = randRange(0.25f, 0.65f);
             v.scale  = randRange(1.2f, 3.8f);
             s3Vapor.push_back(v);
+        }
+    }
+
+    if (s3VolumetricClouds.empty()) {
+        for (int i = 0; i < 360; ++i) {
+            VolumetricCloud c;
+            c.x = randRange(-22.0f, 12.0f);
+            c.y = randRange(3.0f, 13.0f);
+            c.z = randRange(-22.0f, 12.0f);
+            c.speed = randRange(24.0f, 44.0f);
+            c.scale = randRange(3.2f, 8.5f);
+            c.rot = randRange(0.0f, 6.28f);
+            c.rotSpeed = randRange(-0.25f, 0.25f);
+            c.alpha = randRange(0.45f, 0.90f);
+            c.tint = randRange(0.0f, 1.0f);
+            s3VolumetricClouds.push_back(c);
         }
     }
 }
@@ -306,6 +348,30 @@ void updateScene3(float dt) {
             s3Sparks.pop_back();
         } else {
             ++i;
+        }
+    }
+
+    // Update 3D Volumetric Cloud Deck streaming past Ranger in Shot 2
+    if (t >= 50.0f && t < 57.0f) {
+        for (size_t i = 0; i < s3VolumetricClouds.size(); ++i) {
+            VolumetricCloud& c = s3VolumetricClouds[i];
+            c.x -= s3ShipDirX * c.speed * dt;
+            c.y -= s3ShipDirY * c.speed * dt;
+            c.z -= s3ShipDirZ * c.speed * dt;
+            c.rot += c.rotSpeed * dt;
+
+            // Recycle ahead along flight dive vector
+            float relX = c.x - s3ShipX;
+            float relY = c.y - s3ShipY;
+            float relZ = c.z - s3ShipZ;
+            float dot = relX * s3ShipDirX + relY * s3ShipDirY + relZ * s3ShipDirZ;
+            if (dot < -16.0f) {
+                float distAhead = randRange(14.0f, 28.0f);
+                c.x = s3ShipX + s3ShipDirX * distAhead + randRange(-16.0f, 16.0f);
+                c.y = randRange(3.0f, 12.0f);
+                c.z = s3ShipZ + s3ShipDirZ * distAhead + randRange(-16.0f, 16.0f);
+                c.scale = randRange(3.2f, 8.5f);
+            }
         }
     }
 
@@ -774,6 +840,94 @@ static void renderAtmosphericVaporStreaks() {
     glEnable(GL_LIGHTING);
 }
 
+
+
+// ============================================================================
+// DENSE 3D VOLUMETRIC CLOUD DECK (Surrounding Ranger in Shot 2 with Breakthrough Reveal)
+// ============================================================================
+static void renderVolumetricCloudDeck() {
+    if (seqTime < 51.5f || seqTime > 56.5f || s3VolumetricClouds.empty()) return;
+
+    GLuint tex = cloudTexID ? cloudTexID : smokeTexID;
+    if (!tex) return;
+
+    glDisable(GL_LIGHTING);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glDepthMask(GL_FALSE);
+
+    // Extract camera right & up vectors from modelview matrix for camera-facing billboarding
+    float mv[16];
+    glGetFloatv(GL_MODELVIEW_MATRIX, mv);
+    float camRightX = mv[0], camRightY = mv[4], camRightZ = mv[8];
+    float camUpX    = mv[1], camUpY    = mv[5], camUpZ    = mv[9];
+
+    // Breakthrough factor: 51.5s - 53.0s is inside dense clouds; 53.0s - 53.8s breaks through
+    float breakthrough = 0.0f;
+    if (seqTime >= 53.0f) {
+        breakthrough = clampf((seqTime - 53.0f) / 0.85f, 0.0f, 1.0f);
+        breakthrough = breakthrough * breakthrough * (3.0f - 2.0f * breakthrough);
+    }
+
+    for (size_t i = 0; i < s3VolumetricClouds.size(); ++i) {
+        const VolumetricCloud& c = s3VolumetricClouds[i];
+
+        // Part clouds underneath the Ranger as it bursts through the cloud floor
+        float floorFade = 1.0f;
+        if (c.y < s3ShipY + 1.2f && breakthrough > 0.0f) {
+            floorFade = (1.0f - breakthrough * 0.95f);
+        }
+        if (floorFade <= 0.02f) continue;
+
+        // Camera proximity fade to prevent near-plane clipping
+        float dx = c.x - s3ShipX;
+        float dy = c.y - s3ShipY;
+        float dz = c.z - s3ShipZ;
+        float distSq = dx * dx + dy * dy + dz * dz;
+        float camFade = clampf((distSq - 1.2f) / 3.0f, 0.0f, 1.0f);
+
+        float a = c.alpha * floorFade * camFade;
+        if (a <= 0.01f) continue;
+
+        // Authentic multi-tier Martian atmospheric lighting
+        float cr = lerpf(0.85f, 0.72f, c.tint);
+        float cg = lerpf(0.48f, 0.32f, c.tint);
+        float cb = lerpf(0.26f, 0.16f, c.tint);
+
+        // Warm amber/gold forward scattering for upper cloud tops
+        if (c.y > 6.0f) {
+            cr = lerpf(cr, 1.0f, 0.28f);
+            cg = lerpf(cg, 0.75f, 0.28f);
+            cb = lerpf(cb, 0.45f, 0.28f);
+        }
+
+        glColor4f(cr, cg, cb, a);
+
+        float cosR = cosf(c.rot) * c.scale;
+        float sinR = sinf(c.rot) * c.scale;
+        float rx = camRightX * cosR + camUpX * sinR;
+        float ry = camRightY * cosR + camUpY * sinR;
+        float rz = camRightZ * cosR + camUpZ * sinR;
+        float ux = -camRightX * sinR + camUpX * cosR;
+        float uy = -camRightY * sinR + camUpY * cosR;
+        float uz = -camRightZ * sinR + camUpZ * cosR;
+
+        glBegin(GL_QUADS);
+            glTexCoord2f(0.0f, 0.0f); glVertex3f(c.x - rx - ux, c.y - ry - uy, c.z - rz - uz);
+            glTexCoord2f(1.0f, 0.0f); glVertex3f(c.x + rx - ux, c.y + ry - uy, c.z + rz - uz);
+            glTexCoord2f(1.0f, 1.0f); glVertex3f(c.x + rx + ux, c.y + ry + uy, c.z + rz + uz);
+            glTexCoord2f(0.0f, 1.0f); glVertex3f(c.x - rx + ux, c.y - ry + uy, c.z - rz + uz);
+        glEnd();
+    }
+
+    glDepthMask(GL_TRUE);
+    glDisable(GL_TEXTURE_2D);
+    glDisable(GL_BLEND);
+    glEnable(GL_LIGHTING);
+}
+
 // ============================================================================
 // 1. SILKY CONTINUOUS AERODYNAMIC PLASMA SHEATH (Super-smooth flow matching reference)
 // ============================================================================
@@ -1104,6 +1258,8 @@ static void renderTouchdownDustParticles() {
     glEnable(GL_LIGHTING);
 }
 
+
+
 static void renderParachuteWithLines() {
     if (!parachuteLoaded || parachuteDisplayList == 0 || s3ChuteDeploy <= 0.01f) return;
 
@@ -1148,19 +1304,61 @@ void renderScene3() {
     // 2. High-Altitude Atmospheric Cloud & Vapor Shreds
     renderAtmosphericVaporStreaks();
 
-    // 3. Official NASA Gale Crater 3D Topography Mesh (revealed in Shot 2 with over-the-shoulder cut at 51.5s)
-    if (seqTime >= 51.5f && craterLoaded && craterDisplayList != 0) {
+    // 3. Official NASA Gale Crater 3D Topography Mesh
+    // Completely shrouded by dense cloud deck initially in Shot 2, then dramatically revealed at 53.0s as Ranger punches through
+    float craterReveal = 1.0f;
+    if (seqTime < 51.5f || seqTime < 53.0f) {
+        craterReveal = 0.0f;
+    } else if (seqTime < 53.85f) {
+        float u = (seqTime - 53.0f) / 0.85f;
+        craterReveal = u * u * (3.0f - 2.0f * u);
+    } else {
+        craterReveal = 1.0f;
+    }
+
+    if (craterLoaded && craterDisplayList != 0 && craterReveal > 0.01f) {
         glPushMatrix();
         glTranslatef(0.0f, -4.5f, 0.0f);
+
+        if (craterTexID) {
+            glEnable(GL_TEXTURE_2D);
+            glBindTexture(GL_TEXTURE_2D, craterTexID);
+            glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+        }
+
+        glEnable(GL_LIGHTING);
+        glEnable(GL_LIGHT0);
+        // Dramatic low-angle Martian sun illuminating ridges, canyons, and dunes
+        GLfloat terrainSunPos[]  = { 18.0f, 22.0f, 12.0f, 0.0f };
+        GLfloat terrainSunDiff[] = { 1.45f * craterReveal, 0.95f * craterReveal, 0.65f * craterReveal, 1.0f };
+        GLfloat terrainSunAmb[]  = { 0.42f * craterReveal, 0.24f * craterReveal, 0.16f * craterReveal, 1.0f };
+        glLightfv(GL_LIGHT0, GL_POSITION, terrainSunPos);
+        glLightfv(GL_LIGHT0, GL_DIFFUSE, terrainSunDiff);
+        glLightfv(GL_LIGHT0, GL_AMBIENT, terrainSunAmb);
 
         glEnable(GL_COLOR_MATERIAL);
         glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
 
-        GLfloat matSpec[] = { 0.15f, 0.12f, 0.10f, 1.0f };
+        GLfloat matSpec[] = { 0.28f, 0.20f, 0.14f, 1.0f };
         glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, matSpec);
-        glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 8.0f);
+        glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 16.0f);
+
+        if (craterReveal < 0.99f) {
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glColor4f(1.0f, 1.0f, 1.0f, craterReveal);
+        } else {
+            glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+        }
 
         glCallList(craterDisplayList);
+
+        if (craterReveal < 0.99f) {
+            glDisable(GL_BLEND);
+        }
+        if (craterTexID) {
+            glDisable(GL_TEXTURE_2D);
+        }
         glDisable(GL_COLOR_MATERIAL);
         glPopMatrix();
     }
@@ -1228,4 +1426,7 @@ void renderScene3() {
 
     // 7. Volumetric Touchdown Dust Clouds
     renderTouchdownDustParticles();
+
+    // 8. Dense 3D Volumetric Cloud Deck (Surrounding Ranger in Shot 2 with Breakthrough Reveal)
+    renderVolumetricCloudDeck();
 }
