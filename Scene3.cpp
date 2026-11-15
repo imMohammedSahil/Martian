@@ -169,36 +169,6 @@ static void loadGaleCraterMesh() {
         return;
     }
 
-    // Flatten circular landing basin around touchdown point (5.6, 9.0)
-    const float landX = 5.6f;
-    const float landZ = 9.0f;
-    for (size_t i = 0; i < verts.size(); ++i) {
-        float dx = verts[i].x - landX;
-        float dz = verts[i].z - landZ;
-        float d = sqrtf(dx * dx + dz * dz);
-        if (d < 4.5f) {
-            verts[i].y = 0.0f;
-            verts[i].nx = 0.0f;
-            verts[i].ny = 1.0f;
-            verts[i].nz = 0.0f;
-        } else if (d < 11.0f) {
-            float w = (d - 4.5f) / 6.5f;
-            float blend = w * w * (3.0f - 2.0f * w);
-            verts[i].y = lerpf(0.0f, verts[i].y, blend);
-            verts[i].nx = lerpf(0.0f, verts[i].nx, blend);
-            verts[i].ny = lerpf(1.0f, verts[i].ny, blend);
-            verts[i].nz = lerpf(0.0f, verts[i].nz, blend);
-            normalize3(verts[i].nx, verts[i].ny, verts[i].nz);
-        }
-
-        // Circular perimeter blend: smoothly taper vertices outside R=22 towards circular horizon skirt
-        float r = sqrtf(verts[i].x * verts[i].x + verts[i].z * verts[i].z);
-        if (r > 22.0f) {
-            float blend = clampf((r - 22.0f) / 6.5f, 0.0f, 1.0f);
-            verts[i].y = lerpf(verts[i].y, -0.10f, blend);
-        }
-    }
-
     if (!craterTexID) {
         craterTexID = loadTextureHelper("mars_surface_4k.jpg", true);
         if (!craterTexID) craterTexID = loadTextureHelper("mars_surface.jpg", true);
@@ -1528,7 +1498,8 @@ void renderScene3() {
 
     if (craterLoaded && craterDisplayList != 0 && craterReveal > 0.01f) {
         glPushMatrix();
-        glTranslatef(0.0f, -2.10f, 0.0f);
+        float terrainY = (seqTime < 60.5f) ? -4.80f : -2.10f;
+        glTranslatef(0.0f, terrainY, 0.0f);
 
         if (craterTexID) {
             glEnable(GL_TEXTURE_2D);
@@ -1538,10 +1509,21 @@ void renderScene3() {
 
         glEnable(GL_LIGHTING);
         glEnable(GL_LIGHT0);
-        // Dramatic low-angle Martian sun illuminating ridges, canyons, and dunes
-        GLfloat terrainSunPos[]  = { 18.0f, 22.0f, 12.0f, 0.0f };
-        GLfloat terrainSunDiff[] = { 1.45f * craterReveal, 0.95f * craterReveal, 0.65f * craterReveal, 1.0f };
-        GLfloat terrainSunAmb[]  = { 0.42f * craterReveal, 0.24f * craterReveal, 0.16f * craterReveal, 1.0f };
+        // Direct sunlight shining from high behind the camera in Shot 2 to eliminate all terrain shadows
+        GLfloat terrainSunPos[4];
+        if (seqTime < 60.5f) {
+            terrainSunPos[0] = -15.0f;
+            terrainSunPos[1] =  45.0f;
+            terrainSunPos[2] = -25.0f;
+            terrainSunPos[3] =   0.0f;
+        } else {
+            terrainSunPos[0] =  18.0f;
+            terrainSunPos[1] =  22.0f;
+            terrainSunPos[2] =  12.0f;
+            terrainSunPos[3] =   0.0f;
+        }
+        GLfloat terrainSunDiff[] = { 1.65f * craterReveal, 1.15f * craterReveal, 0.85f * craterReveal, 1.0f };
+        GLfloat terrainSunAmb[]  = { 0.75f * craterReveal, 0.48f * craterReveal, 0.32f * craterReveal, 1.0f };
         glLightfv(GL_LIGHT0, GL_POSITION, terrainSunPos);
         glLightfv(GL_LIGHT0, GL_DIFFUSE, terrainSunDiff);
         glLightfv(GL_LIGHT0, GL_AMBIENT, terrainSunAmb);
@@ -1563,10 +1545,12 @@ void renderScene3() {
 
         glCallList(craterDisplayList);
 
-        // Circular extended terrain horizon disk to prevent any square mesh cutoffs
-        buildHorizonDisk();
-        if (horizonDiskDisplayList != 0) {
-            glCallList(horizonDiskDisplayList);
+        // Circular extended terrain horizon disk to prevent any square mesh cutoffs during landing
+        if (seqTime >= 60.5f) {
+            buildHorizonDisk();
+            if (horizonDiskDisplayList != 0) {
+                glCallList(horizonDiskDisplayList);
+            }
         }
 
         if (craterReveal < 0.99f) {
