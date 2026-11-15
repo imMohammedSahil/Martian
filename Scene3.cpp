@@ -713,24 +713,31 @@ static void renderAtmosphericVaporStreaks() {
 
     glDisable(GL_LIGHTING);
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE); // Additive luminous vapor
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // Alpha blend prevents additive whiteout
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, smokeTexID);
     glDepthMask(GL_FALSE);
 
-    // Billowing high-speed cloud vapor shreds tearing diagonally past
+    // Billowing Martian high-altitude wisps & dust vapor strands (warm atmospheric rust/salmon)
     for (size_t i = 0; i < s3Vapor.size(); ++i) {
         const VaporStreak& v = s3Vapor[i];
-        glColor4f(0.96f, 0.74f, 0.54f, v.alpha * 0.60f);
+        // Rich Martian atmospheric tones: deep salmon/rust to warm amber dust wisps
+        float tint = (float)(i % 5) / 5.0f;
+        float cr = lerpf(0.68f, 0.82f, tint);
+        float cg = lerpf(0.32f, 0.44f, tint);
+        float cb = lerpf(0.18f, 0.24f, tint);
+        float ca = v.alpha * 0.32f;
+
+        glColor4f(cr, cg, cb, ca);
 
         glPushMatrix();
         glTranslatef(v.x, v.y, v.z);
-        glScalef(v.scale * 3.8f, v.scale * 2.2f, v.length * 1.8f);
+        glScalef(v.scale * 2.8f, v.scale * 1.4f, v.length * 1.5f);
         glBegin(GL_QUADS);
-            glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -0.6f, -1.0f);
-            glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, -0.6f, -1.0f);
-            glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  0.6f,  1.0f);
-            glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  0.6f,  1.0f);
+            glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -0.5f, -1.0f);
+            glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, -0.5f, -1.0f);
+            glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  0.5f,  1.0f);
+            glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  0.5f,  1.0f);
         glEnd();
         glPopMatrix();
     }
