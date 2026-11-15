@@ -496,9 +496,9 @@ void updateScene3(float dt) {
             s3ShipRoll  = lerpf(10.0f, 4.0f, u);
             s3HeatGlow  = lerpf(1.0f, 0.20f, u);
         } else {
-            // Breakaway: Camera stops following; Ranger dives away down into Gale Crater at high speed
+            // Bullet Breakaway: Camera halts; Ranger rockets forward and down at hypersonic bullet speed into Gale Crater
             float dtBreak = t - 60.5f;
-            float plungeDist = dtBreak * 2.80f;
+            float plungeDist = dtBreak * 8.5f + 5.5f * dtBreak * dtBreak;
 
             s3ShipX = -2.0f + s3ShipDirX * plungeDist;
             s3ShipY =  3.2f + s3ShipDirY * plungeDist;
@@ -506,12 +506,12 @@ void updateScene3(float dt) {
 
             s3ShipPitchExtra = 3.5f;
             s3ShipRoll  = 3.5f;
-            s3HeatGlow  = std::max(0.0f, 0.20f - dtBreak * 0.08f);
+            s3HeatGlow  = std::max(0.0f, 0.20f - dtBreak * 0.12f);
         }
         s3ShipScale = 0.50f;
 
         // Residual sparks fading out
-        if (t < 61.2f) {
+        if (t < 62.4f) {
             for (int f = 0; f < 2; ++f) {
                 ReentrySpark sp;
                 sp.x = s3ShipX + randRange(-0.3f, 0.3f);
