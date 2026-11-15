@@ -933,22 +933,7 @@ static void renderDetachedShockArc() {
     float flicker = s3HeatGlow * (0.94f + 0.06f * sinf(t * 85.0f));
     if (t < 46.5f) flicker *= 1.30f; // Boost shock brilliance against space black
 
-    // Bow shock arc & oblique shock wave filaments (exact previous side-profile heatshield)
-    glLineWidth(2.2f);
-    glBegin(GL_LINE_STRIP);
-    for (int s = -28; s <= 28; ++s) {
-        float phi = (float)s / 28.0f * 1.52f;
-        float sinP = sinf(phi);
-        float cosP = cosf(phi);
-        float x = -0.06f + sinP * 0.32f;
-        float y = -0.095f - (1.0f - cosP) * 0.22f;
-        float z = 1.05f - (1.0f - cosP) * 0.48f;
-        float edgeFade = 1.0f - powf(fabsf((float)s / 28.0f), 1.6f);
-        glColor4f(1.0f, 0.95f, 0.78f, flicker * 0.85f * edgeFade);
-        glVertex3f(x, y, z);
-    }
-    glEnd();
-
+    // Oblique shock wave filaments
     glLineWidth(1.6f);
     glBegin(GL_LINES);
     for (int side = -1; side <= 1; side += 2) {
