@@ -543,21 +543,21 @@ static float evaluateDuneHeight(float x, float z) {
     return baseH + (r1 + r2) * blend;
 }
 
-static float computeDuneShadow(float x, float y, float z, float sunDx, float sunDy, float sunDz) {
-    float shadow = 1.0f;
-    float rayDist = 0.5f;
-    for (int step = 0; step < 28; ++step) {
-        float rx = x + sunDx * rayDist;
-        float rz = z + sunDz * rayDist;
-        float ry = y + sunDy * rayDist;
-        float h = evaluateMacroDuneHeight(rx, rz);
-        float diff = h - ry;
-        float s = clampf(0.5f - diff * 0.35f, 0.0f, 1.0f);
-        if (s < shadow) shadow = s;
-        if (shadow <= 0.0f) { shadow = 0.0f; break; }
-        rayDist += 0.8f + step * 0.04f;
+static inline float evaluateFastDuneHeight(float x, float z) {
+    if (z < 5.25f) return -0.74f;
+    float u1 = x * 0.026f + z * 0.016f;
+    float s1 = sinf(u1);
+    float d1 = s1 * 5.4f + (s1 * s1 * s1) * 1.8f;
+    float u2 = x * 0.052f - z * 0.028f;
+    float d2 = sinf(u2 + sinf(u1 * 1.4f) * 0.45f) * 2.6f;
+    float distDunes = 0.0f;
+    if (z > 60.0f) {
+        float fz = (z - 60.0f) / 160.0f;
+        distDunes = (sinf(x * 0.014f + 0.6f) * 14.0f + cosf(z * 0.010f) * 10.0f + 18.0f) * fz;
     }
-    return shadow * shadow * (3.0f - 2.0f * shadow);
+    float h = d1 + d2 + distDunes - 2.0f;
+    float t = clampf((z - 5.25f) / 9.5f, 0.0f, 1.0f);
+    return -0.74f * (1.0f - t * t * (3.0f - 2.0f * t)) + h * (t * t * (3.0f - 2.0f * t));
 }
 
 static void buildDuneMesh() {
@@ -581,8 +581,8 @@ static void buildDuneMesh() {
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, matSpec);
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 22.0f);
 
-    const int GRID_X = 360;
-    const int GRID_Z = 320;
+    const int GRID_X = 240;
+    const int GRID_Z = 220;
     const float MIN_X = -180.0f, MAX_X = 180.0f;
     const float MIN_Z = 5.25f,   MAX_Z = 320.0f; // STRICTLY starts at ramp tip: ZERO sand inside ship!
     const float DX = (MAX_X - MIN_X) / (float)GRID_X;
@@ -593,6 +593,55 @@ static void buildDuneMesh() {
     const float sunDy = 0.2466f;
     const float sunDz = 0.9687f;
 
+    // Precompute height grid once for instant O(1) mesh generation
+    std::vector<float> H((GRID_Z + 1) * (GRID_X + 1));
+    for (int iz = 0; iz <= GRID_Z; ++iz) {
+        float z = MIN_Z + iz * DZ;
+        for (int ix = 0; ix <= GRID_X; ++ix) {
+            float x = MIN_X + ix * DX;
+            H[iz * (GRID_X + 1) + ix] = evaluateDuneHeight(x, z);
+        }
+    }
+
+    // Precompute soft shadow grid
+    std::vector<float> S((GRID_Z + 1) * (GRID_X + 1), 1.0f);
+    for (int iz = 0; iz <= GRID_Z; ++iz) {
+        float z = MIN_Z + iz * DZ;
+        for (int ix = 0; ix <= GRID_X; ++ix) {
+            float x = MIN_X + ix * DX;
+            float y = H[iz * (GRID_X + 1) + ix];
+            float shadow = 1.0f;
+            float rayDist = 0.8f;
+            for (int step = 0; step < 10; ++step) {
+                float rx = x + sunDx * rayDist;
+                float rz = z + sunDz * rayDist;
+                float ry = y + sunDy * rayDist;
+                float h = evaluateFastDuneHeight(rx, rz);
+                float diff = h - ry;
+                float s = clampf(0.5f - diff * 0.40f, 0.0f, 1.0f);
+                if (s < shadow) shadow = s;
+                if (shadow <= 0.0f) { shadow = 0.0f; break; }
+                rayDist += 1.5f;
+            }
+            S[iz * (GRID_X + 1) + ix] = shadow * shadow * (3.0f - 2.0f * shadow);
+        }
+    }
+
+    auto getH = [&](int ix, int iz) -> float {
+        if (ix < 0) ix = 0;
+        else if (ix > GRID_X) ix = GRID_X;
+        if (iz < 0) iz = 0;
+        else if (iz > GRID_Z) iz = GRID_Z;
+        return H[iz * (GRID_X + 1) + ix];
+    };
+    auto getS = [&](int ix, int iz) -> float {
+        if (ix < 0) ix = 0;
+        else if (ix > GRID_X) ix = GRID_X;
+        if (iz < 0) iz = 0;
+        else if (iz > GRID_Z) iz = GRID_Z;
+        return S[iz * (GRID_X + 1) + ix];
+    };
+
     for (int iz = 0; iz < GRID_Z; ++iz) {
         float z0 = MIN_Z + iz * DZ;
         float z1 = z0 + DZ;
@@ -601,33 +650,22 @@ static void buildDuneMesh() {
         for (int ix = 0; ix <= GRID_X; ++ix) {
             float x = MIN_X + ix * DX;
 
-            float y0 = evaluateDuneHeight(x, z0);
-            float y1 = evaluateDuneHeight(x, z1);
+            float y0 = getH(ix, iz);
+            float y1 = getH(ix, iz + 1);
 
-            // Analytic central difference normal at (x, z0)
-            float eps = 0.22f;
-            float hL0 = evaluateDuneHeight(x - eps, z0);
-            float hR0 = evaluateDuneHeight(x + eps, z0);
-            float hD0 = evaluateDuneHeight(x, z0 - eps);
-            float hU0 = evaluateDuneHeight(x, z0 + eps);
-            float nx0 = (hL0 - hR0) / (2.0f * eps);
-            float nz0 = (hD0 - hU0) / (2.0f * eps);
+            // Fast normal from precomputed grid
+            float nx0 = (getH(ix - 1, iz) - getH(ix + 1, iz)) / (2.0f * DX);
+            float nz0 = (getH(ix, iz - 1) - getH(ix, iz + 1)) / (2.0f * DZ);
             float ny0 = 1.0f;
             normalize3(nx0, ny0, nz0);
 
-            // Analytic central difference normal at (x, z1)
-            float hL1 = evaluateDuneHeight(x - eps, z1);
-            float hR1 = evaluateDuneHeight(x + eps, z1);
-            float hD1 = evaluateDuneHeight(x, z1 - eps);
-            float hU1 = evaluateDuneHeight(x, z1 + eps);
-            float nx1 = (hL1 - hR1) / (2.0f * eps);
-            float nz1 = (hD1 - hU1) / (2.0f * eps);
+            float nx1 = (getH(ix - 1, iz + 1) - getH(ix + 1, iz + 1)) / (2.0f * DX);
+            float nz1 = (getH(ix, iz) - getH(ix, iz + 2)) / (2.0f * DZ);
             float ny1 = 1.0f;
             normalize3(nx1, ny1, nz1);
 
-            // Sun illumination & ray-marched cast shadows
             float sunDot0 = clampf(nx0 * sunDx + ny0 * sunDy + nz0 * sunDz, 0.0f, 1.0f);
-            float shadow0 = computeDuneShadow(x, y0 + 0.06f, z0, sunDx, sunDy, sunDz);
+            float shadow0 = getS(ix, iz);
             float light0 = sunDot0 * (0.18f + 0.82f * shadow0);
 
             float r0 = lerpf(0.52f, 1.28f, light0);
@@ -635,7 +673,7 @@ static void buildDuneMesh() {
             float b0 = lerpf(0.15f, 0.52f, light0);
 
             float sunDot1 = clampf(nx1 * sunDx + ny1 * sunDy + nz1 * sunDz, 0.0f, 1.0f);
-            float shadow1 = computeDuneShadow(x, y1 + 0.06f, z1, sunDx, sunDy, sunDz);
+            float shadow1 = getS(ix, iz + 1);
             float light1 = sunDot1 * (0.18f + 0.82f * shadow1);
 
             float r1 = lerpf(0.52f, 1.28f, light1);
