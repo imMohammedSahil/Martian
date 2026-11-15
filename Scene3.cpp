@@ -800,30 +800,54 @@ static void renderSmoothPlasmaSheath(bool backPass) {
     const float zApex = 1.02f; // Coincident with the Ranger nose apex (Z = 1.00)
     const float zTail = -4.50f;
 
-    auto getCrossSection = [](float z, float& w, float& h, float& x, float& y) {
-        if (z > 0.85f) {
-            // Sleek, razor-sharp parabolic bow shock hugging nose apex (tight & narrow)
-            float frac = (1.02f - z) / 0.17f;
-            frac = clampf(frac, 0.0f, 1.0f);
-            float taper = powf(frac, 0.85f);
-            w = 0.08f * taper;
-            h = 0.06f * taper;
-            x = -0.06f * (1.0f - frac);
-            y = -0.095f + 0.008f * frac;
-        } else if (z > -1.15f) {
-            // Aerodynamic lifting body envelope hugging the chine edges closely
-            float frac = (0.85f - z) / 2.00f;
-            w = 0.08f + 0.44f * sinf(frac * 1.57079f);
-            h = 0.06f + 0.20f * sinf(frac * 1.57079f);
-            x = 0.0f;
-            y = -0.087f - 0.015f * frac;
+    bool isShot2 = (seqTime >= 51.5f);
+    auto getCrossSection = [isShot2](float z, float& w, float& h, float& x, float& y) {
+        if (isShot2) {
+            // SHOT 2 (Over-the-shoulder chase): Sleek, narrow aerodynamic Mach envelope hugging ship
+            if (z > 0.85f) {
+                float frac = (1.02f - z) / 0.17f;
+                frac = clampf(frac, 0.0f, 1.0f);
+                float taper = powf(frac, 0.85f);
+                w = 0.08f * taper;
+                h = 0.06f * taper;
+                x = -0.06f * (1.0f - frac);
+                y = -0.095f + 0.008f * frac;
+            } else if (z > -1.15f) {
+                float frac = (0.85f - z) / 2.00f;
+                w = 0.08f + 0.44f * sinf(frac * 1.57079f);
+                h = 0.06f + 0.20f * sinf(frac * 1.57079f);
+                x = 0.0f;
+                y = -0.087f - 0.015f * frac;
+            } else {
+                float frac = clampf((-1.15f - z) / 3.35f, 0.0f, 1.0f);
+                w = 0.52f - 0.16f * frac;
+                h = 0.26f - 0.10f * frac;
+                x = 0.0f;
+                y = -0.102f + 0.015f * frac;
+            }
         } else {
-            // Trailing aerodynamic wake stream
-            float frac = clampf((-1.15f - z) / 3.35f, 0.0f, 1.0f);
-            w = 0.52f - 0.16f * frac;
-            h = 0.26f - 0.10f * frac;
-            x = 0.0f;
-            y = -0.102f + 0.015f * frac;
+            // SHOT 1 (Side-profile hero): Grand, sweeping plasma reentry envelope (exact previous visuals)
+            if (z > 0.85f) {
+                float frac = (1.02f - z) / 0.17f;
+                frac = clampf(frac, 0.0f, 1.0f);
+                float taper = powf(frac, 0.65f);
+                w = 0.20f * taper;
+                h = 0.15f * taper;
+                x = -0.06f * (1.0f - frac);
+                y = -0.095f + 0.010f * frac;
+            } else if (z > -1.15f) {
+                float frac = (0.85f - z) / 2.00f;
+                w = 0.20f + 1.17f * sinf(frac * 1.57079f);
+                h = 0.15f + 0.49f * sinf(frac * 1.57079f);
+                x = 0.0f;
+                y = -0.085f - 0.020f * frac;
+            } else {
+                float frac = clampf((-1.15f - z) / 3.35f, 0.0f, 1.0f);
+                w = 1.37f - 0.38f * frac;
+                h = 0.64f - 0.24f * frac;
+                x = 0.0f;
+                y = -0.105f + 0.02f * frac;
+            }
         }
     };
 
@@ -933,67 +957,103 @@ static void renderDetachedShockArc() {
     float flicker = s3HeatGlow * (0.94f + 0.06f * sinf(t * 85.0f));
     if (t < 46.5f) flicker *= 1.30f; // Boost shock brilliance against space black
 
-    // A. Razor-sharp Oblique Shock Discontinuity Cone (Mach angle oblique boundary hugging narrow nose)
-    glLineWidth(2.0f);
-    glBegin(GL_LINE_STRIP);
-    for (int s = -28; s <= 28; ++s) {
-        float phi = (float)s / 28.0f * 1.52f;
-        float sinP = sinf(phi);
-        float cosP = cosf(phi);
-        float x = -0.06f + sinP * 0.12f;
-        float y = -0.095f - (1.0f - cosP) * 0.10f;
-        float z = 1.03f - (1.0f - cosP) * 0.30f;
-        float edgeFade = 1.0f - powf(fabsf((float)s / 28.0f), 1.6f);
-        glColor4f(1.0f, 0.95f, 0.78f, flicker * 0.85f * edgeFade);
-        glVertex3f(x, y, z);
-    }
-    glEnd();
+    bool isShot2 = (seqTime >= 51.5f);
+    if (!isShot2) {
+        // Shot 1: Exact previous bow shock & oblique shock wave filaments (from commit 349eb07)
+        glLineWidth(2.2f);
+        glBegin(GL_LINE_STRIP);
+        for (int s = -28; s <= 28; ++s) {
+            float phi = (float)s / 28.0f * 1.52f;
+            float sinP = sinf(phi);
+            float cosP = cosf(phi);
+            float x = -0.06f + sinP * 0.32f;
+            float y = -0.095f - (1.0f - cosP) * 0.22f;
+            float z = 1.05f - (1.0f - cosP) * 0.48f;
+            float edgeFade = 1.0f - powf(fabsf((float)s / 28.0f), 1.6f);
+            glColor4f(1.0f, 0.95f, 0.78f, flicker * 0.85f * edgeFade);
+            glVertex3f(x, y, z);
+        }
+        glEnd();
 
-    // B. Soft-gradient shock layer sheets flaring back along both flanks (gradient lines of flow hugging craft)
-    for (int side = -1; side <= 1; side += 2) {
-        // Multi-tier gradient flow striations (8 ribbons forming smooth flow gradient lines)
-        for (int ribbon = 0; ribbon < 8; ++ribbon) {
-            float frac0 = (float)ribbon / 8.0f;
-            float frac1 = (float)(ribbon + 1) / 8.0f;
+        glLineWidth(1.6f);
+        glBegin(GL_LINES);
+        for (int side = -1; side <= 1; side += 2) {
+            for (int ribbon = 0; ribbon < 3; ++ribbon) {
+                float frac = (float)ribbon / 2.0f;
+                float zStart = 0.98f - frac * 0.25f;
+                float zEnd   = zStart - 3.20f;
+                float xStart = -0.06f + (float)side * (0.16f + frac * 0.18f);
+                float xEnd   = xStart + (float)side * 1.35f;
+                float yStart = -0.095f - frac * 0.02f;
+                float yEnd   = yStart - 0.05f;
 
-            float zStart0 = 1.01f - frac0 * 0.45f;
-            float zStart1 = 1.01f - frac1 * 0.45f;
-            float zEnd0   = zStart0 - 3.20f;
-            float zEnd1   = zStart1 - 3.20f;
+                float shimmer = sinf(t * 70.0f + (float)side * 2.0f + (float)ribbon * 3.0f) * 0.015f;
+                glColor4f(1.0f, 0.88f, 0.45f, flicker * 0.70f * (1.0f - frac * 0.3f));
+                glVertex3f(xStart, yStart, zStart);
 
-            // Tight lateral envelope matching the narrow supersonic mach cone
-            float xStart0 = -0.06f + (float)side * (0.05f + frac0 * 0.18f);
-            float xStart1 = -0.06f + (float)side * (0.05f + frac1 * 0.18f);
-            float xEnd0   = xStart0 + (float)side * (0.24f + frac0 * 0.18f);
-            float xEnd1   = xStart1 + (float)side * (0.24f + frac1 * 0.18f);
+                glColor4f(0.85f, 0.22f, 0.02f, 0.0f);
+                glVertex3f(xEnd + shimmer, yEnd, zEnd);
+            }
+        }
+        glEnd();
+        glLineWidth(1.0f);
+    } else {
+        // Shot 2: Narrow nose Mach cone with gradient density flow lines
+        glLineWidth(2.0f);
+        glBegin(GL_LINE_STRIP);
+        for (int s = -28; s <= 28; ++s) {
+            float phi = (float)s / 28.0f * 1.52f;
+            float sinP = sinf(phi);
+            float cosP = cosf(phi);
+            float x = -0.06f + sinP * 0.12f;
+            float y = -0.095f - (1.0f - cosP) * 0.10f;
+            float z = 1.03f - (1.0f - cosP) * 0.30f;
+            float edgeFade = 1.0f - powf(fabsf((float)s / 28.0f), 1.6f);
+            glColor4f(1.0f, 0.95f, 0.78f, flicker * 0.85f * edgeFade);
+            glVertex3f(x, y, z);
+        }
+        glEnd();
 
-            float yStart0 = -0.095f + frac0 * 0.04f;
-            float yStart1 = -0.095f + frac1 * 0.04f;
-            float yEnd0   = yStart0 - 0.05f;
-            float yEnd1   = yStart1 - 0.05f;
+        for (int side = -1; side <= 1; side += 2) {
+            for (int ribbon = 0; ribbon < 8; ++ribbon) {
+                float frac0 = (float)ribbon / 8.0f;
+                float frac1 = (float)(ribbon + 1) / 8.0f;
 
-            float shimmer = sinf(t * 55.0f + (float)side * 2.0f + (float)ribbon * 1.8f) * 0.006f;
-            // Density gradient modulation to create layered flow lines
-            float lineMod0 = 0.75f + 0.25f * sinf(frac0 * 18.84f);
-            float lineMod1 = 0.75f + 0.25f * sinf(frac1 * 18.84f);
-            float a0 = flicker * lerpf(0.50f, 0.10f, frac0) * lineMod0;
-            float a1 = flicker * lerpf(0.50f, 0.10f, frac1) * lineMod1;
+                float zStart0 = 1.01f - frac0 * 0.45f;
+                float zStart1 = 1.01f - frac1 * 0.45f;
+                float zEnd0   = zStart0 - 3.20f;
+                float zEnd1   = zStart1 - 3.20f;
 
-            glBegin(GL_TRIANGLE_STRIP);
-                // Inner / leading edge (warm golden-white ionization)
-                glColor4f(1.0f, lerpf(0.95f, 0.82f, frac0), lerpf(0.70f, 0.30f, frac0), a0);
-                glVertex3f(xStart0, yStart0, zStart0);
+                float xStart0 = -0.06f + (float)side * (0.05f + frac0 * 0.18f);
+                float xStart1 = -0.06f + (float)side * (0.05f + frac1 * 0.18f);
+                float xEnd0   = xStart0 + (float)side * (0.24f + frac0 * 0.18f);
+                float xEnd1   = xStart1 + (float)side * (0.24f + frac1 * 0.18f);
 
-                glColor4f(1.0f, lerpf(0.95f, 0.82f, frac1), lerpf(0.70f, 0.30f, frac1), a1);
-                glVertex3f(xStart1, yStart1, zStart1);
+                float yStart0 = -0.095f + frac0 * 0.04f;
+                float yStart1 = -0.095f + frac1 * 0.04f;
+                float yEnd0   = yStart0 - 0.05f;
+                float yEnd1   = yStart1 - 0.05f;
 
-                // Outer trailing boundary (smooth fading slipstream into void/atmosphere)
-                glColor4f(0.90f, 0.35f, 0.04f, 0.0f);
-                glVertex3f(xEnd0 + shimmer, yEnd0, zEnd0);
+                float shimmer = sinf(t * 55.0f + (float)side * 2.0f + (float)ribbon * 1.8f) * 0.006f;
+                float lineMod0 = 0.75f + 0.25f * sinf(frac0 * 18.84f);
+                float lineMod1 = 0.75f + 0.25f * sinf(frac1 * 18.84f);
+                float a0 = flicker * lerpf(0.50f, 0.10f, frac0) * lineMod0;
+                float a1 = flicker * lerpf(0.50f, 0.10f, frac1) * lineMod1;
 
-                glColor4f(0.90f, 0.35f, 0.04f, 0.0f);
-                glVertex3f(xEnd1 + shimmer, yEnd1, zEnd1);
-            glEnd();
+                glBegin(GL_TRIANGLE_STRIP);
+                    glColor4f(1.0f, lerpf(0.95f, 0.82f, frac0), lerpf(0.70f, 0.30f, frac0), a0);
+                    glVertex3f(xStart0, yStart0, zStart0);
+
+                    glColor4f(1.0f, lerpf(0.95f, 0.82f, frac1), lerpf(0.70f, 0.30f, frac1), a1);
+                    glVertex3f(xStart1, yStart1, zStart1);
+
+                    glColor4f(0.90f, 0.35f, 0.04f, 0.0f);
+                    glVertex3f(xEnd0 + shimmer, yEnd0, zEnd0);
+
+                    glColor4f(0.90f, 0.35f, 0.04f, 0.0f);
+                    glVertex3f(xEnd1 + shimmer, yEnd1, zEnd1);
+                glEnd();
+            }
         }
     }
 
