@@ -28,6 +28,13 @@ static void loadTitleTexture() {
     }
     if (!data) return;
 
+    // Ensure typography RGB is pure brilliant white so alpha drives the cinematic glyph silhouette
+    for (int i = 0; i < w * h; ++i) {
+        data[i * 4 + 0] = 255;
+        data[i * 4 + 1] = 255;
+        data[i * 4 + 2] = 255;
+    }
+
     glGenTextures(1, &titleTextureID);
     glBindTexture(GL_TEXTURE_2D, titleTextureID);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -176,84 +183,11 @@ void renderCinemaPost(float flareX, float flareY, bool flareInFront, float flare
         renderAnamorphicFlare2D(flareX, flareY, flareVisibility);
     }
 
-    // 2. 2.39:1 Widescreen Cinema Letterbox Bars (Top & Bottom)
+    // 2. 2.39:1 Cinema Letterbox Bar Dimensions
     float barH = (windowHeight - ((float)windowWidth / 2.39f)) * 0.5f;
     if (barH < windowHeight * 0.135f) barH = windowHeight * 0.135f;
 
-    glDisable(GL_BLEND);
-    glColor3f(0.0f, 0.0f, 0.0f);
-
-    // Bottom Letterbox Bar
-    glRectf(0.0f, 0.0f, (float)windowWidth, barH);
-
-    // Top Letterbox Bar
-    glRectf(0.0f, (float)windowHeight - barH, (float)windowWidth, (float)windowHeight);
-
-    // 3. Storyboard Title Card: "M A R T I A N" (25.0s - 34.5s and finale 72.0s - 73.0s)
-    float titleAlpha = 0.0f;
-    if (seqTime >= 25.0f && seqTime <= 34.5f) {
-        titleAlpha = smoothstep(25.0f, 26.2f, seqTime) * (1.0f - smoothstep(33.0f, 34.5f, seqTime));
-    } else if (seqTime >= 72.0f) {
-        titleAlpha = smoothstep(72.0f, 72.6f, seqTime);
-    }
-    if (titleAlpha > 0.01f) {
-            loadTitleTexture();
-            if (hasTitleTexture && titleTextureID) {
-                // High-resolution geometric sans-serif title (Century Gothic Bold - 78% screen width)
-                glEnable(GL_BLEND);
-                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                glEnable(GL_TEXTURE_2D);
-                glBindTexture(GL_TEXTURE_2D, titleTextureID);
-
-                // Colossal, bold cinematic proportion (covers 92% of screen width)
-                float titleW = (float)windowWidth * 0.92f;
-                float titleH = titleW * (640.0f / 2560.0f);
-                float cx = (float)windowWidth * 0.5f;
-                float cy = (float)windowHeight * 0.5f;
-
-                float x0 = cx - titleW * 0.5f;
-                float x1 = cx + titleW * 0.5f;
-                float y0 = cy - titleH * 0.5f;
-                float y1 = cy + titleH * 0.5f;
-
-                glColor4f(1.0f, 1.0f, 1.0f, titleAlpha);
-                glBegin(GL_QUADS);
-                    glTexCoord2f(0.0f, 1.0f); glVertex2f(x0, y0);
-                    glTexCoord2f(1.0f, 1.0f); glVertex2f(x1, y0);
-                    glTexCoord2f(1.0f, 0.0f); glVertex2f(x1, y1);
-                    glTexCoord2f(0.0f, 0.0f); glVertex2f(x0, y1);
-                glEnd();
-
-                glDisable(GL_TEXTURE_2D);
-                glDisable(GL_BLEND);
-            } else {
-                // Vector fallback
-                const char* title = "M   A   R   T   I   A   N";
-                float scale = (windowWidth / 1280.0f) * 0.42f;
-                float strWidth = 0.0f;
-                for (const char* p = title; *p; ++p) {
-                    if (*p == ' ') strWidth += 110.0f;
-                    else strWidth += (float)glutStrokeWidth(GLUT_STROKE_ROMAN, *p);
-                }
-                float startX = (windowWidth - strWidth * scale) * 0.5f;
-                float startY = windowHeight * 0.5f - 14.0f * scale;
-
-                glEnable(GL_BLEND);
-                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                glLineWidth(4.0f);
-                glPushMatrix();
-                glTranslatef(startX, startY, 0.0f);
-                glScalef(scale, scale, 1.0f);
-                glColor4f(0.05f, 0.05f, 0.05f, titleAlpha);
-                for (const char* p = title; *p; ++p) {
-                    glutStrokeCharacter(GLUT_STROKE_ROMAN, *p);
-                }
-                glPopMatrix();
-                glDisable(GL_BLEND);
-            }
-        }
-
-    // 4. Theatrical Transitions & Fades
+    // 3. Theatrical Transitions & Fades
     float fadeAlpha = 0.0f;
     if (seqTime < 1.5f) {
         fadeAlpha = 1.0f - smoothstep(0.0f, 1.5f, seqTime);
@@ -284,13 +218,12 @@ void renderCinemaPost(float flareX, float flareY, bool flareInFront, float flare
             fadeAlpha = 1.0f - smoothstep(61.00f, 61.80f, seqTime);
         }
     }
-    // Scene 4 final fade to black (71.5s - 73.0s)
+    // Scene 4 final hard theatrical CUT TO BLACK at 71.5s (solid 100% complete black background)
     if (seqTime >= 71.50f) {
-        fadeAlpha = smoothstep(71.50f, 73.00f, seqTime);
+        fadeAlpha = 1.0f;
     }
 
-    // Scene 4 Optical Exposure Bloom when ramp lowers and blinding daylight floods in (63.5s - 66.5s)
-    // Confined strictly within the 2.39:1 cinema letterbox window (never bleeds onto black bars)
+    // Scene 4 Optical Exposure Bloom when ramp lowers and daylight floods in (63.5s - 66.5s)
     if (seqTime >= 63.5f && seqTime <= 66.5f) {
         float bloom = 0.0f;
         float maxBloom = getScene4BloomStrength();
@@ -308,6 +241,7 @@ void renderCinemaPost(float flareX, float flareY, bool flareInFront, float flare
         }
     }
 
+    // Fullscreen Fade / Cut-to-Black Quad
     if (fadeAlpha > 0.005f) {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -321,7 +255,73 @@ void renderCinemaPost(float flareX, float flareY, bool flareInFront, float flare
         glDisable(GL_BLEND);
     }
 
-    // Master 2.39:1 Widescreen Cinema Letterbox Bars (Top & Bottom)
+    // 4. Storyboard Title Card: "M A R T I A N"
+    // - Scene 1 opening: 25.0s - 34.5s
+    // - Scene 4 finale: after scene ends and cuts to complete black, title reveals smoothly at 72.2s on black
+    float titleAlpha = 0.0f;
+    if (seqTime >= 25.0f && seqTime <= 34.5f) {
+        titleAlpha = smoothstep(25.0f, 26.2f, seqTime) * (1.0f - smoothstep(33.0f, 34.5f, seqTime));
+    } else if (seqTime >= 72.2f && seqTime <= 78.0f) {
+        titleAlpha = smoothstep(72.2f, 73.2f, seqTime) * (1.0f - smoothstep(76.8f, 78.0f, seqTime));
+    }
+
+    if (titleAlpha > 0.01f) {
+        loadTitleTexture();
+        if (hasTitleTexture && titleTextureID) {
+            // High-resolution geometric sans-serif title (Century Gothic Bold - 92% screen width)
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glEnable(GL_TEXTURE_2D);
+            glBindTexture(GL_TEXTURE_2D, titleTextureID);
+
+            float titleW = (float)windowWidth * 0.92f;
+            float titleH = titleW * (640.0f / 2560.0f);
+            float cx = (float)windowWidth * 0.5f;
+            float cy = (float)windowHeight * 0.5f;
+
+            float x0 = cx - titleW * 0.5f;
+            float x1 = cx + titleW * 0.5f;
+            float y0 = cy - titleH * 0.5f;
+            float y1 = cy + titleH * 0.5f;
+
+            glColor4f(1.0f, 1.0f, 1.0f, titleAlpha);
+            glBegin(GL_QUADS);
+                glTexCoord2f(0.0f, 1.0f); glVertex2f(x0, y0);
+                glTexCoord2f(1.0f, 1.0f); glVertex2f(x1, y0);
+                glTexCoord2f(1.0f, 0.0f); glVertex2f(x1, y1);
+                glTexCoord2f(0.0f, 0.0f); glVertex2f(x0, y1);
+            glEnd();
+
+            glDisable(GL_TEXTURE_2D);
+            glDisable(GL_BLEND);
+        } else {
+            // Vector fallback (rendered in clean pure white)
+            const char* title = "M   A   R   T   I   A   N";
+            float scale = (windowWidth / 1280.0f) * 0.42f;
+            float strWidth = 0.0f;
+            for (const char* p = title; *p; ++p) {
+                if (*p == ' ') strWidth += 110.0f;
+                else strWidth += (float)glutStrokeWidth(GLUT_STROKE_ROMAN, *p);
+            }
+            float startX = (windowWidth - strWidth * scale) * 0.5f;
+            float startY = windowHeight * 0.5f - 14.0f * scale;
+
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glLineWidth(4.0f);
+            glPushMatrix();
+            glTranslatef(startX, startY, 0.0f);
+            glScalef(scale, scale, 1.0f);
+            glColor4f(1.0f, 1.0f, 1.0f, titleAlpha);
+            for (const char* p = title; *p; ++p) {
+                glutStrokeCharacter(GLUT_STROKE_ROMAN, *p);
+            }
+            glPopMatrix();
+            glDisable(GL_BLEND);
+        }
+    }
+
+    // 5. Master 2.39:1 Widescreen Cinema Letterbox Bars (Top & Bottom)
     // Rendered as the final absolute pass to guarantee 100% solid, impenetrable black bars
     glDisable(GL_BLEND);
     glDisable(GL_TEXTURE_2D);

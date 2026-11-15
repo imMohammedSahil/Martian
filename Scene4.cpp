@@ -1512,7 +1512,7 @@ static void drawPoseStudioHUD(int windowWidth, int windowHeight) {
 }
 
 void renderScene4HUD(int windowWidth, int windowHeight) {
-    if (seqTime < 60.5f) return;
+    if (seqTime < 60.5f || seqTime >= 71.5f) return;
 
     if (g_poseMsgTimer > 0.0f) g_poseMsgTimer -= 0.016f;
     if (g_hudMsgTimer > 0.0f)  g_hudMsgTimer  -= 0.016f;
