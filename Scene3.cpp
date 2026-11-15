@@ -255,15 +255,15 @@ void initScene3() {
     if (!sparkTexID) sparkTexID = loadTextureHelper("spark1.png", false);
 
     if (s3Vapor.empty()) {
-        for (int i = 0; i < 35; ++i) {
+        for (int i = 0; i < 65; ++i) {
             VaporStreak v;
-            v.x = s3ShipX + randRange(-5.0f, 5.0f);
-            v.y = s3ShipY + randRange(-3.0f, 4.0f);
-            v.z = s3ShipZ + randRange(-8.0f, 12.0f);
-            v.length = randRange(2.5f, 5.5f);
-            v.speed  = randRange(22.0f, 36.0f);
-            v.alpha  = randRange(0.18f, 0.40f);
-            v.scale  = randRange(0.35f, 0.85f);
+            v.x = s3ShipX + randRange(-9.0f, 9.0f);
+            v.y = s3ShipY + randRange(-5.0f, 6.0f);
+            v.z = s3ShipZ + randRange(-12.0f, 16.0f);
+            v.length = randRange(4.5f, 9.5f);
+            v.speed  = randRange(26.0f, 44.0f);
+            v.alpha  = randRange(0.20f, 0.45f);
+            v.scale  = randRange(0.55f, 1.45f);
             s3Vapor.push_back(v);
         }
     }
@@ -709,7 +709,7 @@ static void renderAtmosphericSkybox() {
 }
 
 static void renderAtmosphericVaporStreaks() {
-    if (seqTime < 50.0f || seqTime > 53.5f || s3Vapor.empty() || !smokeTexID) return;
+    if (seqTime < 44.0f || seqTime > 53.5f || s3Vapor.empty() || !smokeTexID) return;
 
     glDisable(GL_LIGHTING);
     glEnable(GL_BLEND);
@@ -721,16 +721,16 @@ static void renderAtmosphericVaporStreaks() {
     // Billowing high-speed cloud vapor shreds tearing diagonally past
     for (size_t i = 0; i < s3Vapor.size(); ++i) {
         const VaporStreak& v = s3Vapor[i];
-        glColor4f(0.92f, 0.82f, 0.75f, v.alpha * 0.65f);
+        glColor4f(0.95f, 0.72f, 0.52f, v.alpha * 0.55f);
 
         glPushMatrix();
         glTranslatef(v.x, v.y, v.z);
-        glScalef(v.scale * 1.8f, v.scale * 0.45f, v.length);
+        glScalef(v.scale * 3.5f, v.scale * 1.8f, v.length * 1.6f);
         glBegin(GL_QUADS);
-            glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, 0.0f, -1.0f);
-            glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, 0.0f, -1.0f);
-            glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f, 0.0f,  1.0f);
-            glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f, 0.0f,  1.0f);
+            glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -0.5f, -1.0f);
+            glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, -0.5f, -1.0f);
+            glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  0.5f,  1.0f);
+            glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  0.5f,  1.0f);
         glEnd();
         glPopMatrix();
     }
@@ -884,7 +884,7 @@ static void renderSmoothPlasmaSheath(bool backPass) {
 }
 
 // ============================================================================
-// 2. DETACHED OUTER BOW-SHOCK ARC (Sharp thin crescent ahead of nose)
+// 2. REALISTIC OBLIQUE SHOCK LAYER & COMPRESSION CRESCENT (Sharp Supersonic Conical Boundary)
 // ============================================================================
 static void renderDetachedShockArc() {
     if (s3HeatGlow <= 0.01f) return;
@@ -894,21 +894,44 @@ static void renderDetachedShockArc() {
     glDepthMask(GL_FALSE);
 
     float t = seqTime;
-    float flicker = s3HeatGlow * (0.95f + 0.05f * sinf(t * 85.0f));
+    float flicker = s3HeatGlow * (0.94f + 0.06f * sinf(t * 85.0f));
 
-    // Outer faint detached shock crescent (matching the sharp outer line in the reference photo)
-    glLineWidth(2.4f);
+    // A. Razor-sharp Oblique Shock Discontinuity Cone (Mach angle ~34 deg oblique boundary)
+    glLineWidth(2.2f);
     glBegin(GL_LINE_STRIP);
-    for (int s = -24; s <= 24; ++s) {
-        float phi = (float)s / 24.0f * 1.45f;
+    for (int s = -28; s <= 28; ++s) {
+        float phi = (float)s / 28.0f * 1.52f;
         float sinP = sinf(phi);
         float cosP = cosf(phi);
-        float x = sinP * 0.74f;
-        float y = -0.06f - (1.0f - cosP) * 0.20f;
-        float z = 1.42f - (1.0f - cosP) * 0.45f;
-        float edgeFade = 1.0f - fabsf((float)s / 24.0f);
-        glColor4f(1.0f, 0.94f, 0.76f, flicker * 0.65f * edgeFade);
+        float x = -0.06f + sinP * 0.32f;
+        float y = -0.095f - (1.0f - cosP) * 0.22f;
+        float z = 1.05f - (1.0f - cosP) * 0.48f;
+        float edgeFade = 1.0f - powf(fabsf((float)s / 28.0f), 1.6f);
+        glColor4f(1.0f, 0.95f, 0.78f, flicker * 0.85f * edgeFade);
         glVertex3f(x, y, z);
+    }
+    glEnd();
+
+    // B. Trailing Oblique Shock Wave Filaments streaming backwards along the wings/chines
+    glLineWidth(1.6f);
+    glBegin(GL_LINES);
+    for (int side = -1; side <= 1; side += 2) {
+        for (int ribbon = 0; ribbon < 3; ++ribbon) {
+            float frac = (float)ribbon / 2.0f;
+            float zStart = 0.98f - frac * 0.25f;
+            float zEnd   = zStart - 3.20f;
+            float xStart = -0.06f + (float)side * (0.16f + frac * 0.18f);
+            float xEnd   = xStart + (float)side * 1.35f;
+            float yStart = -0.095f - frac * 0.02f;
+            float yEnd   = yStart - 0.05f;
+
+            float shimmer = sinf(t * 70.0f + (float)side * 2.0f + (float)ribbon * 3.0f) * 0.015f;
+            glColor4f(1.0f, 0.88f, 0.45f, flicker * 0.70f * (1.0f - frac * 0.3f));
+            glVertex3f(xStart, yStart, zStart);
+
+            glColor4f(0.85f, 0.22f, 0.02f, 0.0f);
+            glVertex3f(xEnd + shimmer, yEnd, zEnd);
+        }
     }
     glEnd();
     glLineWidth(1.0f);
@@ -1168,6 +1191,9 @@ void renderScene3() {
 
     // Pass D: Render Outside / Front Wall of the silky plasma envelope with feathered boundary
     renderSmoothPlasmaSheath(false);
+
+    // Pass E: Oblique shock layer & supersonic conical boundary
+    renderDetachedShockArc();
 
     glDisable(GL_LIGHT2);
     glDisable(GL_LIGHT3);
