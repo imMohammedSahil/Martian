@@ -315,43 +315,57 @@ void updateScene3(float dt) {
     if (t < 50.0f) {
         float u = (t - 44.0f) / 6.0f; // Extended 6.0s cinematic hero shot
 
-        // Horizontal hypersonic cruise across upper Martian atmosphere
-        s3ShipX = lerpf(-14.0f, -6.0f, u);
-        s3ShipY = lerpf( 12.0f, 10.5f, u); // Gentle shallow glide
-        s3ShipZ = -12.0f;
+        // Plunging steep downward descent into upper Martian atmosphere
+        s3ShipX = lerpf(-18.0f, -9.0f, u);
+        s3ShipY = lerpf( 16.5f,  7.5f, u * u);
+        s3ShipZ = lerpf(-20.0f, -9.0f, u);
 
-        // Flying horizontally to the right across the upper atmosphere
-        s3ShipDirX =  1.0f;
-        s3ShipDirY = -0.04f;
-        s3ShipDirZ =  0.0f;
+        // Vector plunging downward along the diagonal
+        s3ShipDirX =  0.65f;
+        s3ShipDirY = -0.55f; // Strong downward plunge vector
+        s3ShipDirZ =  0.75f;
+        normalize3(s3ShipDirX, s3ShipDirY, s3ShipDirZ);
 
-        // Spacecraft attitude: nose pitched slightly up into airflow (+8 deg alpha), slight bank
-        s3ShipPitchExtra = -8.0f;
-        s3ShipRoll  = -12.0f;
+        // Angle of attack: nose pitched DOWNWARD into the dive (+8.0 degrees)
+        s3ShipPitchExtra = 8.0f;
+        s3ShipRoll  = lerpf(24.0f, 10.0f, u);
         s3ShipScale = 0.50f;
-        s3HeatGlow  = lerpf(0.75f, 1.0f, u);
+        s3HeatGlow  = lerpf(0.50f, 1.0f, u); // High friction thermal glow
 
-        // Pre-warm sparks for instant steady-state wake stream across visible screen
+        float dirX = s3ShipDirX, dirY = s3ShipDirY, dirZ = s3ShipDirZ;
+        float wupX = 0.0f, wupY = 1.0f, wupZ = 0.0f;
+        float rightX = dirY * wupZ - dirZ * wupY;
+        float rightY = dirZ * wupX - dirX * wupZ;
+        float rightZ = dirX * wupY - dirY * wupX;
+        normalize3(rightX, rightY, rightZ);
+        float upX = rightY * dirZ - rightZ * dirY;
+        float upY = rightZ * dirX - rightX * dirZ;
+        float upZ = rightX * dirY - rightY * dirX;
+
+        // Pre-warm sparks for instant steady-state wake stream
         if (s3Sparks.empty()) {
-            for (int i = 0; i < 55; ++i) {
-                float ang = randRange(0.0f, 6.28318f);
-                float rad = randRange(0.20f, 0.70f);
-                float lAlong = randRange(-1.30f, 0.10f);
-                float ly = sinf(ang) * rad * 0.50f - 0.04f;
-                float lz = cosf(ang) * rad * 0.85f;
+            for (int i = 0; i < 45; ++i) {
+                float lLateral = randRange(-0.40f, 0.40f);
+                float lAlong   = randRange(-1.10f, 0.10f);
+                float lHeight  = randRange(-0.12f, 0.02f);
 
-                float speed = randRange(4.5f, 9.5f);
-                float maxLife = randRange(0.60f, 1.20f);
+                float speed = randRange(14.0f, 28.0f);
+                float maxLife = randRange(0.25f, 0.45f);
                 float age = randRange(0.01f, maxLife * 0.95f);
 
                 ReentrySpark sp;
-                sp.vx = -speed;
-                sp.vy = randRange(-0.15f, 0.15f);
-                sp.vz = randRange(-0.25f, 0.25f);
-                sp.x = (s3ShipX + lAlong * s3ShipScale) + sp.vx * age;
-                sp.y = (s3ShipY + ly * s3ShipScale) + sp.vy * age;
-                sp.z = (s3ShipZ + lz * s3ShipScale) + sp.vz * age;
-                sp.len = randRange(0.8f, 2.2f);
+                sp.vx = -dirX * speed + rightX * randRange(-0.8f, 0.8f) + upX * randRange(-0.5f, 0.5f);
+                sp.vy = -dirY * speed + rightY * randRange(-0.8f, 0.8f) + upY * randRange(-0.5f, 0.5f);
+                sp.vz = -dirZ * speed + rightZ * randRange(-0.8f, 0.8f) + upZ * randRange(-0.5f, 0.5f);
+
+                float spawnX = s3ShipX + (rightX * lLateral + upX * lHeight + dirX * lAlong) * s3ShipScale;
+                float spawnY = s3ShipY + (rightY * lLateral + upY * lHeight + dirY * lAlong) * s3ShipScale;
+                float spawnZ = s3ShipZ + (rightZ * lLateral + upZ * lHeight + dirZ * lAlong) * s3ShipScale;
+
+                sp.x = spawnX + sp.vx * age;
+                sp.y = spawnY + sp.vy * age;
+                sp.z = spawnZ + sp.vz * age;
+                sp.len = randRange(0.8f, 2.0f);
                 sp.maxLife = maxLife;
                 sp.life = maxLife - age;
                 sp.size = randRange(2.5f, 4.5f);
@@ -362,31 +376,26 @@ void updateScene3(float dt) {
             }
         }
 
-        // Supersonic spallation embers & horizontal ablation sparks (matching reference image)
-        for (int k = 0; k < 4; ++k) {
-            float ang = randRange(0.0f, 6.28318f);
-            float rad = randRange(0.20f, 0.65f);
-            // Spawn strictly along the heatshield and mid-body (behind the nose!)
-            float lAlong = randRange(-1.10f, 0.10f);
-            float ly = sinf(ang) * rad * 0.48f - 0.04f;
-            float lz = cosf(ang) * rad * 0.90f;
+        // Supersonic spallation embers & ablation sparks peeling into slipstream
+        for (int k = 0; k < 6; ++k) {
+            float lLateral = randRange(-0.40f, 0.40f);
+            float lAlong   = randRange(-1.10f, 0.10f);
+            float lHeight  = randRange(-0.12f, 0.02f);
 
-            // In world space: ship forward is +X, up is +Y, lateral is Z
-            float spawnX = s3ShipX + lAlong * s3ShipScale;
-            float spawnY = s3ShipY + ly * s3ShipScale;
-            float spawnZ = s3ShipZ + lz * s3ShipScale;
+            float spawnX = s3ShipX + (rightX * lLateral + upX * lHeight + dirX * lAlong) * s3ShipScale;
+            float spawnY = s3ShipY + (rightY * lLateral + upY * lHeight + dirY * lAlong) * s3ShipScale;
+            float spawnZ = s3ShipZ + (rightZ * lLateral + upZ * lHeight + dirZ * lAlong) * s3ShipScale;
 
             ReentrySpark sp;
             sp.x = spawnX;
             sp.y = spawnY;
             sp.z = spawnZ;
-            float speed = randRange(4.5f, 9.5f);
-            // Shooting horizontally to the left into the wake slipstream
-            sp.vx = -speed;
-            sp.vy = randRange(-0.15f, 0.15f);
-            sp.vz = randRange(-0.25f, 0.25f);
-            sp.len = randRange(0.8f, 2.2f);
-            sp.maxLife = randRange(0.60f, 1.20f);
+            float speed = randRange(14.0f, 28.0f);
+            sp.vx = -dirX * speed + rightX * randRange(-0.8f, 0.8f) + upX * randRange(-0.5f, 0.5f);
+            sp.vy = -dirY * speed + rightY * randRange(-0.8f, 0.8f) + upY * randRange(-0.5f, 0.5f);
+            sp.vz = -dirZ * speed + rightZ * randRange(-0.8f, 0.8f) + upZ * randRange(-0.5f, 0.5f);
+            sp.len = randRange(0.8f, 2.0f);
+            sp.maxLife = randRange(0.25f, 0.45f);
             sp.life = sp.maxLife;
             sp.size = randRange(2.5f, 4.5f);
             sp.r = 1.0f;
@@ -567,48 +576,25 @@ void computeCameraScene3(float& eyeX, float& eyeY, float& eyeZ,
     float t = seqTime;
 
     // ------------------------------------------------------------------------
-    // SHOT 1: CINEMATIC FLANK HERO SHOT (44.0s - 50.0s)
+    // SHOT 1: SIDE-PROFILE HERO SHOT (44.0s - 50.0s)
     // ------------------------------------------------------------------------
-    // Majestic cinematic widescreen side-profile matching Apollo/Orion/reference footage:
-    // Ranger cruises horizontally rightward across the frame with blunt nose/heatshield leading on the right,
-    // silky smooth plasma sheath & ablation sparks streaming leftward into the cosmic void,
-    // and the curved atmospheric horizon of Mars arcing across the lower third of the viewport.
     if (t < 50.0f) {
         float u = (t - 44.0f) / 6.0f; // Extended 6.0s hero view
 
-        float dirX = s3ShipDirX, dirY = s3ShipDirY, dirZ = s3ShipDirZ;
-        float wupX = 0.0f, wupY = 1.0f, wupZ = 0.0f;
-        // Lateral side vector perpendicular to flight direction and world up
-        float sideX = dirY * wupZ - dirZ * wupY;
-        float sideY = dirZ * wupX - dirX * wupZ;
-        float sideZ = dirX * wupY - dirY * wupX;
-        normalize3(sideX, sideY, sideZ);
+        // Position camera to the side-above the diving ship (side profile)
+        eyeX = s3ShipX + 2.4f;
+        eyeY = s3ShipY + 0.65f;
+        eyeZ = s3ShipZ - 0.40f;
 
-        // Position camera to the port flank of the ship
-        // With +side, the flight direction projects towards the RIGHT of the screen:
-        // - Leading front / bow shock on the right
-        // - Silky trailing wake and sparks streaming to the left
-        // - Deep cosmic void above
-        // - Curved Martian planetary horizon below
-        float sideDist = 2.25f;
-        float upDist   = 0.30f;
-        float backDist = 0.35f;
+        targetX = s3ShipX - 0.35f;
+        targetY = s3ShipY - 0.60f; // Look downward along the plunge trajectory
+        targetZ = s3ShipZ + 0.35f;
 
-        eyeX = s3ShipX + sideX * sideDist - dirX * backDist + wupX * upDist;
-        eyeY = s3ShipY + sideY * sideDist - dirY * backDist + wupY * upDist;
-        eyeZ = s3ShipZ + sideZ * sideDist - dirZ * backDist + wupZ * upDist;
-
-        // Target: framed so the glowing fireball and ship fill the hero view
-        targetX = s3ShipX + dirX * 0.28f;
-        targetY = s3ShipY + dirY * 0.28f - 0.03f;
-        targetZ = s3ShipZ + dirZ * 0.28f;
-
-        // Subtle high-speed hypersonic buffeting vibration
-        float freq = t * 65.0f;
-        float amp  = (1.0f - u * 0.2f) * 0.010f;
-        eyeX += sinf(freq * 1.05f) * amp;
-        eyeY += cosf(freq * 0.95f) * amp;
-        eyeZ += sinf(freq * 1.25f) * amp;
+        // High-frequency buffeting vibration
+        float shake = (1.0f - u * 0.3f) * 0.015f;
+        eyeX += sinf(t * 60.0f) * shake;
+        eyeY += cosf(t * 54.0f) * shake;
+        eyeZ += sinf(t * 72.0f) * shake;
     }
     // ------------------------------------------------------------------------
     // SHOT 2: HYPERSONIC CHASE DIVE (50.0s - 54.0s)
@@ -701,101 +687,16 @@ static void renderAtmosphericSkybox() {
     glPushMatrix();
     glLoadIdentity();
 
-    float t = seqTime;
-
-    if (t < 50.0f) {
-        // ====================================================================
-        // SHOT 1: CINEMATIC PLANETARY LIMB & UPPER ATMOSPHERE (Matching Reference)
-        // ====================================================================
-        // 1. Cosmic Void background (pitch black with deep cosmic gradient)
-        glBegin(GL_QUADS);
-            glColor3f(0.003f, 0.005f, 0.010f); // Pure cosmic blackness
-            glVertex2f(0.0f, 1.0f);
-            glVertex2f(1.0f, 1.0f);
-            glColor3f(0.035f, 0.015f, 0.022f); // Faint cosmic glow above horizon
-            glVertex2f(1.0f, 0.32f);
-            glVertex2f(0.0f, 0.32f);
-        glEnd();
-
-        // 2. Curved Martian Horizon Arc & Atmospheric Rim Glow
-        // Circle center placed below screen to create a gentle, majestic planetary curvature
-        const int ARC_SEGS = 64;
-        const float cx = 0.50f;
-        const float cy = -2.20f;
-        const float R  = 2.44f; // Radius reaching y ~ 0.24 in the middle
-
-        // Planetary Body below the curved limb (rich Mars terrain tones)
-        glBegin(GL_QUAD_STRIP);
-        for (int i = 0; i <= ARC_SEGS; ++i) {
-            float frac = (float)i / (float)ARC_SEGS;
-            float x = frac;
-            float dx = x - cx;
-            float dySq = R * R - dx * dx;
-            float yLimb = cy + (dySq > 0.0f ? sqrtf(dySq) : R);
-
-            // Base of screen (deep shadowed Martian crust)
-            glColor3f(0.16f, 0.07f, 0.04f);
-            glVertex2f(x, 0.0f);
-
-            // Sunlit surface near limb (warm terra-cotta with subtle latitude variation)
-            float latVar = 0.03f * sinf(frac * 18.0f);
-            glColor3f(0.52f + latVar, 0.25f + latVar * 0.5f, 0.13f);
-            glVertex2f(x, yLimb);
-        }
-        glEnd();
-
-        // Atmospheric Rim Glow Layer (sunlit forward-scattering haze separating planet from space)
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-
-        // Tier A: Intense sunlit atmospheric edge (radiant pale cyan-white & golden rim)
-        glBegin(GL_QUAD_STRIP);
-        for (int i = 0; i <= ARC_SEGS; ++i) {
-            float frac = (float)i / (float)ARC_SEGS;
-            float x = frac;
-            float dx = x - cx;
-            float dySq = R * R - dx * dx;
-            float yLimb = cy + (dySq > 0.0f ? sqrtf(dySq) : R);
-
-            // Warm golden dust interface
-            glColor4f(0.98f, 0.72f, 0.45f, 0.90f);
-            glVertex2f(x, yLimb - 0.012f);
-
-            // Brilliant sunlit upper atmosphere (pale cyan/white scattering)
-            glColor4f(0.85f, 0.93f, 1.0f, 0.85f);
-            glVertex2f(x, yLimb + 0.024f);
-        }
-        glEnd();
-
-        // Tier B: Soft diffuse atmospheric haze extending smoothly into the cosmic void
-        glBegin(GL_QUAD_STRIP);
-        for (int i = 0; i <= ARC_SEGS; ++i) {
-            float frac = (float)i / (float)ARC_SEGS;
-            float x = frac;
-            float dx = x - cx;
-            float dySq = R * R - dx * dx;
-            float yLimb = cy + (dySq > 0.0f ? sqrtf(dySq) : R);
-
-            glColor4f(0.55f, 0.70f, 0.95f, 0.45f);
-            glVertex2f(x, yLimb + 0.015f);
-
-            glColor4f(0.15f, 0.10f, 0.25f, 0.0f);
-            glVertex2f(x, yLimb + 0.105f);
-        }
-        glEnd();
-
-        glDisable(GL_BLEND);
-    } else {
-        // Shots 2..5: Ground descent skybox
-        glBegin(GL_QUADS);
-            glColor3f(0.72f, 0.38f, 0.22f);
-            glVertex2f(0.0f, 0.0f);
-            glVertex2f(1.0f, 0.0f);
-            glColor3f(0.20f, 0.08f, 0.12f);
-            glVertex2f(1.0f, 1.0f);
-            glVertex2f(0.0f, 1.0f);
-        glEnd();
-    }
+    glBegin(GL_QUADS);
+        // Horizon: rich Martian salmon/butterscotch
+        glColor3f(0.72f, 0.38f, 0.22f);
+        glVertex2f(0.0f, 0.0f);
+        glVertex2f(1.0f, 0.0f);
+        // Zenith: deep cosmic rust/indigo
+        glColor3f(0.20f, 0.08f, 0.12f);
+        glVertex2f(1.0f, 1.0f);
+        glVertex2f(0.0f, 1.0f);
+    glEnd();
 
     glPopMatrix();
     glMatrixMode(GL_PROJECTION);
@@ -1084,10 +985,15 @@ static void renderReentrySparks() {
         float norm = s.life / s.maxLife; // 1.0 -> 0.0
         float alpha = norm * 0.92f;
 
-        // In Shot 1, flight is to the right (+X), so trailing wake is to the LEFT (-X)
-        // Trail extends to the left, behind the spark head
-        float trailLen = std::min(s.len, (s.maxLife - s.life) * 28.0f);
-        float tailX = s.x - trailLen;
+        float vlen = sqrtf(s.vx * s.vx + s.vy * s.vy + s.vz * s.vz);
+        float ndx = (vlen > 0.001f) ? s.vx / vlen : 0.0f;
+        float ndy = (vlen > 0.001f) ? s.vy / vlen : 0.0f;
+        float ndz = (vlen > 0.001f) ? s.vz / vlen : 0.0f;
+
+        float trailLen = std::min(s.len, (s.maxLife - s.life) * 18.0f);
+        float tailX = s.x - ndx * trailLen;
+        float tailY = s.y - ndy * trailLen;
+        float tailZ = s.z - ndz * trailLen;
 
         // Head (bright white-gold)
         glColor4f(s.r, s.g, s.b, alpha);
@@ -1095,7 +1001,7 @@ static void renderReentrySparks() {
 
         // Tail (trailing streak fading into orange-crimson at alpha 0)
         glColor4f(1.0f, s.g * 0.35f, 0.02f, 0.0f);
-        glVertex3f(tailX, s.y, s.z);
+        glVertex3f(tailX, tailY, tailZ);
     }
     glEnd();
     glLineWidth(1.0f);
