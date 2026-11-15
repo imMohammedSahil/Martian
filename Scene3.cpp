@@ -802,19 +802,19 @@ static void renderSmoothPlasmaSheath(bool backPass) {
 
     auto getCrossSection = [](float z, float& w, float& h, float& x, float& y) {
         if (z > 0.85f) {
-            // Sleek, sharp parabolic bow shock centered right on the nose apex
+            // Sleek, sharp parabolic bow shock centered right on the nose apex (ultra-narrow)
             float frac = (1.02f - z) / 0.17f;
             frac = clampf(frac, 0.0f, 1.0f);
-            float taper = powf(frac, 0.65f);
-            w = 0.20f * taper;
-            h = 0.15f * taper;
+            float taper = powf(frac, 0.75f);
+            w = 0.14f * taper;
+            h = 0.11f * taper;
             x = -0.06f * (1.0f - frac);
             y = -0.095f + 0.010f * frac;
         } else if (z > -1.15f) {
             // Fuselage & delta wings lifting body envelope expanding back along chines
             float frac = (0.85f - z) / 2.00f;
-            w = 0.20f + 1.17f * sinf(frac * 1.57079f);
-            h = 0.15f + 0.49f * sinf(frac * 1.57079f);
+            w = 0.14f + 1.22f * sinf(frac * 1.57079f);
+            h = 0.11f + 0.52f * sinf(frac * 1.57079f);
             x = 0.0f;
             y = -0.085f - 0.020f * frac;
         } else {
@@ -933,41 +933,63 @@ static void renderDetachedShockArc() {
     float flicker = s3HeatGlow * (0.94f + 0.06f * sinf(t * 85.0f));
     if (t < 46.5f) flicker *= 1.30f; // Boost shock brilliance against space black
 
-    // A. Razor-sharp Oblique Shock Discontinuity Cone (Mach angle ~34 deg oblique boundary)
+    // A. Razor-sharp Oblique Shock Discontinuity Cone (Mach angle ~34 deg oblique boundary hugging narrow nose)
     glLineWidth(2.2f);
     glBegin(GL_LINE_STRIP);
     for (int s = -28; s <= 28; ++s) {
         float phi = (float)s / 28.0f * 1.52f;
         float sinP = sinf(phi);
         float cosP = cosf(phi);
-        float x = -0.06f + sinP * 0.32f;
-        float y = -0.095f - (1.0f - cosP) * 0.22f;
-        float z = 1.05f - (1.0f - cosP) * 0.48f;
+        float x = -0.06f + sinP * 0.22f;
+        float y = -0.095f - (1.0f - cosP) * 0.16f;
+        float z = 1.03f - (1.0f - cosP) * 0.42f;
         float edgeFade = 1.0f - powf(fabsf((float)s / 28.0f), 1.6f);
         glColor4f(1.0f, 0.95f, 0.78f, flicker * 0.85f * edgeFade);
         glVertex3f(x, y, z);
     }
     glEnd();
 
-    // B. Trailing Oblique Shock Wave Filaments streaming backwards along the wings/chines
+    // B. Multi-filament supersonic Mach lines streaming along both flanks and shock boundaries
     glLineWidth(1.6f);
     glBegin(GL_LINES);
     for (int side = -1; side <= 1; side += 2) {
-        for (int ribbon = 0; ribbon < 3; ++ribbon) {
-            float frac = (float)ribbon / 2.0f;
-            float zStart = 0.98f - frac * 0.25f;
-            float zEnd   = zStart - 3.20f;
-            float xStart = -0.06f + (float)side * (0.16f + frac * 0.18f);
-            float xEnd   = xStart + (float)side * 1.35f;
-            float yStart = -0.095f - frac * 0.02f;
-            float yEnd   = yStart - 0.05f;
+        // Outer shock layer boundary streamlines (clearly visible in chase/over-the-shoulder view)
+        for (int ribbon = 0; ribbon < 5; ++ribbon) {
+            float frac = (float)ribbon / 4.0f;
+            float zStart = 0.98f - frac * 0.40f;
+            float zEnd   = zStart - 3.40f;
+            float xStart = -0.06f + (float)side * (0.12f + frac * 0.32f);
+            float xEnd   = xStart + (float)side * 1.45f;
+            float yStart = -0.095f + frac * 0.04f;
+            float yEnd   = yStart - 0.08f;
 
-            float shimmer = sinf(t * 70.0f + (float)side * 2.0f + (float)ribbon * 3.0f) * 0.015f;
-            glColor4f(1.0f, 0.88f, 0.45f, flicker * 0.70f * (1.0f - frac * 0.3f));
+            float shimmer = sinf(t * 70.0f + (float)side * 2.0f + (float)ribbon * 2.5f) * 0.015f;
+            float lineAlpha = flicker * (0.80f - frac * 0.25f);
+
+            // Shock boundary line head (bright golden-white ion flare)
+            glColor4f(1.0f, 0.92f, 0.58f, lineAlpha);
             glVertex3f(xStart, yStart, zStart);
 
-            glColor4f(0.85f, 0.22f, 0.02f, 0.0f);
+            // Trailing dissipation streak
+            glColor4f(0.90f, 0.26f, 0.02f, 0.0f);
             glVertex3f(xEnd + shimmer, yEnd, zEnd);
+        }
+
+        // Upper chine shock vortex filaments (crisp lines wrapping over the hull shoulders)
+        for (int vLine = 0; vLine < 2; ++vLine) {
+            float vFrac = (float)vLine / 2.0f;
+            float zStart = 0.75f - vFrac * 0.30f;
+            float zEnd   = zStart - 2.80f;
+            float xStart = -0.06f + (float)side * (0.24f + vFrac * 0.22f);
+            float xEnd   = xStart + (float)side * 1.10f;
+            float yStart = -0.04f + vFrac * 0.06f; // Upper dorsal chine
+            float yEnd   = yStart + 0.03f;
+
+            glColor4f(1.0f, 0.96f, 0.75f, flicker * 0.75f);
+            glVertex3f(xStart, yStart, zStart);
+
+            glColor4f(0.85f, 0.35f, 0.05f, 0.0f);
+            glVertex3f(xEnd, yEnd, zEnd);
         }
     }
     glEnd();
