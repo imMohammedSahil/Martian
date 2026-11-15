@@ -21,6 +21,7 @@
 #include "Spacecraft.h"
 #include "PostProcess.h"
 #include "SceneDirector.h"
+#include <string>
 
 // ============================================================================
 // GLOBAL STATE DEFINITIONS
@@ -32,6 +33,46 @@ float seqTime          = 0.0f;
 float totalTime        = 0.0f;
 float lastClockTime    = 0.0f;
 bool  isPaused         = false;
+
+static std::string autoScreenshotPath;
+static int autoScreenshotFrames = 0;
+
+static void saveScreenshotBMP(const char* filename) {
+    int w = windowWidth;
+    int h = windowHeight;
+    std::vector<unsigned char> pixels(w * h * 3);
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    glReadPixels(0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, &pixels[0]);
+
+    unsigned char bmpHeader[54] = {
+        'B','M', 0,0,0,0, 0,0, 0,0, 54,0,0,0,
+        40,0,0,0, 0,0,0,0, 0,0,0,0, 1,0, 24,0,
+        0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0
+    };
+    int rowSize = (w * 3 + 3) & ~3;
+    int dataSize = rowSize * h;
+    int fileSize = 54 + dataSize;
+    *(int*)&bmpHeader[2] = fileSize;
+    *(int*)&bmpHeader[18] = w;
+    *(int*)&bmpHeader[22] = h;
+    *(int*)&bmpHeader[34] = dataSize;
+
+    FILE* fp = fopen(filename, "wb");
+    if (!fp) return;
+    fwrite(bmpHeader, 1, 54, fp);
+
+    std::vector<unsigned char> row(rowSize, 0);
+    for (int y = 0; y < h; ++y) {
+        for (int x = 0; x < w; ++x) {
+            int srcIdx = (y * w + x) * 3;
+            row[x * 3 + 0] = pixels[srcIdx + 2]; // B
+            row[x * 3 + 1] = pixels[srcIdx + 1]; // G
+            row[x * 3 + 2] = pixels[srcIdx + 0]; // R
+        }
+        fwrite(&row[0], 1, rowSize, fp);
+    }
+    fclose(fp);
+}
 
 // Directional Sunlight shining directly onto the camera-facing surface of Mars
 const float SUN_DIR_X = -0.38f;
@@ -101,9 +142,15 @@ void display() {
     }
 
     // 5. 2D Post: Anamorphic Lens Flare, 2.39:1 Letterbox Bars, Title & Fades
-
-    // 5. 2D Post: Anamorphic Lens Flare, 2.39:1 Letterbox Bars, Title & Fades
     renderCinemaPost(flareX, flareY, flareInFront, sunVisibility);
+
+    if (!autoScreenshotPath.empty()) {
+        autoScreenshotFrames++;
+        if (autoScreenshotFrames >= 4) {
+            saveScreenshotBMP(autoScreenshotPath.c_str());
+            exit(0);
+        }
+    }
 
     glutSwapBuffers();
 }
@@ -234,6 +281,16 @@ int main(int argc, char** argv) {
 
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
+
+    for (int i = 1; i < argc; ++i) {
+        if (strcmp(argv[i], "--time") == 0 && i + 1 < argc) {
+            seqTime = (float)atof(argv[i + 1]);
+            i++;
+        } else if (strcmp(argv[i], "--screenshot") == 0 && i + 1 < argc) {
+            autoScreenshotPath = argv[i + 1];
+            i++;
+        }
+    }
 
     int scrW = GetSystemMetrics(SM_CXSCREEN);
     int scrH = GetSystemMetrics(SM_CYSCREEN);
