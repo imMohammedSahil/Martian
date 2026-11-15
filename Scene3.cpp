@@ -688,12 +688,12 @@ static void renderAtmosphericSkybox() {
     glLoadIdentity();
 
     glBegin(GL_QUADS);
-    if (seqTime >= 50.0f && seqTime < 54.0f) {
-        // Shot 2 (50.0s - 54.0s): Atmospheric entry transition plunging from black space into dense Martian air
-        float entryProg = clampf((seqTime - 50.0f) / 2.6f, 0.0f, 1.0f);
+    if (seqTime < 50.0f) {
+        // Shot 1 (44.0s - 50.0s): Side profile entry pierces from space black into Martian atmosphere
+        float entryProg = clampf((seqTime - 44.0f) / 3.0f, 0.0f, 1.0f);
         float smoothProg = entryProg * entryProg * (3.0f - 2.0f * entryProg);
 
-        // Horizon transitions from deep space void black (0,0,0) to rich Martian salmon/butterscotch
+        // Horizon transitions from space black (0,0,0) to Martian salmon/butterscotch
         float hR = lerpf(0.0f, 0.72f, smoothProg);
         float hG = lerpf(0.0f, 0.38f, smoothProg);
         float hB = lerpf(0.0f, 0.22f, smoothProg);
@@ -701,7 +701,7 @@ static void renderAtmosphericSkybox() {
         glVertex2f(0.0f, 0.0f);
         glVertex2f(1.0f, 0.0f);
 
-        // Zenith transitions from space pitch black (0,0,0) to deep cosmic rust/indigo
+        // Zenith transitions from space pitch black (0,0,0) to cosmic rust/indigo
         float zR = lerpf(0.0f, 0.20f, smoothProg);
         float zG = lerpf(0.0f, 0.08f, smoothProg);
         float zB = lerpf(0.0f, 0.12f, smoothProg);
@@ -709,7 +709,7 @@ static void renderAtmosphericSkybox() {
         glVertex2f(1.0f, 1.0f);
         glVertex2f(0.0f, 1.0f);
     } else {
-        // Standard atmospheric skybox (Shot 1 & Shots 3-5)
+        // Shots 2..5: In-atmosphere skybox
         // Horizon: rich Martian salmon/butterscotch
         glColor3f(0.72f, 0.38f, 0.22f);
         glVertex2f(0.0f, 0.0f);
