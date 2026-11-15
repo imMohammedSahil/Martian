@@ -255,15 +255,15 @@ void initScene3() {
     if (!sparkTexID) sparkTexID = loadTextureHelper("spark1.png", false);
 
     if (s3Vapor.empty()) {
-        for (int i = 0; i < 65; ++i) {
+        for (int i = 0; i < 180; ++i) {
             VaporStreak v;
-            v.x = s3ShipX + randRange(-9.0f, 9.0f);
-            v.y = s3ShipY + randRange(-5.0f, 6.0f);
-            v.z = s3ShipZ + randRange(-12.0f, 16.0f);
-            v.length = randRange(4.5f, 9.5f);
-            v.speed  = randRange(26.0f, 44.0f);
-            v.alpha  = randRange(0.20f, 0.45f);
-            v.scale  = randRange(0.55f, 1.45f);
+            v.x = s3ShipX + randRange(-18.0f, 18.0f);
+            v.y = s3ShipY + randRange(-10.0f, 12.0f);
+            v.z = s3ShipZ + randRange(-22.0f, 25.0f);
+            v.length = randRange(6.0f, 16.0f);
+            v.speed  = randRange(24.0f, 48.0f);
+            v.alpha  = randRange(0.25f, 0.65f);
+            v.scale  = randRange(1.2f, 3.8f);
             s3Vapor.push_back(v);
         }
     }
@@ -288,10 +288,10 @@ void updateScene3(float dt) {
         s3Vapor[i].z -= s3Vapor[i].speed * dt;
         s3Vapor[i].x -= s3Vapor[i].speed * 0.40f * dt;
         s3Vapor[i].y += s3Vapor[i].speed * 0.25f * dt;
-        if (s3Vapor[i].z < s3ShipZ - 12.0f) {
-            s3Vapor[i].z = s3ShipZ + randRange(10.0f, 18.0f);
-            s3Vapor[i].x = s3ShipX + randRange(-4.0f, 6.0f);
-            s3Vapor[i].y = s3ShipY + randRange(-2.0f, 4.0f);
+        if (s3Vapor[i].z < s3ShipZ - 20.0f) {
+            s3Vapor[i].z = s3ShipZ + randRange(15.0f, 26.0f);
+            s3Vapor[i].x = s3ShipX + randRange(-12.0f, 16.0f);
+            s3Vapor[i].y = s3ShipY + randRange(-6.0f, 10.0f);
         }
     }
 
@@ -721,16 +721,16 @@ static void renderAtmosphericVaporStreaks() {
     // Billowing high-speed cloud vapor shreds tearing diagonally past
     for (size_t i = 0; i < s3Vapor.size(); ++i) {
         const VaporStreak& v = s3Vapor[i];
-        glColor4f(0.95f, 0.72f, 0.52f, v.alpha * 0.55f);
+        glColor4f(0.96f, 0.74f, 0.54f, v.alpha * 0.60f);
 
         glPushMatrix();
         glTranslatef(v.x, v.y, v.z);
-        glScalef(v.scale * 3.5f, v.scale * 1.8f, v.length * 1.6f);
+        glScalef(v.scale * 3.8f, v.scale * 2.2f, v.length * 1.8f);
         glBegin(GL_QUADS);
-            glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -0.5f, -1.0f);
-            glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, -0.5f, -1.0f);
-            glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  0.5f,  1.0f);
-            glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  0.5f,  1.0f);
+            glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -0.6f, -1.0f);
+            glTexCoord2f(1.0f, 0.0f); glVertex3f( 1.0f, -0.6f, -1.0f);
+            glTexCoord2f(1.0f, 1.0f); glVertex3f( 1.0f,  0.6f,  1.0f);
+            glTexCoord2f(0.0f, 1.0f); glVertex3f(-1.0f,  0.6f,  1.0f);
         glEnd();
         glPopMatrix();
     }
