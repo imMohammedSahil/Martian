@@ -53,23 +53,31 @@
 		<Linker>
 			<Add directory="lib" />
 		</Linker>
-		<Unit filename="Common.h" />
-		<Unit filename="AudioEngine.h" />
 		<Unit filename="AudioEngine.cpp" />
-		<Unit filename="Starfield.h" />
-		<Unit filename="Starfield.cpp" />
-		<Unit filename="Planet.h" />
+		<Unit filename="AudioEngine.h" />
+		<Unit filename="Common.h" />
 		<Unit filename="Planet.cpp" />
-		<Unit filename="Spacecraft.h" />
-		<Unit filename="Spacecraft.cpp" />
-		<Unit filename="PostProcess.h" />
+		<Unit filename="Planet.h" />
 		<Unit filename="PostProcess.cpp" />
-		<Unit filename="SceneDirector.h" />
-		<Unit filename="SceneDirector.cpp" />
+		<Unit filename="PostProcess.h" />
 		<Unit filename="Scene1.cpp" />
-		<Unit filename="main.cpp">
-			<Option compilerVar="CPP" />
-		</Unit>
+		<Unit filename="Scene2.cpp" />
+		<Unit filename="Scene2.h" />
+		<Unit filename="Scene3.cpp" />
+		<Unit filename="Scene3.h" />
+		<Unit filename="Scene4.cpp" />
+		<Unit filename="Scene4.h" />
+		<Unit filename="SceneDirector.cpp" />
+		<Unit filename="SceneDirector.h" />
+		<Unit filename="Spacecraft.cpp" />
+		<Unit filename="Spacecraft.h" />
+		<Unit filename="Starfield.cpp" />
+		<Unit filename="Starfield.h" />
+		<Unit filename="TimingEditor.cpp" />
+		<Unit filename="TimingEditor.h" />
+		<Unit filename="VideoExporter.cpp" />
+		<Unit filename="VideoExporter.h" />
+		<Unit filename="main.cpp" />
 		<Extensions>
 			<lib_finder disable_auto="1" />
 		</Extensions>

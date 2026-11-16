@@ -1,0 +1,2 @@
+cutToBlack 76.90
+titleReveal 78.80

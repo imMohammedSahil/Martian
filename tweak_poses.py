@@ -103,12 +103,12 @@ def main():
         if y > 1.62: # Head
             v[0], v[1], v[2] = rotate_pt_y(x, y, z, 0.0, 0.0, cfg1["head_yaw"])
             v[0], v[1], v[2] = rotate_pt_x(v[0], v[1], v[2], 1.70, 0.0, cfg1["head_pitch"])
-        elif x > 0.32 and y < 1.42: # Right Arm
+        elif x > 0.32 and 0.72 < y < 1.42: # Right Arm
             v[0], v[1], v[2] = rotate_pt_z(x, y, z, 0.36, 1.35, cfg1["r_shoulder_flare"])
             if v[1] < 1.15: # Right Forearm & Hand
                 v[0], v[1], v[2] = rotate_pt_z(v[0], v[1], v[2], 0.44, 1.12, cfg1["r_elbow_bend"])
                 v[0], v[1], v[2] = rotate_pt_y(v[0], v[1], v[2], 0.44, 0.0, cfg1["r_forearm_twist"])
-        elif x < -0.32 and y < 1.42: # Left Arm
+        elif x < -0.32 and 0.72 < y < 1.42: # Left Arm
             v[0], v[1], v[2] = rotate_pt_z(x, y, z, -0.36, 1.35, cfg1["l_arm_swing"])
     save_pose_mesh(p1, "astronaut_pose1.bin")
 
@@ -120,12 +120,12 @@ def main():
         if y > 1.62: # Head
             v[0], v[1], v[2] = rotate_pt_y(x, y, z, 0.0, 0.0, cfg2["head_yaw"])
             v[0], v[1], v[2] = rotate_pt_x(v[0], v[1], v[2], 1.70, 0.0, cfg2["head_pitch"])
-        elif x > 0.32 and y < 1.42: # Right Arm
+        elif x > 0.32 and 0.72 < y < 1.42: # Right Arm
             v[0], v[1], v[2] = rotate_pt_x(x, y, z, 1.35, 0.0, cfg2["r_shoulder_pitch"])
             if v[1] < 1.15: # Forearm
                 v[0], v[1], v[2] = rotate_pt_z(v[0], v[1], v[2], 0.35, 1.12, cfg2["r_elbow_inward"])
                 v[2] -= 0.08
-        elif x < -0.32 and y < 1.42: # Left Arm
+        elif x < -0.32 and 0.72 < y < 1.42: # Left Arm
             v[0], v[1], v[2] = rotate_pt_x(x, y, z, 1.35, 0.0, cfg2["l_shoulder_pitch"])
             if v[1] < 1.15: # Forearm
                 v[0], v[1], v[2] = rotate_pt_z(v[0], v[1], v[2], -0.35, 1.12, cfg2["l_elbow_inward"])
@@ -140,12 +140,12 @@ def main():
         if y > 1.62: # Head
             v[0], v[1], v[2] = rotate_pt_y(x, y, z, 0.0, 0.0, cfg3["head_yaw"])
             v[0], v[1], v[2] = rotate_pt_x(v[0], v[1], v[2], 1.70, 0.0, cfg3["head_pitch"])
-        elif x > 0.32 and y < 1.42: # Right Arm
+        elif x > 0.32 and 0.72 < y < 1.42: # Right Arm
             v[0], v[1], v[2] = rotate_pt_x(x, y, z, 1.35, 0.0, cfg3["r_shoulder_lift"])
             if v[1] < 1.18: # Forearm holding scanner
                 v[0], v[1], v[2] = rotate_pt_x(v[0], v[1], v[2], 1.15, 0.12, cfg3["r_elbow_lift"])
                 v[0], v[1], v[2] = rotate_pt_z(v[0], v[1], v[2], 0.38, 1.15, -18.0)
-        elif x < -0.32 and y < 1.42: # Left Arm
+        elif x < -0.32 and 0.72 < y < 1.42: # Left Arm
             v[0], v[1], v[2] = rotate_pt_z(x, y, z, -0.36, 1.35, cfg3["l_arm_flare"])
     save_pose_mesh(p3, "astronaut_pose3.bin")
 
@@ -157,15 +157,20 @@ def main():
         if y > 1.62: # Head
             v[0], v[1], v[2] = rotate_pt_y(x, y, z, 0.0, 0.0, cfg4["head_yaw"])
             v[0], v[1], v[2] = rotate_pt_x(v[0], v[1], v[2], 1.70, 0.0, cfg4["head_pitch"])
-        elif x > 0.32 and y < 1.42: # Right Arm
+        elif x > 0.32 and 0.72 < y < 1.42: # Right Arm
             v[0], v[1], v[2] = rotate_pt_z(x, y, z, 0.36, 1.35, cfg4["r_arm_swing"])
             if v[1] < 1.15:
                 v[0], v[1], v[2] = rotate_pt_x(v[0], v[1], v[2], 1.12, 0.0, cfg4["r_elbow_bend"])
-        elif x < -0.32 and y < 1.42: # Left Arm
+        elif x < -0.32 and 0.72 < y < 1.42: # Left Arm
             v[0], v[1], v[2] = rotate_pt_z(x, y, z, -0.36, 1.35, cfg4["l_arm_swing"])
     save_pose_mesh(p4, "astronaut_pose4.bin")
 
-    print("\nAll 4 poses updated successfully!")
+    import smooth_astronauts
+    for i in range(1, 5):
+        fn = f"astronaut_pose{i}.bin"
+        smooth_astronauts.smooth_pose_mesh(fn, fn, num_subdiv=1, smooth_iters=4)
+
+    print("\nAll 4 poses updated and smoothed successfully!")
 
 if __name__ == "__main__":
     main()

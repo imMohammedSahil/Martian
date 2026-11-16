@@ -55,7 +55,7 @@ def deform_mesh(params):
             v[0], v[1], v[2] = rot_y(x, y, z, 0.0, 0.0, params.get("head_yaw", 0.0))
             v[0], v[1], v[2] = rot_x(v[0], v[1], v[2], 1.70, 0.0, params.get("head_pitch", 0.0))
         # Right Arm
-        elif x > 0.32 and y < 1.42:
+        elif x > 0.32 and 0.72 < y < 1.42:
             if params.get("r_shoulder_flare", 0.0) != 0:
                 v[0], v[1], v[2] = rot_z(v[0], v[1], v[2], 0.36, 1.35, params.get("r_shoulder_flare", 0.0))
             if params.get("r_shoulder_pitch", 0.0) != 0:
@@ -70,8 +70,11 @@ def deform_mesh(params):
                     v[0], v[1], v[2] = rot_x(v[0], v[1], v[2], 1.15, 0.12, params.get("r_elbow_pitch", 0.0))
                 if params.get("r_hand_offset_z", 0.0) != 0:
                     v[2] += params.get("r_hand_offset_z", 0.0)
+                if params.get("r_inward", 0.0) != 0:
+                    factor = min(1.0, max(0.0, (1.15 - v[1]) / 0.40))
+                    v[0] -= params.get("r_inward", 0.0) * factor
         # Left Arm
-        elif x < -0.32 and y < 1.42:
+        elif x < -0.32 and 0.72 < y < 1.42:
             if params.get("l_shoulder_flare", 0.0) != 0:
                 v[0], v[1], v[2] = rot_z(v[0], v[1], v[2], -0.36, 1.35, params.get("l_shoulder_flare", 0.0))
             if params.get("l_shoulder_pitch", 0.0) != 0:
@@ -86,6 +89,9 @@ def deform_mesh(params):
                     v[0], v[1], v[2] = rot_x(v[0], v[1], v[2], 1.15, 0.12, params.get("l_elbow_pitch", 0.0))
                 if params.get("l_hand_offset_z", 0.0) != 0:
                     v[2] += params.get("l_hand_offset_z", 0.0)
+                if params.get("l_inward", 0.0) != 0:
+                    factor = min(1.0, max(0.0, (1.15 - v[1]) / 0.40))
+                    v[0] += params.get("l_inward", 0.0) * factor
     return verts
 
 def save_bin(filename, verts):
@@ -212,7 +218,8 @@ HTML_CONTENT = """<!DOCTYPE html>
             </div>
         </div>
 
-        <button class="btn-save" onclick="savePosesToGame()">💾 SAVE ALL POSES TO GAME</button>
+        <button class="btn-save" style="background:#2e7d32; margin-bottom:8px;" onclick="saveCurrentPoseToGame()">💾 SAVE SELECTED CREW ONLY</button>
+        <button class="btn-save" onclick="savePosesToGame()">💾 SAVE ALL 4 CREW POSES</button>
         <div id="status-msg"></div>
     </div>
 
@@ -226,7 +233,7 @@ HTML_CONTENT = """<!DOCTYPE html>
             { head_yaw: -9, head_pitch: 0, r_shoulder_flare: 16, r_shoulder_pitch: 0, r_elbow_bend: -42, r_forearm_twist: 24, r_elbow_pitch: 0, l_shoulder_flare: -5, l_shoulder_pitch: 0, l_elbow_bend: 0, l_forearm_twist: 0 },
             { head_yaw: 3, head_pitch: -2, r_shoulder_flare: 0, r_shoulder_pitch: -22, r_elbow_bend: -42, r_forearm_twist: 0, r_elbow_pitch: 0, l_shoulder_flare: 0, l_shoulder_pitch: -22, l_elbow_bend: 42, l_forearm_twist: 0, r_hand_offset_z: -0.08, l_hand_offset_z: -0.08 },
             { head_yaw: 10, head_pitch: 14, r_shoulder_flare: 0, r_shoulder_pitch: 28, r_elbow_bend: -18, r_forearm_twist: 0, r_elbow_pitch: 45, l_shoulder_flare: -10, l_shoulder_pitch: 0, l_elbow_bend: 0, l_forearm_twist: 0 },
-            { head_yaw: -12, head_pitch: 2, r_shoulder_flare: -8, r_shoulder_pitch: 0, r_elbow_bend: 15, r_forearm_twist: 0, r_elbow_pitch: 0, l_shoulder_flare: 10, l_shoulder_pitch: 0, l_elbow_bend: 0, l_forearm_twist: 0 }
+            { head_yaw: -3, head_pitch: 2, r_shoulder_flare: -20, r_shoulder_pitch: 0, r_elbow_bend: -14, r_forearm_twist: 15, r_elbow_pitch: 0, l_shoulder_flare: 10, l_shoulder_pitch: 0, l_elbow_bend: 0, l_forearm_twist: 0 }
         ];
 
         // Three.js Setup
@@ -325,7 +332,7 @@ HTML_CONTENT = """<!DOCTYPE html>
                     if (p.head_pitch) [x, y, z] = rotX(x, y, z, 1.70, 0.0, p.head_pitch);
                 }
                 // Right Arm
-                else if (x > 0.32 && y < 1.42) {
+                else if (x > 0.32 && y > 0.72 && y < 1.42) {
                     if (p.r_shoulder_flare) [x, y, z] = rotZ(x, y, z, 0.36, 1.35, p.r_shoulder_flare);
                     if (p.r_shoulder_pitch) [x, y, z] = rotX(x, y, z, 1.35, 0.0, p.r_shoulder_pitch);
                     if (y < 1.15) {
@@ -336,7 +343,7 @@ HTML_CONTENT = """<!DOCTYPE html>
                     }
                 }
                 // Left Arm
-                else if (x < -0.32 && y < 1.42) {
+                else if (x < -0.32 && y > 0.72 && y < 1.42) {
                     if (p.l_shoulder_flare) [x, y, z] = rotZ(x, y, z, -0.36, 1.35, p.l_shoulder_flare);
                     if (p.l_shoulder_pitch) [x, y, z] = rotX(x, y, z, 1.35, 0.0, p.l_shoulder_pitch);
                     if (y < 1.15) {
@@ -401,6 +408,24 @@ HTML_CONTENT = """<!DOCTYPE html>
             }
         }
 
+        function saveCurrentPoseToGame() {
+            const msgEl = document.getElementById('status-msg');
+            msgEl.innerText = `Saving Crew ${currentCrew+1} only...`;
+            fetch('/api/save_crew_pose', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ crew: currentCrew, params: poses[currentCrew] })
+            })
+            .then(res => res.json())
+            .then(data => {
+                msgEl.innerText = `✅ Saved & smoothed astronaut_pose${currentCrew+1}.bin only! (Others untouched)`;
+                setTimeout(() => { msgEl.innerText = ''; }, 4000);
+            })
+            .catch(err => {
+                msgEl.innerText = '❌ Error saving: ' + err;
+            });
+        }
+
         function savePosesToGame() {
             const msgEl = document.getElementById('status-msg');
             msgEl.innerText = 'Saving poses to game...';
@@ -448,14 +473,30 @@ class PoseEditorHandler(http.server.SimpleHTTPRequestHandler):
             self.send_error(404)
 
     def do_POST(self):
-        if self.path == "/api/save_poses":
+        if self.path == "/api/save_crew_pose":
+            content_length = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(content_length).decode('utf-8')
+            data = json.loads(body)
+            crew_idx = data["crew"]
+            fname = f"astronaut_pose{crew_idx+1}.bin"
+            v = deform_mesh(data["params"])
+            save_bin(fname, v)
+            import smooth_astronauts
+            smooth_astronauts.smooth_pose_mesh(fname, fname, num_subdiv=1, smooth_iters=4)
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "ok"}).encode("utf-8"))
+        elif self.path == "/api/save_poses":
             content_length = int(self.headers.get('Content-Length', 0))
             body = self.rfile.read(content_length).decode('utf-8')
             poses = json.loads(body)
+            import smooth_astronauts
             for i, p in enumerate(poses):
                 fname = f"astronaut_pose{i+1}.bin"
                 v = deform_mesh(p)
                 save_bin(fname, v)
+                smooth_astronauts.smooth_pose_mesh(fname, fname, num_subdiv=1, smooth_iters=4)
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.end_headers()

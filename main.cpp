@@ -22,6 +22,7 @@
 #include "PostProcess.h"
 #include "SceneDirector.h"
 #include "Scene4.h"
+#include "VideoExporter.h"
 #include <string>
 
 // ============================================================================
@@ -136,7 +137,7 @@ void display() {
         if (seqTime > 41.0f) {
             renderSpeedDustStreaks(eyeX, eyeY, eyeZ);
         }
-    } else if (seqTime < 61.0f) {
+    } else if (seqTime < 65.0f) {
         // SCENE 3: ATMOSPHERIC ENTRY, CLOUD BREAK & CANYON DIVE
         renderScene3();
         renderParticles();
@@ -148,9 +149,11 @@ void display() {
     // 5. 2D Post: Anamorphic Lens Flare, 2.39:1 Letterbox Bars, Title & Fades
     renderCinemaPost(flareX, flareY, flareInFront, sunVisibility);
 
-    if (seqTime >= 60.5f) {
+    if (seqTime >= 64.5f) {
         renderScene4HUD(windowWidth, windowHeight);
     }
+
+    renderTimingHUD(windowWidth, windowHeight);
 
     if (!autoScreenshotPath.empty()) {
         autoScreenshotFrames++;
@@ -186,6 +189,8 @@ void timer(int value) {
         updateSceneDirector(dt);
     }
 
+    updateAudioEngine(seqTime, isPaused);
+
     glutPostRedisplay();
     glutTimerFunc(16, timer, 0);
 }
@@ -203,15 +208,29 @@ void reshape(int w, int h) {
 
 void keyboard(unsigned char key, int x, int y) {
     if (key == 27) { // ESC: Exit Theater
-        PlaySoundA(NULL, NULL, 0);
+        shutdownAudioEngine();
         glutLeaveMainLoop();
-    } else if (key == ' ') { // Freeze-Frame Pause
+        return;
+    }
+
+    if (handleTimingKeyboard(key)) {
+        return;
+    }
+
+    // Give Scene 4 HUDs priority for keyboard input
+    if (handleScene4Keyboard(key)) {
+        return;
+    }
+
+    if (key == ' ') { // Freeze-Frame Pause
         isPaused = !isPaused;
     } else if (key == 'r' || key == 'R') { // Replay Scene from start
         seqTime = 0.0f;
+        resetAudioEngine();
     } else if (key == '1') {
         seqTime = 0.0f;
         particles.clear();
+        resetAudioEngine();
     } else if (key == '2') {
         seqTime = 35.0f;
         particles.clear();
@@ -219,10 +238,8 @@ void keyboard(unsigned char key, int x, int y) {
         seqTime = 44.0f;
         particles.clear();
     } else if (key == '4') {
-        seqTime = 61.0f;
+        seqTime = 65.0f;
         particles.clear();
-    } else if (handleScene4Keyboard(key)) {
-        return;
     } else if (key == 'f' || key == 'F' || key == '.' || key == '>') { // Fast-Forward 5s
         seqTime = clampf(seqTime + 5.0f, 0.0f, SEQUENCE_DURATION - 0.1f);
     } else if (key == 'b' || key == 'B' || key == ',' || key == '<') { // Rewind 5s
@@ -231,6 +248,9 @@ void keyboard(unsigned char key, int x, int y) {
 }
 
 void specialKeys(int key, int x, int y) {
+    if (handleTimingSpecial(key)) {
+        return;
+    }
     if (handleScene4Special(key)) {
         return;
     }
@@ -298,6 +318,7 @@ int main(int argc, char** argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
 
+    const char* exportPreset = NULL;
     for (int i = 1; i < argc; ++i) {
         if (strcmp(argv[i], "--time") == 0 && i + 1 < argc) {
             seqTime = (float)atof(argv[i + 1]);
@@ -305,7 +326,26 @@ int main(int argc, char** argv) {
         } else if (strcmp(argv[i], "--screenshot") == 0 && i + 1 < argc) {
             autoScreenshotPath = argv[i + 1];
             i++;
+        } else if (strcmp(argv[i], "--export") == 0 && i + 1 < argc) {
+            exportPreset = argv[i + 1];
+            i++;
         }
+    }
+
+    initTimingEditor();
+
+    if (exportPreset) {
+        glutInitWindowSize(320, 240);
+        glutInitWindowPosition(-1000, -1000); // Offscreen helper window
+        int win = glutCreateWindow("MARTIAN EXPORT");
+        initOpenGL();
+        loadMarsTexture();
+        initSolarAssets();
+        initStarfield();
+
+        runVideoExport(exportPreset);
+        glutDestroyWindow(win);
+        return 0;
     }
 
     int scrW = GetSystemMetrics(SM_CXSCREEN);

@@ -1,0 +1,21 @@
+# Video Exports (Offscreen FBO + FFmpeg recordings)
+*.mp4
+*.avi
+*.mkv
+*.mov
+
+# Build artifacts & Compiler intermediate object files
+obj/
+*.o
+*.obj
+
+# Windows / OS thumbnails & cache
+desktop.ini
+Thumbs.db
+.DS_Store
+
+# IDE / Editor configuration
+.vscode/
+.idea/
+*.swp
+*.bak

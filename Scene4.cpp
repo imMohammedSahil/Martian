@@ -61,10 +61,10 @@ struct LightKeyframe {
 };
 
 static std::vector<LightKeyframe> g_keyframes;
-static LightKeyframe g_curLight = { 61.0f, 2.40f, 14.0f, 1.50f, 0.15f, 0.28f, 0.45f, 1.00f };
-static bool g_showLightingHUD = true;
-static char g_hudStatusMsg[128] = "HUD Active: [Space] Pause, [< >] Scrub, Hotkeys to tweak";
-static float g_hudMsgTimer = 4.0f;
+static LightKeyframe g_curLight = { 65.0f, 2.40f, 14.0f, 1.50f, 0.15f, 0.28f, 0.45f, 1.00f };
+static bool g_showLightingHUD = false;
+static char g_hudStatusMsg[128] = "";
+static float g_hudMsgTimer = 0.0f;
 
 void reloadScene4Lighting() {
     FILE* fp = fopen("scene4_lighting.txt", "r");
@@ -1092,10 +1092,10 @@ void computeCameraScene4(float& eyeX, float& eyeY, float& eyeZ,
 
     float t = seqTime;
 
-    // The single continuous Dune shot runs 61.0s to 73.0s (12.0s duration)
+    // The single continuous Dune shot runs 65.0s to 77.0s (12.0s duration)
     // Camera is positioned inside the dark cabin behind the 4 crew members,
     // looking past them through the opened hatch onto the Martian dunes.
-    float prog = clampf((t - 61.0f) / 12.0f, 0.0f, 1.0f);
+    float prog = clampf((t - 65.0f) / 12.0f, 0.0f, 1.0f);
     float smoothProg = prog * prog * (3.0f - 2.0f * prog);
 
     // Very slow, majestic cinematic push-in dolly forward
@@ -1175,12 +1175,12 @@ void renderScene4() {
     float t = seqTime;
 
     // Ramp animation timing:
-    // 61.0s – 63.2s: Closed (hold in dark interior)
-    // 63.2s – 66.8s: Opening smoothly (hydraulic release & lowering)
-    // 66.8s – 73.0s: Fully lowered onto red sand
+    // 65.0s – 67.2s: Closed (hold in dark interior)
+    // 67.2s – 70.8s: Opening smoothly (hydraulic release & lowering)
+    // 70.8s – 77.0s: Fully lowered onto red sand
     float openProg = 0.0f;
-    if (t >= 63.2f) {
-        openProg = clampf((t - 63.2f) / 3.6f, 0.0f, 1.0f);
+    if (t >= 67.2f) {
+        openProg = clampf((t - 67.2f) / 3.6f, 0.0f, 1.0f);
         openProg = openProg * openProg * (3.0f - 2.0f * openProg); // Smooth cubic ease
     }
 
@@ -1512,12 +1512,11 @@ static void drawPoseStudioHUD(int windowWidth, int windowHeight) {
 }
 
 void renderScene4HUD(int windowWidth, int windowHeight) {
-    if (seqTime < 60.5f || seqTime >= 71.5f) return;
+    if (seqTime < 64.5f || seqTime >= 75.5f) return;
 
     if (g_poseMsgTimer > 0.0f) g_poseMsgTimer -= 0.016f;
-    if (g_hudMsgTimer > 0.0f)  g_hudMsgTimer  -= 0.016f;
 
-    if (!g_showLightingHUD && !g_showPoseHUD) return;
+    if (!g_showPoseHUD) return;
 
     glDisable(GL_LIGHTING);
     glDisable(GL_DEPTH_TEST);
@@ -1532,91 +1531,7 @@ void renderScene4HUD(int windowWidth, int windowHeight) {
     glPushMatrix();
     glLoadIdentity();
 
-    if (g_showPoseHUD) {
-        drawPoseStudioHUD(windowWidth, windowHeight);
-    }
-
-    if (g_showLightingHUD) {
-        float panelW = 480.0f;
-        float panelH = 180.0f;
-        float padX = 25.0f;
-        float padY = 25.0f;
-
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glColor4f(0.04f, 0.05f, 0.08f, 0.88f);
-        glBegin(GL_QUADS);
-            glVertex2f(padX, padY);
-            glVertex2f(padX + panelW, padY);
-            glVertex2f(padX + panelW, padY + panelH);
-            glVertex2f(padX, padY + panelH);
-        glEnd();
-
-        glColor4f(0.95f, 0.50f, 0.15f, 0.95f);
-        glLineWidth(1.5f);
-        glBegin(GL_LINE_LOOP);
-            glVertex2f(padX, padY);
-            glVertex2f(padX + panelW, padY);
-            glVertex2f(padX + panelW, padY + panelH);
-            glVertex2f(padX, padY + panelH);
-        glEnd();
-
-        LightKeyframe cur = evalLighting(seqTime);
-        char buf[128];
-        float textX = padX + 14.0f;
-        float textY = padY + panelH - 22.0f;
-
-        glColor3f(1.0f, 0.65f, 0.20f);
-        snprintf(buf, sizeof(buf), "MARTIAN LIGHTING GRADING HUD [%s]", isPaused ? "PAUSED" : "PLAYING");
-        drawHUDString(textX, textY, buf);
-
-        textY -= 18.0f;
-        glColor3f(0.85f, 0.85f, 0.85f);
-        snprintf(buf, sizeof(buf), "Time: %.2fs / 73.00s | Keyframes Defined: %d", seqTime, (int)g_keyframes.size());
-        drawHUDString(textX, textY, buf);
-
-        textY -= 20.0f;
-        glColor3f(0.35f, 0.85f, 1.0f);
-        snprintf(buf, sizeof(buf), "[U / J] Sun Brightness:  %.2f", cur.sunBrightness);
-        drawHUDString(textX, textY, buf);
-
-        glColor3f(0.35f, 0.85f, 1.0f);
-        snprintf(buf, sizeof(buf), "[I / K] Cabin Ambient:   %.2f", cur.cabinAmbient);
-        drawHUDString(textX + 230.0f, textY, buf);
-
-        textY -= 16.0f;
-        glColor3f(0.35f, 0.85f, 1.0f);
-        snprintf(buf, sizeof(buf), "[O / 9] Sun Elevation:  %.1f", cur.sunHeight);
-        drawHUDString(textX, textY, buf);
-
-        glColor3f(0.35f, 0.85f, 1.0f);
-        snprintf(buf, sizeof(buf), "[P / ;] Door Bloom:      %.2f", cur.doorBloom);
-        drawHUDString(textX + 230.0f, textY, buf);
-
-        textY -= 16.0f;
-        glColor3f(0.35f, 0.85f, 1.0f);
-        snprintf(buf, sizeof(buf), "[Y / H] Light Shaft:     %.2f", cur.lightShaft);
-        drawHUDString(textX, textY, buf);
-
-        glColor3f(0.35f, 0.85f, 1.0f);
-        snprintf(buf, sizeof(buf), "[T / G] Sky Warmth:      %.2f", cur.skyWarmth);
-        drawHUDString(textX + 230.0f, textY, buf);
-
-        textY -= 20.0f;
-        glColor3f(0.70f, 0.70f, 0.70f);
-        snprintf(buf, sizeof(buf), "[< / >] Scrub 0.1s | [[ / ]] 1-Frame | [Space] Pause");
-        drawHUDString(textX, textY, buf);
-
-        textY -= 16.0f;
-        glColor3f(0.30f, 1.0f, 0.40f);
-        snprintf(buf, sizeof(buf), "[Enter / S] Save Keyframe | [Del] Delete | [L] Toggle Lighting | [E] Pose Studio");
-        drawHUDString(textX, textY, buf);
-
-        if (g_hudMsgTimer > 0.0f) {
-            glColor3f(1.0f, 0.90f, 0.30f);
-            drawHUDString(padX, padY - 16.0f, g_hudStatusMsg);
-        }
-    }
+    drawPoseStudioHUD(windowWidth, windowHeight);
 
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
@@ -1629,7 +1544,7 @@ void renderScene4HUD(int windowWidth, int windowHeight) {
 }
 
 bool handleScene4Keyboard(unsigned char key) {
-    if (seqTime < 60.5f) return false;
+    if (seqTime < 64.5f) return false;
 
     // Toggle In-Game Pose Studio: 'e', 'E', or Tab (ASCII 9)
     if (key == 'e' || key == 'E' || key == 9) {
@@ -1638,12 +1553,6 @@ bool handleScene4Keyboard(unsigned char key) {
             snprintf(g_poseStatusMsg, sizeof(g_poseStatusMsg), "Pose Studio ACTIVE [1-4: Select Crew | W/S: Prop | A/D: Tweak | Enter: Save]");
             g_poseMsgTimer = 4.0f;
         }
-        return true;
-    }
-
-    // Toggle Lighting HUD: 'l' or 'L'
-    if (key == 'l' || key == 'L') {
-        g_showLightingHUD = !g_showLightingHUD;
         return true;
     }
 
@@ -1693,83 +1602,21 @@ bool handleScene4Keyboard(unsigned char key) {
             g_poseMsgTimer = 3.0f;
             return true;
         }
+        return true;
     }
 
-    // Lighting HUD controls:
-    float t = seqTime;
-    LightKeyframe cur = evalLighting(t);
-    bool changed = false;
-
-    if (key == 'u' || key == 'U') {
-        cur.sunBrightness += (key == 'U') ? 0.20f : 0.05f;
-        changed = true;
-    } else if (key == 'j' || key == 'J') {
-        cur.sunBrightness = std::max(0.10f, cur.sunBrightness - ((key == 'J') ? 0.20f : 0.05f));
-        changed = true;
-    } else if (key == 'i' || key == 'I') {
-        cur.cabinAmbient = std::min(0.50f, cur.cabinAmbient + 0.01f);
-        changed = true;
-    } else if (!g_showPoseHUD && (key == 'k' || key == 'K')) {
-        cur.cabinAmbient = std::max(0.01f, cur.cabinAmbient - 0.01f);
-        changed = true;
-    } else if (key == 'o' || key == 'O') {
-        cur.sunHeight += 1.0f;
-        changed = true;
-    } else if (key == '9' || key == '(') {
-        cur.sunHeight = std::max(2.0f, cur.sunHeight - 1.0f);
-        changed = true;
-    } else if (key == 'p' || key == 'P') {
-        cur.doorBloom = std::min(1.50f, cur.doorBloom + 0.05f);
-        changed = true;
-    } else if (key == ';' || key == ':') {
-        cur.doorBloom = std::max(0.00f, cur.doorBloom - 0.05f);
-        changed = true;
-    } else if (key == 'y' || key == 'Y') {
-        cur.lightShaft = std::min(1.00f, cur.lightShaft + 0.03f);
-        changed = true;
-    } else if (key == 'h' || key == 'H') {
-        cur.lightShaft = std::max(0.00f, cur.lightShaft - 0.03f);
-        changed = true;
-    } else if (key == 't' || key == 'T') {
-        cur.skyWarmth = std::min(2.00f, cur.skyWarmth + 0.05f);
-        changed = true;
-    } else if (key == 'g' || key == 'G') {
-        cur.skyWarmth = std::max(0.30f, cur.skyWarmth - 0.05f);
-        changed = true;
-    } else if (!g_showPoseHUD && (key == 13 || key == 's' || key == 'S')) {
-        setOrUpdateKeyframe(t, cur);
-        saveLightingKeyframes();
-        return true;
-    } else if (key == 8 || key == 127) { // Backspace or Del
-        for (size_t i = 0; i < g_keyframes.size(); ++i) {
-            if (fabsf(g_keyframes[i].time - t) < 0.25f) {
-                g_keyframes.erase(g_keyframes.begin() + i);
-                saveLightingKeyframes();
-                snprintf(g_hudStatusMsg, sizeof(g_hudStatusMsg), "Deleted keyframe near %.2fs", t);
-                g_hudMsgTimer = 3.0f;
-                return true;
-            }
-        }
-    } else if (key == '[' || key == '{') { // Fine frame step back (1 frame = 0.016s)
-        seqTime = clampf(seqTime - 0.01667f, 61.0f, SEQUENCE_DURATION - 0.1f);
+    if (key == '[' || key == '{') { // Fine frame step back (1 frame = 0.016s)
+        seqTime = clampf(seqTime - 0.01667f, 65.0f, SEQUENCE_DURATION - 0.1f);
         return true;
     } else if (key == ']' || key == '}') { // Fine frame step forward (1 frame = 0.016s)
-        seqTime = clampf(seqTime + 0.01667f, 61.0f, SEQUENCE_DURATION - 0.1f);
-        return true;
-    }
-
-    if (changed) {
-        setOrUpdateKeyframe(t, cur);
-        snprintf(g_hudStatusMsg, sizeof(g_hudStatusMsg), "T=%.2fs | Sun=%.2f Amb=%.2f Bloom=%.2f [S to Save]",
-                 t, cur.sunBrightness, cur.cabinAmbient, cur.doorBloom);
-        g_hudMsgTimer = 3.0f;
+        seqTime = clampf(seqTime + 0.01667f, 65.0f, SEQUENCE_DURATION - 0.1f);
         return true;
     }
     return false;
 }
 
 bool handleScene4Special(int key) {
-    if (seqTime < 60.5f) return false;
+    if (seqTime < 64.5f) return false;
 
     if (g_showPoseHUD) {
         if (key == GLUT_KEY_UP) {
@@ -1788,10 +1635,10 @@ bool handleScene4Special(int key) {
     }
 
     if (key == GLUT_KEY_LEFT) {
-        seqTime = clampf(seqTime - 0.10f, 61.0f, SEQUENCE_DURATION - 0.1f);
+        seqTime = clampf(seqTime - 0.10f, 65.0f, SEQUENCE_DURATION - 0.1f);
         return true;
     } else if (key == GLUT_KEY_RIGHT) {
-        seqTime = clampf(seqTime + 0.10f, 61.0f, SEQUENCE_DURATION - 0.1f);
+        seqTime = clampf(seqTime + 0.10f, 65.0f, SEQUENCE_DURATION - 0.1f);
         return true;
     }
     return false;

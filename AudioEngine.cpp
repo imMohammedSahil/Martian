@@ -1,9 +1,16 @@
 #include "AudioEngine.h"
 #include "Common.h"
+#include <cstdio>
+#include <cmath>
 
+static bool g_hasTrackFile = false;
+static char g_trackPath[MAX_PATH] = "";
+static bool g_isPlaying = false;
+static float g_lastSyncSeqTime = -100.0f;
+static bool g_windTriggered = false;
 static std::vector<unsigned char> ambientWavData;
 
-void initAndPlaySpaceAmbience() {
+static void buildProceduralSynthFallback() {
     const int sampleRate  = 22050;
     const int numChannels = 2;
     const int bitsPerSamp = 16;
@@ -71,7 +78,6 @@ void initAndPlaySpaceAmbience() {
         float mixL = (organL * lfo + subRumble) * 0.48f;
         float mixR = (organR * lfo + subRumble) * 0.48f;
 
-        // Loop crossfade
         float edgeFade = 1.0f;
         const float fadeTime = 0.8f;
         if (t < fadeTime) {
@@ -88,7 +94,126 @@ void initAndPlaySpaceAmbience() {
         samples[i * 2 + 0] = (short)sL;
         samples[i * 2 + 1] = (short)sR;
     }
-
-    PlaySoundA((LPCSTR)ambientWavData.data(), NULL, SND_MEMORY | SND_ASYNC | SND_LOOP);
 }
 
+void initAudioEngine() {
+    const char* candidates[] = {
+        "soundtrack.mp3",
+        "soundtrack.wav",
+        "no_time_for_caution.mp3",
+        "no_time_for_caution.wav",
+        "notimeforcaution.mp3",
+        "notimeforcaution.wav",
+        "interstellar.mp3",
+        "interstellar.wav"
+    };
+    const int numCandidates = sizeof(candidates) / sizeof(candidates[0]);
+
+    g_hasTrackFile = false;
+    for (int i = 0; i < numCandidates; ++i) {
+        FILE* fp = fopen(candidates[i], "rb");
+        if (fp) {
+            fclose(fp);
+            strncpy(g_trackPath, candidates[i], sizeof(g_trackPath) - 1);
+            g_hasTrackFile = true;
+            break;
+        }
+    }
+
+    if (g_hasTrackFile) {
+        mciSendStringA("close all", NULL, 0, NULL);
+        char cmd[512];
+        snprintf(cmd, sizeof(cmd), "open \"%s\" type mpegvideo alias soundtrack", g_trackPath);
+        if (mciSendStringA(cmd, NULL, 0, NULL) != 0) {
+            snprintf(cmd, sizeof(cmd), "open \"%s\" alias soundtrack", g_trackPath);
+            mciSendStringA(cmd, NULL, 0, NULL);
+        }
+        mciSendStringA("set soundtrack time format milliseconds", NULL, 0, NULL);
+        mciSendStringA("play soundtrack from 0", NULL, 0, NULL);
+        g_isPlaying = true;
+        g_lastSyncSeqTime = 0.0f;
+    } else {
+        // Fallback procedural Hans Zimmer organ synth
+        buildProceduralSynthFallback();
+        PlaySoundA((LPCSTR)ambientWavData.data(), NULL, SND_MEMORY | SND_ASYNC | SND_LOOP);
+    }
+
+    // Pre-open Mars wind SFX on independent MCI channel
+    FILE* fWind = fopen("mars_wind_nasa.wav", "rb");
+    if (fWind) {
+        fclose(fWind);
+        mciSendStringA("open \"mars_wind_nasa.wav\" type waveaudio alias mars_wind", NULL, 0, NULL);
+    }
+}
+
+void resetAudioEngine() {
+    if (g_hasTrackFile) {
+        mciSendStringA("stop soundtrack", NULL, 0, NULL);
+        mciSendStringA("seek soundtrack to start", NULL, 0, NULL);
+        mciSendStringA("play soundtrack from 0", NULL, 0, NULL);
+        mciSendStringA("stop mars_wind", NULL, 0, NULL);
+        mciSendStringA("seek mars_wind to start", NULL, 0, NULL);
+        g_isPlaying = true;
+        g_lastSyncSeqTime = 0.0f;
+        g_windTriggered = false;
+    } else {
+        PlaySoundA((LPCSTR)ambientWavData.data(), NULL, SND_MEMORY | SND_ASYNC | SND_LOOP);
+    }
+}
+
+void updateAudioEngine(float seqTime, bool isPaused) {
+    // Detect loop wrap-around or fresh replay (seqTime wrapped back to 0)
+    if (seqTime < 0.40f && g_lastSyncSeqTime > 5.0f) {
+        resetAudioEngine();
+        return;
+    }
+
+    if (g_hasTrackFile) {
+        // Pure digital silence when seqTime reaches g_cutToBlackTime
+        if (seqTime >= g_cutToBlackTime) {
+            if (g_isPlaying) {
+                mciSendStringA("stop soundtrack", NULL, 0, NULL);
+                mciSendStringA("stop mars_wind", NULL, 0, NULL);
+                g_isPlaying = false;
+            }
+            return;
+        }
+
+        if (isPaused) {
+            if (g_isPlaying) {
+                mciSendStringA("pause soundtrack", NULL, 0, NULL);
+                mciSendStringA("pause mars_wind", NULL, 0, NULL);
+                g_isPlaying = false;
+            }
+            return;
+        }
+
+        // Time scrub / jump detection (> 0.40s deviation)
+        if (fabsf(seqTime - g_lastSyncSeqTime) > 0.40f || !g_isPlaying) {
+            int ms = (int)(seqTime * 1000.0f);
+            char playCmd[128];
+            snprintf(playCmd, sizeof(playCmd), "play soundtrack from %d", ms);
+            mciSendStringA(playCmd, NULL, 0, NULL);
+            g_isPlaying = true;
+        }
+        g_lastSyncSeqTime = seqTime;
+    }
+
+    // Mars wind SFX trigger during atmospheric entry (Scene 3: 44.0s - 64.2s)
+    if (seqTime >= 44.0f && seqTime < 64.2f) {
+        if (!g_windTriggered) {
+            g_windTriggered = true;
+            mciSendStringA("play mars_wind from 0", NULL, 0, NULL);
+        }
+    } else if (seqTime < 44.0f || seqTime >= 64.2f) {
+        if (g_windTriggered) {
+            mciSendStringA("stop mars_wind", NULL, 0, NULL);
+            g_windTriggered = false;
+        }
+    }
+}
+
+void shutdownAudioEngine() {
+    mciSendStringA("close all", NULL, 0, NULL);
+    PlaySoundA(NULL, NULL, 0);
+}

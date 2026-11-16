@@ -1,0 +1,122 @@
+# Blender 5.0.1 MTL File: 'None'
+# www.blender.org
+
+newmtl Glass
+Ka 0.250000 0.250000 0.250000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 3
+map_Kd Endurance from SketchLab/source/tEXTURE/A-MasterColour.jpg
+map_Ns Endurance from SketchLab/source/tEXTURE/Grain.png
+
+newmtl Glass1
+Ns 360.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+
+newmtl Interior
+Ns 360.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+
+newmtl Light
+Ns 360.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+
+newmtl Metal
+Ka 0.500000 0.500000 0.500000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 3
+map_Kd Endurance from SketchLab/source/tEXTURE/A-MasterColour.jpg
+map_Ns Endurance from SketchLab/source/tEXTURE/Grain1.png
+
+newmtl Non_Metal
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Kd Endurance from SketchLab/source/tEXTURE/A-MasterColour.jpg
+map_Ns Endurance from SketchLab/source/tEXTURE/Grain1.png
+
+newmtl RollingShuttle
+Ka 0.500000 0.500000 0.500000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 3
+map_Ns Endurance from SketchLab/source/tEXTURE/Grain1.png
+
+newmtl RollingShuttle1
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Ns Endurance from SketchLab/source/tEXTURE/Grain1.png
+
+newmtl Tiles
+Ka 0.100000 0.100000 0.100000
+Kd 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 3
+map_Ns Endurance from SketchLab/source/tEXTURE/Grain1.png
+
+newmtl Tiles1
+Ka 0.100000 0.100000 0.100000
+Kd 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 3
+map_Ns Endurance from SketchLab/source/tEXTURE/Grain1.png
+
+newmtl Tiles2
+Ka 0.500000 0.500000 0.500000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 3
+map_Kd Endurance from SketchLab/source/tEXTURE/A-MasterColour.jpg
+map_Ns Endurance from SketchLab/source/tEXTURE/ShipTiles2_Bump.jpg
+
+newmtl Tiles3
+Ka 0.100000 0.100000 0.100000
+Kd 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 3
+map_Ns Endurance from SketchLab/source/tEXTURE/Grain1.png

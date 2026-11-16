@@ -323,12 +323,6 @@ void updateScene3(float dt) {
 
     float t = seqTime;
 
-    // Trigger authentic NASA Martian wind sound when hitting the atmosphere
-    if (!soundTriggered && t >= 44.0f) {
-        soundTriggered = true;
-        PlaySoundA("mars_wind_nasa.wav", NULL, SND_FILENAME | SND_ASYNC | SND_NOSTOP);
-    }
-
     // Update cloud vapor shreds streaming backward
     for (size_t i = 0; i < s3Vapor.size(); ++i) {
         s3Vapor[i].z -= s3Vapor[i].speed * dt;
@@ -477,8 +471,10 @@ void updateScene3(float dt) {
     // ------------------------------------------------------------------------
     // SHOT 2: HYPERSONIC OVER-THE-SHOULDER DIVE (50.5s - 60.5s)
     // ------------------------------------------------------------------------
+    // SHOT 2: HYPERSONIC CHASE DIVE (50.5s - 65.0s: 6.5s in clouds + 8.0s clear crater flight)
+    // ------------------------------------------------------------------------
     else {
-        float u = (t - 50.5f) / 10.0f;
+        float u = (t - 50.5f) / 14.5f;
         u = clampf(u, 0.0f, 1.0f);
         float ease = u * u;
 
@@ -497,7 +493,7 @@ void updateScene3(float dt) {
         s3HeatGlow  = lerpf(1.0f, 0.20f, u);
 
         // Residual sparks fading out
-        if (t <= 60.5f) {
+        if (t <= 64.5f) {
             for (int f = 0; f < 2; ++f) {
                 ReentrySpark sp;
                 sp.x = s3ShipX + randRange(-0.3f, 0.3f);
@@ -551,10 +547,10 @@ void computeCameraScene3(float& eyeX, float& eyeY, float& eyeZ,
         eyeZ += sinf(t * 72.0f) * shake;
     }
     // ------------------------------------------------------------------------
-    // SHOT 2: HYPERSONIC CHASE DIVE (50.5s - 60.5s)
+    // SHOT 2: HYPERSONIC CHASE DIVE (50.5s - 65.0s)
     // ------------------------------------------------------------------------
     else {
-        float u = (t - 50.5f) / 10.0f;
+        float u = (t - 50.5f) / 14.5f;
         u = clampf(u, 0.0f, 1.0f);
         float dirX =  0.60f, dirY = -0.42f, dirZ =  0.75f;
         normalize3(dirX, dirY, dirZ);
@@ -701,7 +697,7 @@ static void renderAtmosphericVaporStreaks() {
 // DENSE 3D VOLUMETRIC CLOUD DECK (Surrounding Ranger in Shot 2 with Breakthrough Reveal)
 // ============================================================================
 static void renderVolumetricCloudDeck() {
-    if (seqTime < 50.5f || seqTime > 62.5f || s3VolumetricClouds.empty()) return;
+    if (seqTime < 50.5f || seqTime > 66.5f || s3VolumetricClouds.empty()) return;
 
     GLuint tex = cloudTexID ? cloudTexID : smokeTexID;
     if (!tex) return;
@@ -719,22 +715,22 @@ static void renderVolumetricCloudDeck() {
     float camRightX = mv[0], camRightY = mv[4], camRightZ = mv[8];
     float camUpX    = mv[1], camUpY    = mv[5], camUpZ    = mv[9];
 
-    // Breakthrough factor: 50.5s - 56.5s (6s) is inside dense clouds; 56.5s - 57.35s breaks through
+    // Breakthrough factor: 50.5s - 56.5s inside dense clouds; 56.5s - 57.0s bursts through; 57.0s loud music hits!
     float breakthrough = 0.0f;
     if (seqTime >= 56.5f) {
-        breakthrough = clampf((seqTime - 56.5f) / 0.85f, 0.0f, 1.0f);
-        breakthrough = breakthrough * breakthrough * (3.0f - 2.0f * breakthrough);
+        float u = clampf((seqTime - 56.5f) / 0.5f, 0.0f, 1.0f);
+        breakthrough = u * u * (3.0f - 2.0f * u);
     }
 
     for (size_t i = 0; i < s3VolumetricClouds.size(); ++i) {
         const VolumetricCloud& c = s3VolumetricClouds[i];
 
-        // Part clouds underneath the Ranger as it bursts through the cloud floor
-        float floorFade = 1.0f;
-        if (c.y < s3ShipY + 1.2f && breakthrough > 0.0f) {
-            floorFade = (1.0f - breakthrough * 0.95f);
+        // Clouds sweep backward and vanish as ship breaks out into clear sky
+        float cloudFade = 1.0f;
+        if (breakthrough > 0.0f) {
+            cloudFade = (1.0f - breakthrough);
         }
-        if (floorFade <= 0.02f) continue;
+        if (cloudFade <= 0.01f) continue;
 
         // Camera proximity fade to prevent near-plane clipping
         float dx = c.x - s3ShipX;
@@ -743,7 +739,7 @@ static void renderVolumetricCloudDeck() {
         float distSq = dx * dx + dy * dy + dz * dz;
         float camFade = clampf((distSq - 1.2f) / 3.0f, 0.0f, 1.0f);
 
-        float a = c.alpha * floorFade * camFade;
+        float a = c.alpha * cloudFade * camFade;
         if (a <= 0.01f) continue;
 
         // Authentic multi-tier Martian atmospheric lighting
@@ -1091,12 +1087,12 @@ void renderScene3() {
     renderAtmosphericVaporStreaks();
 
     // 3. Official NASA Gale Crater 3D Topography Mesh
-    // Completely shrouded by dense cloud deck for first 6 seconds (50.5s - 56.5s), then dramatically revealed at 56.5s
+    // Completely shrouded by dense cloud deck (50.5s - 56.5s), revealed exactly as clouds clear at 57.0s on loud chord hit
     float craterReveal = 1.0f;
     if (seqTime < 50.5f || seqTime < 56.5f) {
         craterReveal = 0.0f;
-    } else if (seqTime < 57.35f) {
-        float u = (seqTime - 56.5f) / 0.85f;
+    } else if (seqTime < 57.0f) {
+        float u = (seqTime - 56.5f) / 0.5f;
         craterReveal = u * u * (3.0f - 2.0f * u);
     } else {
         craterReveal = 1.0f;

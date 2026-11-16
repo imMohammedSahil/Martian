@@ -208,29 +208,28 @@ void renderCinemaPost(float flareX, float flareY, bool flareInFront, float flare
             fadeAlpha = 1.0f - smoothstep(44.0f, 44.50f, seqTime);
         }
     }
-    // Scene 3 Shot 2 cut to black (60.0s - 60.5s), hold black (60.5s - 61.0s), and clean reveal of Scene 4 (61.0s - 61.8s)
-    if (seqTime >= 60.00f && seqTime < 61.80f) {
-        if (seqTime < 60.50f) {
-            fadeAlpha = smoothstep(60.00f, 60.50f, seqTime);
-        } else if (seqTime < 61.00f) {
-            fadeAlpha = 1.0f;
+    // Scene 3 into Scene 4 Smooth Filmic Transition (64.2s - 65.8s)
+    // Seamlessly dissolves the high-speed canyon dive into the dark cabin silhouette
+    if (seqTime >= 64.20f && seqTime < 65.80f) {
+        if (seqTime < 65.00f) {
+            fadeAlpha = smoothstep(64.20f, 65.00f, seqTime);
         } else {
-            fadeAlpha = 1.0f - smoothstep(61.00f, 61.80f, seqTime);
+            fadeAlpha = 1.0f - smoothstep(65.00f, 65.80f, seqTime);
         }
     }
-    // Scene 4 final hard theatrical CUT TO BLACK at 71.5s (solid 100% complete black background)
-    if (seqTime >= 71.50f) {
+    // Scene 4 final theatrical CUT TO BLACK (controlled interactively by g_cutToBlackTime)
+    if (seqTime >= g_cutToBlackTime) {
         fadeAlpha = 1.0f;
     }
 
-    // Scene 4 Optical Exposure Bloom when ramp lowers and daylight floods in (63.5s - 66.5s)
-    if (seqTime >= 63.5f && seqTime <= 66.5f) {
+    // Scene 4 Optical Exposure Bloom when ramp lowers and daylight floods in (67.5s - 70.5s)
+    if (seqTime >= 67.5f && seqTime <= 70.5f) {
         float bloom = 0.0f;
         float maxBloom = getScene4BloomStrength();
-        if (seqTime <= 64.3f) {
-            bloom = smoothstep(63.5f, 64.3f, seqTime) * maxBloom;
+        if (seqTime <= 68.3f) {
+            bloom = smoothstep(67.5f, 68.3f, seqTime) * maxBloom;
         } else {
-            bloom = (1.0f - smoothstep(64.3f, 66.5f, seqTime)) * maxBloom;
+            bloom = (1.0f - smoothstep(68.3f, 70.5f, seqTime)) * maxBloom;
         }
         if (bloom > 0.005f) {
             glEnable(GL_BLEND);
@@ -256,13 +255,14 @@ void renderCinemaPost(float flareX, float flareY, bool flareInFront, float flare
     }
 
     // 4. Storyboard Title Card: "M A R T I A N"
-    // - Scene 1 opening: 25.0s - 34.5s
-    // - Scene 4 finale: after scene ends and cuts to complete black, title reveals smoothly at 72.2s on black
+    // - Scene 1 opening: 27.0s - 34.5s (locked frame-accurately to the 27.0s organ chord drop)
+    // - Scene 4 finale: after scene ends and cuts to complete black, title reveals smoothly on black in dead silence
     float titleAlpha = 0.0f;
-    if (seqTime >= 25.0f && seqTime <= 34.5f) {
-        titleAlpha = smoothstep(25.0f, 26.2f, seqTime) * (1.0f - smoothstep(33.0f, 34.5f, seqTime));
-    } else if (seqTime >= 72.2f && seqTime <= 78.0f) {
-        titleAlpha = smoothstep(72.2f, 73.2f, seqTime) * (1.0f - smoothstep(76.8f, 78.0f, seqTime));
+    if (seqTime >= 27.0f && seqTime <= 34.5f) {
+        titleAlpha = smoothstep(27.0f, 27.6f, seqTime) * (1.0f - smoothstep(33.2f, 34.5f, seqTime));
+    } else if (seqTime >= g_titleRevealTime && seqTime <= (g_titleRevealTime + 5.5f)) {
+        titleAlpha = smoothstep(g_titleRevealTime, g_titleRevealTime + 0.8f, seqTime) * 
+                     (1.0f - smoothstep(g_titleRevealTime + 4.2f, g_titleRevealTime + 5.5f, seqTime));
     }
 
     if (titleAlpha > 0.01f) {

@@ -33,7 +33,9 @@ const int   MARS_SLICES         = 112;
 const int   MARS_STACKS         = 72;
 const int   NUM_STARS           = 4200;
 const int   NUM_DUST_STREAKS    = 90;
-const float SEQUENCE_DURATION   = 78.5f; // Scene 1 (35s) + Scene 2 (9s) + Scene 3 (16.5s) + Scene 4 Dune Shot (11s) + Black Finale Title (7s)
+const float SEQUENCE_DURATION   = 84.3f; // Scene 1 (35s) + Scene 2 (9s) + Scene 3 (21s) + Scene 4 Dune (11.9s) + Black Finale Title (7.4s)
+
+#include "TimingEditor.h"
 
 // ============================================================================
 // DATA STRUCTURES
