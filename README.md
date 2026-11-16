@@ -136,46 +136,72 @@ stateDiagram-v2
 
 ## Graphics Pipeline & Technical Implementation
 
+```mermaid
+flowchart TD
+    subgraph Pass1 ["1. Buffer Initialization"]
+        Clear["glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)"]
+    end
+
+    subgraph Pass2 ["2. Camera Projection & Viewport"]
+        Proj["gluPerspective(44.0, W / H, 0.08, 350.0)"]
+        View["gluLookAt(eye, target, up)"]
+        Proj --> View
+    end
+
+    subgraph Pass3 ["3. Illumination Model"]
+        SunLight["GL_LIGHT0: Primary Directional Sun<br/>Pos: (-18, 12, 44), Diffuse: (2.10, 1.95, 1.80)"]
+        MarsLight["GL_LIGHT1: Mars Planetary Bounce Fill<br/>Pos: (0, 0, 0), Diffuse: (0.42, 0.17, 0.08)"]
+        SunLight --- MarsLight
+    end
+
+    subgraph Pass4 ["4. Scene Geometry Passes"]
+        direction LR
+        subgraph DeepSpace ["Scenes 1 & 2: Orbit"]
+            S1_1["3D Stellar Dome (4,200 stars)"]
+            S1_2["Sun Disc & Solar Geometry"]
+            S1_3["Mars Sphere (112x72) & Atmosphere"]
+            S1_4["Pre-Baked Endurance Mesh"]
+            S1_5["Ranger Lander Model"]
+        end
+        subgraph Surface ["Scenes 3 & 4: Descent & Surface"]
+            S3_1["Gale Crater Elevation Surface"]
+            S3_2["Multi-Layered Dust Particles"]
+            S3_3["Cabin Interior & Cargo Ramp"]
+            S3_4["Ray-Marched Dunes & Soft Shadows"]
+            S3_5["Posed Astronaut Crew Models"]
+        end
+    end
+
+    subgraph Pass5 ["5. 2D Theatrical Post-Processing"]
+        Occl["Analytical Ray-Sphere Sun-Mars Occlusion"]
+        Flare["gluProject 2D Anamorphic Flare & Bloom"]
+        Title["Century Gothic Cinematic Typography"]
+        Bars["Solid 2.39:1 Cinema Letterbox Matte Bars"]
+        Occl --> Flare --> Title --> Bars
+    end
+
+    subgraph Pass6 ["6. Frame Presentation"]
+        Swap["glutSwapBuffers() (V-Sync Synchronized)"]
+    end
+
+    Clear --> Proj
+    View --> SunLight
+    MarsLight --> Pass4
+    Pass4 --> Occl
+    Bars --> Swap
 ```
-+-----------------------------------------------------------------------------------+
-|                            PER-FRAME RENDER PIPELINE                              |
-+-----------------------------------------------------------------------------------+
-|                                                                                   |
-|  1. BUFFER CLEAR                                                                  |
-|     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)                            |
-|                                                                                   |
-|  2. CAMERA PROJECTION & VIEWPORT TRANSFORM                                        |
-|     glMatrixMode(GL_PROJECTION) -> gluPerspective(44.0, W / H, 0.08, 350.0)      |
-|     glMatrixMode(GL_MODELVIEW)  -> gluLookAt(eye, target, up)                     |
-|                                                                                   |
-|  3. LIGHTING SETUP                                                                |
-|     GL_LIGHT0: Primary directional sun (Pos: -18, 12, 44, Diffuse: 2.10, 1.95, 1.80) |
-|     GL_LIGHT1: Mars planetary bounce fill (Pos: 0, 0, 0, Diffuse: 0.42, 0.17, 0.08)  |
-|                                                                                   |
-|  4. SCENE-SPECIFIC GEOMETRY RENDERING                                             |
-|     +----------------------------+--------------------------------------------+   |
-|     | Scenes 1 & 2               | Scenes 3 & 4                               |   |
-|     +----------------------------+--------------------------------------------+   |
-|     | - 3D Stellar Dome (4200 pt)| - Gale Crater Elevation Grid               |   |
-|     | - Solar Disk Geometry      | - Multi-layered Dust Particle System       |   |
-|     | - Mars Sphere (112x72 mesh)| - High-Poly Cabin Mesh & Ramp Rigging      |   |
-|     | - Dual Atmospheric Shells  | - Ray-Marched Sand Dunes with Soft Shadows |   |
-|     | - Pre-Baked Endurance Mesh | - Skeletally Positioned Crew Models        |   |
-|     | - Ranger Lander Model      | - Volumetric Haze Plane                    |   |
-|     +----------------------------+--------------------------------------------+   |
-|                                                                                   |
-|  5. 2D POST-PROCESSING PASS (Orthographic 0..W x 0..H)                            |
-|     - Analytical Sun-Mars ray occlusion check via computeSunMarsOcclusion()       |
-|     - gluProject solar coordinates to screen space (winX, winY)                   |
-|     - Multi-layer additive anamorphic flare streaks & optical bloom               |
-|     - Frame-synchronized title typography overlays                                |
-|     - Solid 2.39:1 Cinema Letterbox matte bars (Top & Bottom)                     |
-|                                                                                   |
-|  6. BUFFER SWAP                                                                   |
-|     glutSwapBuffers() (V-Sync locked)                                             |
-|                                                                                   |
-+-----------------------------------------------------------------------------------+
-```
+
+### Render Stage Execution Breakdown
+
+| Stage | Operation | Technical Implementation & OpenGL Calls |
+| :--- | :--- | :--- |
+| **1. Buffer Clear** | Clear color & depth buffers | `glClear(GL_COLOR_BUFFER_BIT \| GL_DEPTH_BUFFER_BIT)` |
+| **2. Camera & Viewport** | Perspective projection & camera tracking | `gluPerspective(44.0, W/H, 0.08, 350.0)`<br/>`gluLookAt(eye, target, up)` |
+| **3. Illumination** | Dual-light source configuration | `GL_LIGHT0`: Directional solar key light `(-18, 12, 44)`<br/>`GL_LIGHT1`: Martian rust planetary bounce `(0, 0, 0)` |
+| **4. Geometry: Orbit (Scenes 1-2)** | Deep space & orbital spacecraft | 4,200-point stellar skybox, Mars 112x72 sphere, dual atmospheric shells, pre-baked Endurance & Ranger display lists |
+| **4. Geometry: Surface (Scenes 3-4)** | Surface descent & landing site | NASA Gale Crater elevation grid (`gale_crater.bin`), volumetric dust plumes, cabin interior, ray-marched sand dunes, posed astronauts |
+| **5. 2D Post-Processing** | Theatrical compositing & letterbox | Screen-space solar projection via `gluProject`, anamorphic blue/gold streaks, typography overlays, 2.39:1 letterbox matte bars |
+| **6. Buffer Swap** | Final frame presentation | `glutSwapBuffers()` locked to display V-Sync (60 FPS) |
 
 ### Analytical Ray-Sphere Eclipse Model
 
