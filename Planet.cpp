@@ -276,10 +276,10 @@ void renderBackgroundPlanets() {
         glBindTexture(GL_TEXTURE_2D, jupiterTextureID);
         glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     }
-    GLfloat jupDiffuse[]  = { 1.45f, 1.35f, 1.20f, 1.0f };
-    GLfloat jupAmbient[]  = { 0.28f, 0.24f, 0.20f, 1.0f };
-    GLfloat jupSpecular[] = { 0.12f, 0.10f, 0.06f, 1.0f };
-    GLfloat jupShine[]    = { 6.0f };
+    GLfloat jupDiffuse[]  = { 2.10f, 1.95f, 1.75f, 1.0f };
+    GLfloat jupAmbient[]  = { 0.48f, 0.42f, 0.36f, 1.0f };
+    GLfloat jupSpecular[] = { 0.22f, 0.18f, 0.14f, 1.0f };
+    GLfloat jupShine[]    = { 8.0f };
     glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, jupDiffuse);
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, jupAmbient);
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, jupSpecular);
