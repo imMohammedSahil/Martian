@@ -2,7 +2,7 @@
 
 A high-performance, native C++ / OpenGL real-time cinematic visualizer and animation sequence recreating the Interstellar and Gravity-grade journey from deep cosmic orbit to hypersonic entry and touchdown on the Martian surface.
 
-> **Pre-compiled Binary**: Download [**Martian_v1.0.zip**](https://github.com/imMohammedSahil/Martian/releases/latest/download/Martian_v1.0.zip) from [Releases](https://github.com/imMohammedSahil/Martian/releases), extract, and run `Martian.exe` directly on Windows without compiling.
+> **Pre-compiled Binary**: Download [**Martian_v1.0.zip**](https://github.com/imMohammedSahil/Martian/releases/latest/download/Martian_v1.0.zip) from [Releases](https://github.com/imMohammedSahil/Martian/releases), extract, and run `Martian.exe` directly on Windows without compiling. *(On first run, click **More info** → **Run anyway** if Windows SmartScreen prompts).*
 
 The engine executes an uninterrupted, frame-accurate 84.3-second cinematic sequence rendered in an anamorphic 2.39:1 theatrical letterbox, powered by procedural solar lens flare projection, multi-scattering atmospheric illumination, fast ray-marched terrain shadows, dual-stream spatial audio, and an offscreen frame-buffer video recording pipeline.
 
