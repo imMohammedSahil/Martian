@@ -17,6 +17,10 @@ float  uranusSpinAngle   = 45.0f;
 float  jupiterSpinAngle  = 120.0f;
 float  saturnSpinAngle   = 200.0f;
 
+#ifndef GL_TEXTURE_MAX_ANISOTROPY_EXT
+#define GL_TEXTURE_MAX_ANISOTROPY_EXT 0x84FE
+#endif
+
 static GLuint loadTextureFromFile(const char* filename, bool isRGBA, bool repeatS) {
     int w, h, channels;
     int req = isRGBA ? 4 : 3;
@@ -28,6 +32,7 @@ static GLuint loadTextureFromFile(const char* filename, bool isRGBA, bool repeat
     glBindTexture(GL_TEXTURE_2D, texID);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 16.0f);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, repeatS ? GL_REPEAT : GL_CLAMP);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
     GLenum format = isRGBA ? GL_RGBA : GL_RGB;
@@ -69,6 +74,7 @@ static void createProceduralMarsTexture() {
     glBindTexture(GL_TEXTURE_2D, marsTextureID);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 16.0f);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
     gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGB, W, H, GL_RGB, GL_UNSIGNED_BYTE, data);
@@ -102,6 +108,7 @@ void loadMarsTexture() {
     glBindTexture(GL_TEXTURE_2D, marsTextureID);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 16.0f);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
     gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGB, w, h, GL_RGB, GL_UNSIGNED_BYTE, data);
@@ -192,6 +199,18 @@ void renderMarsAndAtmosphere() {
     glPopMatrix();
 }
 
+static void renderAtmosphericLimb(float radius, float r, float g, float b, float a) {
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+    glDisable(GL_CULL_FACE);
+    GLfloat limbMat[] = { r, g, b, a };
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, limbMat);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, limbMat);
+    glutSolidSphere(radius, 48, 28);
+    glDisable(GL_BLEND);
+    glEnable(GL_CULL_FACE);
+}
+
 static void renderSaturnRings(float innerR, float outerR, int segments) {
     if (saturnRingTextureID) {
         glEnable(GL_TEXTURE_2D);
@@ -201,14 +220,18 @@ static void renderSaturnRings(float innerR, float outerR, int segments) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_ALPHA_TEST);
-    glAlphaFunc(GL_GREATER, 0.04f);
+    glAlphaFunc(GL_GREATER, 0.03f);
     glDisable(GL_CULL_FACE);
     glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
 
-    GLfloat ringDiffuse[] = { 1.55f, 1.48f, 1.30f, 0.95f };
-    GLfloat ringAmbient[] = { 0.40f, 0.35f, 0.28f, 0.95f };
+    GLfloat ringDiffuse[]  = { 1.70f, 1.58f, 1.36f, 0.98f };
+    GLfloat ringAmbient[]  = { 0.45f, 0.40f, 0.32f, 0.98f };
+    GLfloat ringSpecular[] = { 0.30f, 0.25f, 0.18f, 1.0f };
+    GLfloat ringShine[]    = { 16.0f };
     glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, ringDiffuse);
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ringAmbient);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, ringSpecular);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, ringShine);
 
     glBegin(GL_QUAD_STRIP);
     glNormal3f(0.0f, 1.0f, 0.0f);
@@ -247,20 +270,23 @@ void renderBackgroundPlanets() {
         glBindTexture(GL_TEXTURE_2D, uranusTextureID);
         glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     }
-    GLfloat uranusDiffuse[]  = { 1.25f, 1.40f, 1.50f, 1.0f };
-    GLfloat uranusAmbient[]  = { 0.25f, 0.30f, 0.35f, 1.0f };
-    GLfloat uranusSpecular[] = { 0.15f, 0.20f, 0.25f, 1.0f };
-    GLfloat uranusShine[]    = { 8.0f };
+    GLfloat uranusDiffuse[]  = { 1.30f, 1.45f, 1.55f, 1.0f };
+    GLfloat uranusAmbient[]  = { 0.28f, 0.32f, 0.38f, 1.0f };
+    GLfloat uranusSpecular[] = { 0.18f, 0.24f, 0.28f, 1.0f };
+    GLfloat uranusShine[]    = { 12.0f };
     glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, uranusDiffuse);
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, uranusAmbient);
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, uranusSpecular);
     glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, uranusShine);
 
-    renderTexturedSphere(0.38f, 48, 28);
+    renderTexturedSphere(0.38f, 56, 32);
 
     if (uranusTextureID) {
         glDisable(GL_TEXTURE_2D);
     }
+    // Atmospheric limb
+    renderAtmosphericLimb(0.38f * 1.025f, 0.20f, 0.45f, 0.70f, 0.28f);
+
     glEnable(GL_CULL_FACE);
     glPopMatrix();
 
@@ -276,20 +302,23 @@ void renderBackgroundPlanets() {
         glBindTexture(GL_TEXTURE_2D, jupiterTextureID);
         glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     }
-    GLfloat jupDiffuse[]  = { 2.10f, 1.95f, 1.75f, 1.0f };
-    GLfloat jupAmbient[]  = { 0.48f, 0.42f, 0.36f, 1.0f };
-    GLfloat jupSpecular[] = { 0.22f, 0.18f, 0.14f, 1.0f };
-    GLfloat jupShine[]    = { 8.0f };
+    GLfloat jupDiffuse[]  = { 2.15f, 2.00f, 1.80f, 1.0f };
+    GLfloat jupAmbient[]  = { 0.50f, 0.44f, 0.38f, 1.0f };
+    GLfloat jupSpecular[] = { 0.24f, 0.20f, 0.16f, 1.0f };
+    GLfloat jupShine[]    = { 10.0f };
     glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, jupDiffuse);
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, jupAmbient);
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, jupSpecular);
     glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, jupShine);
 
-    renderTexturedSphere(0.68f, 64, 36);
+    renderTexturedSphere(0.68f, 72, 40);
 
     if (jupiterTextureID) {
         glDisable(GL_TEXTURE_2D);
     }
+    // Atmospheric limb
+    renderAtmosphericLimb(0.68f * 1.018f, 0.38f, 0.28f, 0.16f, 0.22f);
+
     glEnable(GL_CULL_FACE);
     glPopMatrix();
 
@@ -307,23 +336,25 @@ void renderBackgroundPlanets() {
         glBindTexture(GL_TEXTURE_2D, saturnTextureID);
         glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     }
-    GLfloat satDiffuse[]  = { 1.40f, 1.32f, 1.15f, 1.0f };
-    GLfloat satAmbient[]  = { 0.30f, 0.26f, 0.20f, 1.0f };
-    GLfloat satSpecular[] = { 0.14f, 0.12f, 0.08f, 1.0f };
-    GLfloat satShine[]    = { 8.0f };
+    GLfloat satDiffuse[]  = { 1.48f, 1.40f, 1.22f, 1.0f };
+    GLfloat satAmbient[]  = { 0.34f, 0.30f, 0.22f, 1.0f };
+    GLfloat satSpecular[] = { 0.18f, 0.15f, 0.10f, 1.0f };
+    GLfloat satShine[]    = { 10.0f };
     glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, satDiffuse);
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, satAmbient);
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, satSpecular);
     glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, satShine);
 
-    renderTexturedSphere(0.78f, 64, 36);
+    renderTexturedSphere(0.78f, 72, 40);
 
     if (saturnTextureID) {
         glDisable(GL_TEXTURE_2D);
     }
+    // Atmospheric limb
+    renderAtmosphericLimb(0.78f * 1.020f, 0.42f, 0.34f, 0.18f, 0.25f);
 
-    // Saturn's Rings
-    renderSaturnRings(1.05f, 2.15f, 96);
+    // Saturn's Rings (160 segments for ultra-smooth silhouette)
+    renderSaturnRings(1.08f, 2.22f, 160);
 
     glEnable(GL_CULL_FACE);
     glPopMatrix();
