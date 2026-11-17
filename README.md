@@ -252,54 +252,33 @@ Mars features a thin carbon-dioxide atmosphere rendered via two concentric polyg
 
 ## Repository Structure
 
-```
+```text
 Martian/
-|-- .gitignore                  <- Git exclusion rules (build objects, video exports)
-|-- build.bat                   <- Automated MinGW-w64 build script
-|-- Martian.cbp                 <- Code::Blocks project configuration
-|-- Martian.layout              <- Code::Blocks editor workspace layout
-|-- Martian.exe                 <- Pre-compiled 64-bit static executable (standalone)
-|-- README.md                   <- Technical developer documentation
-|-- Common.h                    <- Core types, mathematical utilities, and global state
-|-- main.cpp                    <- Entry point, GLUT initialization, and event dispatcher
-|-- SceneDirector.h/.cpp        <- Unified timeline state machine and camera director
-|-- Scene1.cpp                  <- Scene 1: Cosmic void, Mars approach, and orbit reveal
-|-- Scene2.h/.cpp               <- Scene 2: Lander detachment and orbital burn
-|-- Scene3.h/.cpp               <- Scene 3: Atmospheric entry, Gale Crater, and descent
-|-- Scene4.h/.cpp               <- Scene 4: Cabin interior and sand dune silhouette
-|-- Spacecraft.h/.cpp           <- Endurance and Ranger mesh loading and transformation
-|-- Planet.h/.cpp               <- Mars, Uranus, Jupiter, Saturn & ring rendering and atmospheric limbs
-|-- Starfield.h/.cpp            <- 3D starfield point cloud and twinkling generator
-|-- PostProcess.h/.cpp          <- Lens flare, letterboxing, and title card compositor
-|-- AudioEngine.h/.cpp          <- Dual-mode audio engine (MCI streaming + organ synth)
-|-- TimingEditor.h/.cpp         <- Live runtime keyframe and timing calibration HUD
-|-- VideoExporter.h/.cpp        <- Offscreen FBO recorder and FFmpeg piping interface
-|-- timing_config.txt           <- Calibrated timing file for transitions and finale
-|-- scene4_lighting.txt         <- Directional and ambient lighting keyframe matrix
-|-- scene4_poses.txt            <- Astronaut joint rotation angles and positions
-|-- mars_surface.jpg            <- Photographic 2048x1024 Mars planetary texture
-|-- saturn_surface_4k.jpg       <- 4K NASA Cassini cylindrical surface texture for Saturn
-|-- saturn_ring_alpha.png       <- 8K alpha-channeled ring texture with Cassini/Encke divisions
-|-- jupiter_surface_2k.jpg      <- High-resolution banded Jovian atmosphere texture
-|-- uranus_surface_2k.jpg       <- High-resolution pale cyan ice giant texture
-|-- endurance_diffuse.jpg       <- Diffuse texture map for Endurance modules
-|-- ranger_diffuse.png          <- High-detail diffuse map for Ranger lander
-|-- martian_title.png           <- 2560x640 4K Century Gothic typography map
-|-- mars_wind_nasa.wav          <- NASA InSight lander atmospheric wind recording
-|-- soundtrack.mp3              <- Orchestral soundtrack for cinematic playback
-|-- endurance.bin               <- Pre-baked binary mesh for the Endurance spacecraft
-|-- ranger.bin                  <- Pre-baked binary mesh for the Ranger lifting body
-|-- gale_crater.bin             <- High-resolution NASA Gale Crater elevation surface
-|-- astronaut_pose1..4.bin      <- Pre-baked deformed astronaut character meshes
-|-- include/                    <- C/C++ Header dependencies
-|   |-- GL/freeglut.h           <- FreeGLUT 3.0 API definitions
-|   |-- GL/freeglut_ext.h       <- Extended FreeGLUT function pointers
-|   |-- stb_image.h             <- Single-header public-domain image decoder
-|-- lib/                        <- Static link libraries
-|   |-- libfreeglut_static.a    <- 64-bit static FreeGLUT library for MinGW
-|-- bin/
-    |-- Release/Martian.exe     <- Standalone optimized release build
-    |-- Debug/Martian.exe       <- Development debug build
+|-- build.bat            <- MinGW automated build script
+|-- Martian.cbp          <- Code::Blocks project file
+|-- Martian.exe          <- Standalone 64-bit executable
+|-- Common.h             <- Core types & global state
+|-- main.cpp             <- Entry point & GLUT loop
+|-- SceneDirector.h/.cpp <- Timeline state machine
+|-- Scene1.cpp           <- Scene 1: Orbit & Mars approach
+|-- Scene2.h/.cpp        <- Scene 2: Lander detachment & burn
+|-- Scene3.h/.cpp        <- Scene 3: Atmospheric entry
+|-- Scene4.h/.cpp        <- Scene 4: Dune silhouette
+|-- Spacecraft.h/.cpp    <- Spacecraft model loaders
+|-- Planet.h/.cpp        <- Mars, Saturn, Jupiter, Uranus
+|-- Starfield.h/.cpp     <- 3D cosmic starfield
+|-- PostProcess.h/.cpp   <- Lens flare & title compositor
+|-- AudioEngine.h/.cpp   <- Dual-mode audio system
+|-- TimingEditor.h/.cpp  <- Live timing calibration HUD
+|-- VideoExporter.h/.cpp <- Offscreen 4K FBO exporter
+|-- timing_config.txt    <- Scene transition timestamps
+|-- scene4_lighting.txt  <- Lighting keyframe matrix
+|-- scene4_poses.txt     <- Astronaut joint poses
+|-- *.jpg / *.png        <- Planetary textures & titles
+|-- *.bin                <- Pre-baked 3D binary meshes
+|-- include/             <- Headers (FreeGLUT, stb_image)
+|-- lib/                 <- Static FreeGLUT library
+|-- bin/Release/         <- Release binaries
 ```
 
 ---
