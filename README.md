@@ -1,11 +1,8 @@
 # MARTIAN: Cinematic Space Sequence Engine
 
-[![Release](https://img.shields.io/github/v/release/imMohammedSahil/Martian?color=brightgreen&label=Download%20v1.0)](https://github.com/imMohammedSahil/Martian/releases/latest)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-
 A high-performance, native C++ / OpenGL real-time cinematic visualizer and animation sequence recreating the Interstellar and Gravity-grade journey from deep cosmic orbit to hypersonic entry and touchdown on the Martian surface.
 
-> **One-Click Play**: Download [**Martian_v1.0.zip**](https://github.com/imMohammedSahil/Martian/releases/latest/download/Martian_v1.0.zip), extract, and double-click `Martian.exe` to run immediately on Windows without compiling.
+> **Pre-compiled Binary**: Download [**Martian_v1.0.zip**](https://github.com/imMohammedSahil/Martian/releases/latest/download/Martian_v1.0.zip) from [Releases](https://github.com/imMohammedSahil/Martian/releases), extract, and run `Martian.exe` directly on Windows without compiling.
 
 The engine executes an uninterrupted, frame-accurate 84.3-second cinematic sequence rendered in an anamorphic 2.39:1 theatrical letterbox, powered by procedural solar lens flare projection, multi-scattering atmospheric illumination, fast ray-marched terrain shadows, dual-stream spatial audio, and an offscreen frame-buffer video recording pipeline.
 
