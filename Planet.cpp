@@ -225,12 +225,14 @@ static void renderSaturnRings(float innerR, float outerR, int segments) {
     glDisable(GL_CULL_FACE);
     glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
 
-    GLfloat ringDiffuse[]  = { 1.70f, 1.58f, 1.36f, 0.98f };
-    GLfloat ringAmbient[]  = { 0.45f, 0.40f, 0.32f, 0.98f };
-    GLfloat ringSpecular[] = { 0.30f, 0.25f, 0.18f, 1.0f };
-    GLfloat ringShine[]    = { 16.0f };
+    GLfloat ringDiffuse[]  = { 2.20f, 2.05f, 1.80f, 1.0f };
+    GLfloat ringAmbient[]  = { 0.90f, 0.85f, 0.75f, 1.0f };
+    GLfloat ringEmission[] = { 0.70f, 0.65f, 0.55f, 1.0f };
+    GLfloat ringSpecular[] = { 0.40f, 0.35f, 0.28f, 1.0f };
+    GLfloat ringShine[]    = { 24.0f };
     glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, ringDiffuse);
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ringAmbient);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, ringEmission);
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, ringSpecular);
     glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, ringShine);
 
@@ -248,6 +250,9 @@ static void renderSaturnRings(float innerR, float outerR, int segments) {
         glVertex3f(outerR * cosA, 0.0f, outerR * sinA);
     }
     glEnd();
+
+    GLfloat zeroEmission[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, zeroEmission);
 
     glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
     glDisable(GL_ALPHA_TEST);
@@ -355,7 +360,7 @@ void renderBackgroundPlanets() {
     renderAtmosphericLimb(0.65f * 1.018f, 0.45f, 0.36f, 0.20f, 0.25f);
 
     // Saturn's Rings (200 segments for master-grade curvature)
-    renderSaturnRings(0.88f, 1.90f, 200);
+    renderSaturnRings(0.82f, 1.95f, 200);
 
     glEnable(GL_CULL_FACE);
     glPopMatrix();
