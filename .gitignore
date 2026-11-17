@@ -19,3 +19,7 @@ Thumbs.db
 .idea/
 *.swp
 *.bak
+
+# Temporary / user reference media
+WhatsApp Image*
+*.jpeg
