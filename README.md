@@ -36,7 +36,7 @@ flowchart TD
     end
 
     subgraph Simulation ["Simulation & Geometry Stages"]
-        Scene1["Scene 1: Orbit & Title<br/>(Deep Starfield, Solar Flare, Endurance)"]
+        Scene1["Scene 1: Orbit & Title<br/>(Deep Starfield, Uranus, Jupiter, Saturn & Rings, Solar Flare, Endurance)"]
         Scene2["Scene 2: Separation<br/>(Ranger Lander RCS Maneuvers)"]
         Scene3["Scene 3: Entry & Descent<br/>(Hypersonic Heatshield, Gale Crater STL)"]
         Scene4["Scene 4: The Dune Shot<br/>(Ray-Marched Dunes, Crew Silhouette)"]
@@ -118,8 +118,8 @@ stateDiagram-v2
 
 | Shot | Timecode | Camera Movement & Lens | Visual Mechanics & Assets | Audio Cue |
 | :--- | :--- | :--- | :--- | :--- |
-| **1.1** | `00.0s - 04.5s` | Slow pan in deep space; 44 deg FOV | 4,200 twinkling stars; distant solar glare; pitch void | Low-frequency sub-bass drone |
-| **1.2** | `04.5s - 13.0s` | Orbit acquisition flight | Edge of Mars rim illuminated; Endurance rotating speck | Rising chord progression |
+| **1.1** | `00.0s - 04.5s` | Slow pan in deep space; 44 deg FOV | 4,200 twinkling stars; distant pale cyan ice giant Uranus; pitch void | Low-frequency sub-bass drone |
+| **1.2** | `04.5s - 13.0s` | Orbit acquisition & celestial sweep | Panning past banded giant Jupiter; Mars centered in frame with Saturn & illuminated 8K alpha rings at bottom-right; Endurance rotating speck | Rising chord progression |
 | **1.3** | `13.0s - 22.0s` | High-speed descent `Z: 12.0 -> 3.12` | Mars surface expands to cover 100% viewport | Dynamic orchestral swell |
 | **1.4** | `22.0s - 35.0s` | Heroic tracking orbit | Authentic 12-pod Endurance ring with beacon strobes; `MARTIAN` title at `27.0s` | Peak pipe organ crescendo |
 | **2.1** | `35.0s - 39.0s` | Over-the-shoulder lander view | Ranger decoupling from hub; cold-gas RCS puffs | Thruster burst SFX |
@@ -266,7 +266,7 @@ Martian/
 |-- Scene3.h/.cpp               <- Scene 3: Atmospheric entry, Gale Crater, and descent
 |-- Scene4.h/.cpp               <- Scene 4: Cabin interior and sand dune silhouette
 |-- Spacecraft.h/.cpp           <- Endurance and Ranger mesh loading and transformation
-|-- Planet.h/.cpp               <- Mars sphere generation, atmosphere, and Phobos
+|-- Planet.h/.cpp               <- Mars, Uranus, Jupiter, Saturn & ring rendering and atmospheric limbs
 |-- Starfield.h/.cpp            <- 3D starfield point cloud and twinkling generator
 |-- PostProcess.h/.cpp          <- Lens flare, letterboxing, and title card compositor
 |-- AudioEngine.h/.cpp          <- Dual-mode audio engine (MCI streaming + organ synth)
@@ -276,6 +276,10 @@ Martian/
 |-- scene4_lighting.txt         <- Directional and ambient lighting keyframe matrix
 |-- scene4_poses.txt            <- Astronaut joint rotation angles and positions
 |-- mars_surface.jpg            <- Photographic 2048x1024 Mars planetary texture
+|-- saturn_surface_4k.jpg       <- 4K NASA Cassini cylindrical surface texture for Saturn
+|-- saturn_ring_alpha.png       <- 8K alpha-channeled ring texture with Cassini/Encke divisions
+|-- jupiter_surface_2k.jpg      <- High-resolution banded Jovian atmosphere texture
+|-- uranus_surface_2k.jpg       <- High-resolution pale cyan ice giant texture
 |-- endurance_diffuse.jpg       <- Diffuse texture map for Endurance modules
 |-- ranger_diffuse.png          <- High-detail diffuse map for Ranger lander
 |-- martian_title.png           <- 2560x640 4K Century Gothic typography map
@@ -442,6 +446,9 @@ Ensure FFmpeg is installed and added to your system `PATH`:
 
 # Export Ultra HD 4K @ 60 FPS (3840x2160)
 .\Martian.exe --export 4k
+
+# Export custom duration (e.g. Scene 1 through title reveal @ 32.0s in 4K 60 FPS)
+.\Martian.exe --export 4k --duration 32.0
 
 # Export both 1080p and 4K master sequences sequentially
 .\Martian.exe --export both
