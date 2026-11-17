@@ -1,0 +1,24 @@
+name: Build & Verify
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: Windows MinGW Compilation
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify MinGW Compiler
+        shell: cmd
+        run: g++ --version
+
+      - name: Build Martian Engine
+        shell: cmd
+        run: build.bat
