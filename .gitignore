@@ -20,6 +20,10 @@ Thumbs.db
 *.swp
 *.bak
 
+# Archives and releases
+*.zip
+release_staging/
+
 # Temporary / user reference media
 WhatsApp Image*
 *.jpeg
