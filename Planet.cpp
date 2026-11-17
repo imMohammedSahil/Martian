@@ -128,8 +128,9 @@ void loadPlanetTextures() {
         if (!jupiterTextureID) jupiterTextureID = loadTextureFromFile("textures/jupiter_surface_2k.jpg", false, true);
     }
     if (!saturnTextureID) {
-        saturnTextureID     = loadTextureFromFile("saturn_surface_2k.jpg", false, true);
-        if (!saturnTextureID) saturnTextureID = loadTextureFromFile("textures/saturn_surface_2k.jpg", false, true);
+        saturnTextureID     = loadTextureFromFile("saturn_surface_4k.jpg", false, true);
+        if (!saturnTextureID) saturnTextureID = loadTextureFromFile("saturn_surface_2k.jpg", false, true);
+        if (!saturnTextureID) saturnTextureID = loadTextureFromFile("textures/saturn_surface_4k.jpg", false, true);
     }
     if (!saturnRingTextureID) {
         saturnRingTextureID = loadTextureFromFile("saturn_ring_alpha.png", true, false);
@@ -336,25 +337,25 @@ void renderBackgroundPlanets() {
         glBindTexture(GL_TEXTURE_2D, saturnTextureID);
         glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     }
-    GLfloat satDiffuse[]  = { 1.48f, 1.40f, 1.22f, 1.0f };
-    GLfloat satAmbient[]  = { 0.34f, 0.30f, 0.22f, 1.0f };
-    GLfloat satSpecular[] = { 0.18f, 0.15f, 0.10f, 1.0f };
-    GLfloat satShine[]    = { 10.0f };
+    GLfloat satDiffuse[]  = { 1.62f, 1.50f, 1.28f, 1.0f };
+    GLfloat satAmbient[]  = { 0.36f, 0.32f, 0.24f, 1.0f };
+    GLfloat satSpecular[] = { 0.22f, 0.18f, 0.12f, 1.0f };
+    GLfloat satShine[]    = { 14.0f };
     glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, satDiffuse);
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, satAmbient);
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, satSpecular);
     glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, satShine);
 
-    renderTexturedSphere(0.65f, 72, 40);
+    renderTexturedSphere(0.65f, 96, 56);
 
     if (saturnTextureID) {
         glDisable(GL_TEXTURE_2D);
     }
     // Atmospheric limb
-    renderAtmosphericLimb(0.65f * 1.020f, 0.42f, 0.34f, 0.18f, 0.25f);
+    renderAtmosphericLimb(0.65f * 1.018f, 0.45f, 0.36f, 0.20f, 0.25f);
 
-    // Saturn's Rings (160 segments for ultra-smooth silhouette)
-    renderSaturnRings(0.90f, 1.85f, 160);
+    // Saturn's Rings (200 segments for master-grade curvature)
+    renderSaturnRings(0.88f, 1.90f, 200);
 
     glEnable(GL_CULL_FACE);
     glPopMatrix();
