@@ -1,5 +1,7 @@
 # MARTIAN: Cinematic Space Sequence Engine
 
+![MARTIAN Banner](docs/martian_banner.jpg)
+
 A high-performance, native C++ / OpenGL real-time cinematic visualizer and animation sequence recreating the Interstellar and Gravity-grade journey from deep cosmic orbit to hypersonic entry and touchdown on the Martian surface.
 
 > **Pre-compiled Binary**: Download [**Martian_v1.0.zip**](https://github.com/imMohammedSahil/Martian/releases/latest/download/Martian_v1.0.zip) from [Releases](https://github.com/imMohammedSahil/Martian/releases), extract, and run `Martian.exe` directly on Windows without compiling. *(On first run, click **More info** → **Run anyway** if Windows SmartScreen prompts).*
