@@ -345,16 +345,16 @@ void renderBackgroundPlanets() {
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, satSpecular);
     glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, satShine);
 
-    renderTexturedSphere(0.78f, 72, 40);
+    renderTexturedSphere(0.65f, 72, 40);
 
     if (saturnTextureID) {
         glDisable(GL_TEXTURE_2D);
     }
     // Atmospheric limb
-    renderAtmosphericLimb(0.78f * 1.020f, 0.42f, 0.34f, 0.18f, 0.25f);
+    renderAtmosphericLimb(0.65f * 1.020f, 0.42f, 0.34f, 0.18f, 0.25f);
 
     // Saturn's Rings (160 segments for ultra-smooth silhouette)
-    renderSaturnRings(1.08f, 2.22f, 160);
+    renderSaturnRings(0.90f, 1.85f, 160);
 
     glEnable(GL_CULL_FACE);
     glPopMatrix();
