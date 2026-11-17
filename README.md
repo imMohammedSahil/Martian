@@ -517,4 +517,13 @@ Total per vertex: 44 bytes
 
 ---
 
+## Community & Governance
+
+* [MIT License](LICENSE)
+* [Code of Conduct](CODE_OF_CONDUCT.md)
+* [Contributing Guide](CONTRIBUTING.md)
+* [Security Policy](SECURITY.md)
+
+---
+
 [imMohammedSahil/Martian](https://github.com/imMohammedSahil/Martian)
