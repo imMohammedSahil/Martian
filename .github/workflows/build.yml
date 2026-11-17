@@ -15,10 +15,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Verify MinGW Compiler
-        shell: cmd
-        run: g++ --version
+      - name: Setup MinGW Toolchain
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: false
+          install: mingw-w64-x86_64-gcc
 
       - name: Build Martian Engine
-        shell: cmd
-        run: build.bat
+        shell: msys2 {0}
+        run: |
+          g++ --version
+          cmd.exe /c build.bat
