@@ -86,6 +86,9 @@ extern bool  isPaused;
 
 extern float marsSpinAngle;
 extern float phobosAngle;
+extern float uranusSpinAngle;
+extern float jupiterSpinAngle;
+extern float saturnSpinAngle;
 
 extern float enduranceOrbitT;
 extern float ringSpinAngle;

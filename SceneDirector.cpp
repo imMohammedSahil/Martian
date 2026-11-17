@@ -37,6 +37,15 @@ void updateSceneDirector(float dt) {
     marsSpinAngle += 3.5f * dt;
     if (marsSpinAngle >= 360.0f) marsSpinAngle -= 360.0f;
 
+    uranusSpinAngle += 2.0f * dt;
+    if (uranusSpinAngle >= 360.0f) uranusSpinAngle -= 360.0f;
+
+    jupiterSpinAngle += 4.5f * dt;
+    if (jupiterSpinAngle >= 360.0f) jupiterSpinAngle -= 360.0f;
+
+    saturnSpinAngle += 3.8f * dt;
+    if (saturnSpinAngle >= 360.0f) saturnSpinAngle -= 360.0f;
+
     phobosAngle += 0.045f * dt;
     ringSpinAngle += 24.0f * dt;
     if (ringSpinAngle >= 360.0f) ringSpinAngle -= 360.0f;

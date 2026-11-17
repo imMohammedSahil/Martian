@@ -115,7 +115,10 @@ void display() {
         // 1. Stellar Skybox
         renderStarfield();
 
-        // 2. Solar Disc & Flares (only after opening void)
+        // 2. Distant Solar System Background Planets (Uranus, Jupiter, Saturn)
+        renderBackgroundPlanets();
+
+        // 3. Solar Disc & Flares (only after opening void)
         if (seqTime >= 6.0f) {
             renderSunDisc3D(flareX, flareY, flareZ, flareInFront);
             sunVisibility = computeSunMarsOcclusion(eyeX, eyeY, eyeZ);

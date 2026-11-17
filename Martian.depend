@@ -1,14 +1,15 @@
 # depslib dependency file v1.0
-1794319705 source:c:\holidays\martian\main.cpp
-	<stdio.h>
-	<GL/glut.h>
-	<cmath>
-	<cstdlib>
-	<cstdio>
-	<vector>
+1794771919 source:c:\holidays\martian\main.cpp
+	"Common.h"
+	"AudioEngine.h"
+	"Starfield.h"
+	"Planet.h"
+	"Spacecraft.h"
+	"PostProcess.h"
+	"SceneDirector.h"
+	"Scene4.h"
+	"VideoExporter.h"
 	<string>
-	<iostream>
-	"stb_image.h"
 
 1794318154 c:\holidays\martian\include\gl\glut.h
 	"freeglut_std.h"
@@ -37,4 +38,135 @@
 	<emmintrin.h>
 	<intrin.h>
 	<arm_neon.h>
+
+1794771835 source:c:\holidays\martian\audioengine.cpp
+	"AudioEngine.h"
+	"Common.h"
+	<cstdio>
+	<cmath>
+
+1794765377 c:\holidays\martian\audioengine.h
+
+1794773478 c:\holidays\martian\common.h
+	<windows.h>
+	<mmsystem.h>
+	<GL/freeglut.h>
+	<cmath>
+	<cstdlib>
+	<cstdio>
+	<cstring>
+	<vector>
+	<algorithm>
+	"TimingEditor.h"
+
+1794318152 c:\holidays\martian\include\gl\freeglut.h
+	"freeglut_std.h"
+	"freeglut_ext.h"
+
+1794318153 c:\holidays\martian\include\gl\freeglut_ext.h
+	<stdarg.h>
+
+1794771785 c:\holidays\martian\timingeditor.h
+
+1794504332 c:\holidays\martian\starfield.h
+
+1794504332 c:\holidays\martian\planet.h
+	"Common.h"
+
+1794682056 c:\holidays\martian\spacecraft.h
+	"Common.h"
+
+1794505547 c:\holidays\martian\postprocess.h
+	"Common.h"
+
+1794744891 c:\holidays\martian\scenedirector.h
+	"Common.h"
+
+1794748135 c:\holidays\martian\scene4.h
+	"Common.h"
+
+1794768215 c:\holidays\martian\videoexporter.h
+
+1794591960 source:c:\holidays\martian\planet.cpp
+	"Planet.h"
+	"Common.h"
+	"stb_image.h"
+
+1794771919 source:c:\holidays\martian\postprocess.cpp
+	"PostProcess.h"
+	"Common.h"
+	"Scene4.h"
+	"stb_image.h"
+
+1794585672 source:c:\holidays\martian\scene1.cpp
+	"SceneDirector.h"
+	"Common.h"
+
+1794679053 source:c:\holidays\martian\scene2.cpp
+	"Scene2.h"
+	"SceneDirector.h"
+	"Common.h"
+	"Spacecraft.h"
+	<cmath>
+
+1794590092 c:\holidays\martian\scene2.h
+
+1794770485 source:c:\holidays\martian\scene3.cpp
+	"Scene3.h"
+	"SceneDirector.h"
+	"Common.h"
+	"Spacecraft.h"
+	"stb_image.h"
+	<cmath>
+	<cstdio>
+	<cstdint>
+	<vector>
+
+1794681628 c:\holidays\martian\scene3.h
+	"Common.h"
+
+1794767154 source:c:\holidays\martian\scene4.cpp
+	"Scene4.h"
+	"SceneDirector.h"
+	"Common.h"
+	"stb_image.h"
+	<cmath>
+	<cstdio>
+	<cstdint>
+	<vector>
+	<algorithm>
+
+1794766068 source:c:\holidays\martian\scenedirector.cpp
+	"SceneDirector.h"
+	"Common.h"
+
+1794682323 source:c:\holidays\martian\spacecraft.cpp
+	"Spacecraft.h"
+	"Common.h"
+	"stb_image.h"
+	<cstdio>
+	<cstdint>
+
+1794504332 source:c:\holidays\martian\starfield.cpp
+	"Starfield.h"
+	"Common.h"
+
+1794771802 source:c:\holidays\martian\timingeditor.cpp
+	"TimingEditor.h"
+	"Common.h"
+	"AudioEngine.h"
+	<cstdio>
+	<cstring>
+	<algorithm>
+
+1794771919 source:c:\holidays\martian\videoexporter.cpp
+	"VideoExporter.h"
+	"Common.h"
+	"SceneDirector.h"
+	<windows.h>
+	<GL/gl.h>
+	<GL/freeglut.h>
+	<cstdio>
+	<vector>
+	<string>
 
