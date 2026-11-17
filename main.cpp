@@ -322,6 +322,7 @@ int main(int argc, char** argv) {
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
 
     const char* exportPreset = NULL;
+    float exportDuration = -1.0f;
     for (int i = 1; i < argc; ++i) {
         if (strcmp(argv[i], "--time") == 0 && i + 1 < argc) {
             seqTime = (float)atof(argv[i + 1]);
@@ -331,6 +332,9 @@ int main(int argc, char** argv) {
             i++;
         } else if (strcmp(argv[i], "--export") == 0 && i + 1 < argc) {
             exportPreset = argv[i + 1];
+            i++;
+        } else if (strcmp(argv[i], "--duration") == 0 && i + 1 < argc) {
+            exportDuration = (float)atof(argv[i + 1]);
             i++;
         }
     }
@@ -346,7 +350,7 @@ int main(int argc, char** argv) {
         initSolarAssets();
         initStarfield();
 
-        runVideoExport(exportPreset);
+        runVideoExport(exportPreset, exportDuration);
         glutDestroyWindow(win);
         return 0;
     }

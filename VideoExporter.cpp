@@ -29,7 +29,7 @@ typedef void (APIENTRY *PFNGLDELETERENDERBUFFERSPROC) (GLsizei n, const GLuint *
 extern void display();
 extern void reshape(int w, int h);
 
-static bool exportSingle(int outW, int outH, const char* outFilename, const char* label) {
+static bool exportSingle(int outW, int outH, const char* outFilename, const char* label, float maxDuration = -1.0f) {
     PFNGLGENFRAMEBUFFERSPROC glGenFramebuffers = (PFNGLGENFRAMEBUFFERSPROC)wglGetProcAddress("glGenFramebuffers");
     if (!glGenFramebuffers) glGenFramebuffers = (PFNGLGENFRAMEBUFFERSPROC)wglGetProcAddress("glGenFramebuffersEXT");
 
@@ -100,15 +100,21 @@ static bool exportSingle(int outW, int outH, const char* outFilename, const char
     FILE* fa = fopen("soundtrack.mp3", "rb");
     if (fa) { fclose(fa); hasAudio = true; }
 
+    float dur = (maxDuration > 0.0f) ? maxDuration : SEQUENCE_DURATION;
+
     if (hasAudio) {
+        float audioCut = (maxDuration > 0.0f) ? maxDuration : g_cutToBlackTime;
+        float fadeDur = (maxDuration > 0.0f) ? 1.5f : 0.08f;
+        float fadeStart = audioCut - fadeDur;
+        if (fadeStart < 0.0f) fadeStart = 0.0f;
         snprintf(ffmpegCmd, sizeof(ffmpegCmd),
             "C:\\ffmpeg\\bin\\ffmpeg.exe -y -f rawvideo -vcodec rawvideo -s %dx%d -pix_fmt rgb24 -r 60 -i - -i soundtrack.mp3 "
-            "-filter_complex \"[1:a]atrim=0:%.2f,asetpts=PTS-STARTPTS,afade=t=out:st=%.2f:d=0.08,apad=whole_dur=%.2f[aout]\" "
-            "-map 0:v -map \"[aout]\" -vf vflip -c:v h264_nvenc -pix_fmt yuv420p -preset p7 -cq 16 -b:v 0 -c:a aac -b:a 320k -shortest %s",
-            outW, outH, g_cutToBlackTime, g_cutToBlackTime - 0.08f, SEQUENCE_DURATION, outFilename);
+            "-filter_complex \"[1:a]atrim=0:%.2f,asetpts=PTS-STARTPTS,afade=t=out:st=%.2f:d=%.2f,apad=whole_dur=%.2f[aout]\" "
+            "-map 0:v -map \"[aout]\" -vf vflip -c:v h264_nvenc -pix_fmt yuv420p -preset p7 -cq 16 -b:v 0 -c:a aac -b:a 320k -shortest \"%s\"",
+            outW, outH, audioCut, fadeStart, fadeDur, dur, outFilename);
     } else {
         snprintf(ffmpegCmd, sizeof(ffmpegCmd),
-            "C:\\ffmpeg\\bin\\ffmpeg.exe -y -f rawvideo -vcodec rawvideo -s %dx%d -pix_fmt rgb24 -r 60 -i - -vf vflip -c:v h264_nvenc -pix_fmt yuv420p -preset p7 -cq 16 -b:v 0 %s",
+            "C:\\ffmpeg\\bin\\ffmpeg.exe -y -f rawvideo -vcodec rawvideo -s %dx%d -pix_fmt rgb24 -r 60 -i - -vf vflip -c:v h264_nvenc -pix_fmt yuv420p -preset p7 -cq 16 -b:v 0 \"%s\"",
             outW, outH, outFilename);
     }
 
@@ -120,7 +126,7 @@ static bool exportSingle(int outW, int outH, const char* outFilename, const char
     }
 
     const int FPS = 60;
-    const int totalFrames = (int)(SEQUENCE_DURATION * (float)FPS); // 82.5s * 60 = 4950 frames
+    const int totalFrames = (int)(dur * (float)FPS);
     const float dt = 1.0f / (float)FPS;
 
     std::vector<unsigned char> fullBuffer(outW * outH * 3);
@@ -129,7 +135,7 @@ static bool exportSingle(int outW, int outH, const char* outFilename, const char
     printf("\n========================================================\n");
     printf(" EXPORTING CINEMATIC VIDEO [%s: %dx%d @ 60 FPS]\n", label, outW, outH);
     printf(" Target File: %s\n", outFilename);
-    printf(" Total Frames: %d (Duration: %.1fs)\n", totalFrames, SEQUENCE_DURATION);
+    printf(" Total Frames: %d (Duration: %.1fs)\n", totalFrames, dur);
     printf("========================================================\n");
 
     seqTime = 0.0f;
@@ -185,16 +191,26 @@ static bool exportSingle(int outW, int outH, const char* outFilename, const char
     return true;
 }
 
-bool runVideoExport(const char* preset) {
+bool runVideoExport(const char* preset, float duration) {
     if (!preset) return false;
 
+    char filename1080[256];
+    char filename4k[256];
+    if (duration > 0.0f) {
+        snprintf(filename1080, sizeof(filename1080), "Martian_Scene1_Title_1080p_60fps.mp4");
+        snprintf(filename4k, sizeof(filename4k), "Martian_Scene1_Title_4K_60fps.mp4");
+    } else {
+        snprintf(filename1080, sizeof(filename1080), "Martian_1080p_60fps.mp4");
+        snprintf(filename4k, sizeof(filename4k), "Martian_4K_60fps.mp4");
+    }
+
     if (strcmp(preset, "1080p") == 0 || strcmp(preset, "1080") == 0) {
-        return exportSingle(1920, 1080, "Martian_1080p_60fps.mp4", "Full HD 1080p");
+        return exportSingle(1920, 1080, filename1080, "Full HD 1080p", duration);
     } else if (strcmp(preset, "4k") == 0 || strcmp(preset, "4K") == 0 || strcmp(preset, "2160p") == 0) {
-        return exportSingle(3840, 2160, "Martian_4K_60fps.mp4", "Ultra HD 4K");
+        return exportSingle(3840, 2160, filename4k, "Ultra HD 4K", duration);
     } else if (strcmp(preset, "both") == 0) {
-        bool ok1 = exportSingle(1920, 1080, "Martian_1080p_60fps.mp4", "Full HD 1080p");
-        bool ok2 = exportSingle(3840, 2160, "Martian_4K_60fps.mp4", "Ultra HD 4K");
+        bool ok1 = exportSingle(1920, 1080, filename1080, "Full HD 1080p", duration);
+        bool ok2 = exportSingle(3840, 2160, filename4k, "Ultra HD 4K", duration);
         return ok1 && ok2;
     }
 
