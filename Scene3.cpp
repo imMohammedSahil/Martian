@@ -715,10 +715,10 @@ static void renderVolumetricCloudDeck() {
     float camRightX = mv[0], camRightY = mv[4], camRightZ = mv[8];
     float camUpX    = mv[1], camUpY    = mv[5], camUpZ    = mv[9];
 
-    // Breakthrough factor: 50.5s - 56.5s inside dense clouds; 56.5s - 57.0s bursts through; 57.0s loud music hits!
+    // Breakthrough factor: 50.5s - 56.70s inside dense clouds; 56.70s - 57.38s bursts through; 57.38s loud music boom hits!
     float breakthrough = 0.0f;
-    if (seqTime >= 56.5f) {
-        float u = clampf((seqTime - 56.5f) / 0.5f, 0.0f, 1.0f);
+    if (seqTime >= 56.70f) {
+        float u = clampf((seqTime - 56.70f) / 0.68f, 0.0f, 1.0f);
         breakthrough = u * u * (3.0f - 2.0f * u);
     }
 
@@ -1087,12 +1087,12 @@ void renderScene3() {
     renderAtmosphericVaporStreaks();
 
     // 3. Official NASA Gale Crater 3D Topography Mesh
-    // Completely shrouded by dense cloud deck (50.5s - 56.5s), revealed exactly as clouds clear at 57.0s on loud chord hit
+    // Completely shrouded by dense cloud deck (50.5s - 56.70s), revealed exactly as clouds clear at 57.38s on loud boom hit
     float craterReveal = 1.0f;
-    if (seqTime < 50.5f || seqTime < 56.5f) {
+    if (seqTime < 50.5f || seqTime < 56.70f) {
         craterReveal = 0.0f;
-    } else if (seqTime < 57.0f) {
-        float u = (seqTime - 56.5f) / 0.5f;
+    } else if (seqTime < 57.38f) {
+        float u = (seqTime - 56.70f) / 0.68f;
         craterReveal = u * u * (3.0f - 2.0f * u);
     } else {
         craterReveal = 1.0f;
