@@ -169,10 +169,9 @@ static void renderOpeningSolarFlare(float intensity) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE); // Additive optical blending
 
-    // Flare source is positioned just off-screen at the TOP RIGHT
-    float tNorm = clampf(seqTime / 4.8f, 0.0f, 1.0f);
-    float winX = (float)windowWidth * (0.97f + 0.05f * tNorm);
-    float winY = (float)windowHeight * (0.92f - 0.04f * tNorm);
+    // Flare source stays steadily positioned just off-screen at the TOP RIGHT
+    float winX = (float)windowWidth * 0.98f;
+    float winY = (float)windowHeight * 0.92f;
 
     float cx = (float)windowWidth * 0.5f;
     float cy = (float)windowHeight * 0.5f;

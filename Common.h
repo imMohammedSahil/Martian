@@ -146,17 +146,20 @@ inline void drawBox(float sx, float sy, float sz) {
     glPopMatrix();
 }
 
-// Scene 1 Opening Solar Flare & Glare Intensity (0.0s - 5.0s)
+// Scene 1 Solar Flare & Glare Intensity (stays sustained, steady throughout Scene 1)
 inline float getOpeningFlareIntensity() {
-    if (seqTime < 0.0f || seqTime > 5.0f) return 0.0f;
-    if (seqTime < 0.35f) {
-        return smoothstep(0.0f, 0.35f, seqTime);
-    } else if (seqTime <= 1.8f) {
-        float u = (seqTime - 0.35f) / 1.45f;
-        return 1.0f + 0.35f * sinf(u * (float)M_PI);
-    } else {
-        return 1.0f - smoothstep(1.8f, 4.8f, seqTime);
+    if (seqTime < 0.0f) return 0.0f;
+    if (seqTime < 0.8f) {
+        return smoothstep(0.0f, 0.8f, seqTime);
     }
+    // Stays continuously active throughout Scene 1 without fading away
+    if (seqTime <= 35.0f) {
+        return 1.0f;
+    }
+    if (seqTime <= 38.0f) {
+        return 1.0f - smoothstep(35.0f, 38.0f, seqTime);
+    }
+    return 0.0f;
 }
 
 #endif // COMMON_H
