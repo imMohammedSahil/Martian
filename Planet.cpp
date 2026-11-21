@@ -584,9 +584,9 @@ void renderBackgroundPlanets() {
         glBindTexture(GL_TEXTURE_2D, saturnTextureID);
         glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     }
-    GLfloat satDiffuse[]  = { 1.25f + 0.15f * flare, 1.15f + 0.12f * flare, 0.98f + 0.10f * flare, 1.0f };
-    GLfloat satAmbient[]  = { 0.28f, 0.24f, 0.18f, 1.0f };
-    GLfloat satSpecular[] = { 0.25f + 0.32f * flare, 0.22f + 0.28f * flare, 0.16f + 0.20f * flare, 1.0f };
+    GLfloat satDiffuse[]  = { 0.85f + 0.10f * flare, 0.78f + 0.08f * flare, 0.65f + 0.06f * flare, 1.0f };
+    GLfloat satAmbient[]  = { 0.12f, 0.10f, 0.08f, 1.0f };
+    GLfloat satSpecular[] = { 0.15f + 0.18f * flare, 0.13f + 0.15f * flare, 0.09f + 0.12f * flare, 1.0f };
     GLfloat satShine[]    = { 18.0f + 20.0f * flare };
     glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, satDiffuse);
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, satAmbient);
@@ -601,8 +601,8 @@ void renderBackgroundPlanets() {
     if (saturnTextureID) {
         glDisable(GL_TEXTURE_2D);
     }
-    // Atmospheric limb
-    renderAtmosphericLimb(0.42f * 1.018f, 0.38f, 0.30f, 0.16f, 0.20f + 0.08f * flare);
+    // Atmospheric limb (toned down)
+    renderAtmosphericLimb(0.42f * 1.015f, 0.28f, 0.22f, 0.12f, 0.09f + 0.04f * flare);
 
     // Saturn's Rings (300 segments for master-grade curvature)
     renderSaturnRings(0.54f, 1.28f, 300, satSunLx, satSunLy, satSunLz);
