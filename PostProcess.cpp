@@ -184,22 +184,22 @@ static void renderOpeningSolarFlare(float intensity) {
 
     // 1. Fullscreen Subtle Veiling Glare (anamorphic contrast reduction from intense off-axis light)
     glBegin(GL_QUADS);
-        glColor4f(0.05f, 0.08f, 0.14f, 0.20f * intensity);
+        glColor4f(0.04f, 0.07f, 0.12f, 0.15f * intensity);
         glVertex2f(0.0f, barH);
         glVertex2f((float)windowWidth, barH);
         glVertex2f((float)windowWidth, (float)windowHeight - barH);
         glVertex2f(0.0f, (float)windowHeight - barH);
     glEnd();
 
-    // 2. Multi-Layer Organic Sun Glare & Light Leak from Top-Right (No artificial horizontal laser line)
+    // 2. Multi-Layer Organic Sun Glare & Light Leak from Top-Right (Soft natural atmospheric bleed)
     const int fanSegments = 48;
 
     // Layer A: Wide atmospheric ambient bloom (deep-space wash)
-    float rWide = (float)windowWidth * 0.92f * (0.8f + 0.3f * intensity);
+    float rWide = (float)windowWidth * 0.85f * (0.8f + 0.3f * intensity);
     glBegin(GL_TRIANGLE_FAN);
-        glColor4f(0.24f, 0.50f, 0.90f, 0.30f * intensity);
+        glColor4f(0.18f, 0.42f, 0.82f, 0.20f * intensity);
         glVertex2f(winX, winY);
-        glColor4f(0.05f, 0.15f, 0.35f, 0.0f);
+        glColor4f(0.04f, 0.12f, 0.30f, 0.0f);
         for (int i = 0; i <= fanSegments; ++i) {
             float ang = 2.0f * (float)M_PI * (float)i / fanSegments;
             glVertex2f(winX + rWide * cosf(ang), winY + rWide * sinf(ang));
@@ -207,23 +207,23 @@ static void renderOpeningSolarFlare(float intensity) {
     glEnd();
 
     // Layer B: Mid-range golden coronal scatter (warm solar daylight bleed)
-    float rMid = (float)windowWidth * 0.52f * (0.8f + 0.35f * intensity);
+    float rMid = (float)windowWidth * 0.46f * (0.8f + 0.35f * intensity);
     glBegin(GL_TRIANGLE_FAN);
-        glColor4f(0.98f, 0.82f, 0.54f, 0.48f * intensity);
+        glColor4f(0.92f, 0.75f, 0.48f, 0.34f * intensity);
         glVertex2f(winX, winY);
-        glColor4f(0.18f, 0.42f, 0.80f, 0.0f);
+        glColor4f(0.15f, 0.38f, 0.75f, 0.0f);
         for (int i = 0; i <= fanSegments; ++i) {
             float ang = 2.0f * (float)M_PI * (float)i / fanSegments;
             glVertex2f(winX + rMid * cosf(ang), winY + rMid * sinf(ang));
         }
     glEnd();
 
-    // Layer C: Intense proximal lens illumination entering frame edge
-    float rCore = (float)windowWidth * 0.28f * (0.8f + 0.4f * intensity);
+    // Layer C: Soft proximal lens illumination at top-right edge (natural, not blown-out white)
+    float rCore = (float)windowWidth * 0.22f * (0.8f + 0.4f * intensity);
     glBegin(GL_TRIANGLE_FAN);
-        glColor4f(1.00f, 0.98f, 0.94f, 0.70f * intensity);
+        glColor4f(0.96f, 0.90f, 0.80f, 0.46f * intensity);
         glVertex2f(winX, winY);
-        glColor4f(0.88f, 0.65f, 0.28f, 0.0f);
+        glColor4f(0.85f, 0.60f, 0.25f, 0.0f);
         for (int i = 0; i <= fanSegments; ++i) {
             float ang = 2.0f * (float)M_PI * (float)i / fanSegments;
             glVertex2f(winX + rCore * cosf(ang), winY + rCore * sinf(ang));
