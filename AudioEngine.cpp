@@ -188,6 +188,18 @@ void updateAudioEngine(float seqTime, bool isPaused) {
             return;
         }
 
+        // Scene 3 entry transition lock (44.0s) - guarantees natural playback matches jumping directly to Scene 3
+        static bool s3CutSynced = false;
+        if (seqTime < 40.0f) {
+            s3CutSynced = false;
+        }
+        if (!s3CutSynced && seqTime >= 44.0f && seqTime < 44.5f) {
+            s3CutSynced = true;
+            mciSendStringA("play soundtrack from 44000", NULL, 0, NULL);
+            g_isPlaying = true;
+            g_lastSyncSeqTime = seqTime;
+        }
+
         // User scrub / jump detection (> 0.40s deviation) or initial start
         if (fabsf(seqTime - g_lastSyncSeqTime) > 0.40f || !g_isPlaying) {
             int ms = (int)(seqTime * 1000.0f);

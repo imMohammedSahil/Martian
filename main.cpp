@@ -209,11 +209,15 @@ void display() {
 // SIMULATION UPDATE & CLOCK
 // ============================================================================
 void timer(int value) {
-    int currentMs = glutGet(GLUT_ELAPSED_TIME);
-    float dt = (currentMs / 1000.0f) - lastClockTime;
-    if (dt > 0.05f) dt = 0.05f;
-    if (dt < 0.0f)  dt = 0.016f;
-    lastClockTime = currentMs / 1000.0f;
+    float now = glutGet(GLUT_ELAPSED_TIME) / 1000.0f;
+    float dt = now - lastClockTime;
+    if (dt > 0.10f) {
+        dt = 0.016f;
+        lastClockTime = now;
+    } else {
+        if (dt < 0.0f) dt = 0.016f;
+        lastClockTime += dt;
+    }
 
     if (!isPaused) {
         totalTime += dt;
