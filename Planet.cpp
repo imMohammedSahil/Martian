@@ -289,13 +289,13 @@ void renderBackgroundPlanets() {
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, uranusSpecular);
     glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, uranusShine);
 
-    renderTexturedSphere(0.38f, 56, 32);
+    renderTexturedSphere(0.22f, 56, 32);
 
     if (uranusTextureID) {
         glDisable(GL_TEXTURE_2D);
     }
     // Atmospheric limb
-    renderAtmosphericLimb(0.38f * 1.02f, 0.15f, 0.35f, 0.55f, 0.20f + 0.10f * flare);
+    renderAtmosphericLimb(0.22f * 1.025f, 0.15f, 0.35f, 0.55f, 0.20f + 0.10f * flare);
 
     glEnable(GL_CULL_FACE);
     glPopMatrix();
@@ -321,13 +321,13 @@ void renderBackgroundPlanets() {
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, jupSpecular);
     glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, jupShine);
 
-    renderTexturedSphere(0.68f, 72, 40);
+    renderTexturedSphere(0.44f, 72, 40);
 
     if (jupiterTextureID) {
         glDisable(GL_TEXTURE_2D);
     }
     // Atmospheric limb
-    renderAtmosphericLimb(0.68f * 1.016f, 0.32f, 0.24f, 0.14f, 0.18f + 0.08f * flare);
+    renderAtmosphericLimb(0.44f * 1.018f, 0.32f, 0.24f, 0.14f, 0.18f + 0.08f * flare);
 
     glEnable(GL_CULL_FACE);
     glPopMatrix();
