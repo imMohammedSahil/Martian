@@ -146,22 +146,13 @@ inline void drawBox(float sx, float sy, float sz) {
     glPopMatrix();
 }
 
-// Scene 1 Initial Shot Solar Flare & Glare Intensity
-// Stays steady during initial shot (0.0s - 4.5s), naturally exits as camera turns to Mars (4.5s - 6.0s)
+extern float g_openingFlareIntensity;
+extern float g_openingFlareScreenX;
+extern float g_openingFlareScreenY;
+
+// Scene 1 Solar Flare & Glare Intensity (driven purely by camera rotation)
 inline float getOpeningFlareIntensity() {
-    if (seqTime < 0.0f) return 0.0f;
-    if (seqTime < 0.6f) {
-        return smoothstep(0.0f, 0.6f, seqTime);
-    }
-    // Stays solid and steady throughout the initial shot
-    if (seqTime <= 4.5f) {
-        return 1.0f;
-    }
-    // Exits naturally as camera rotates away to Mars
-    if (seqTime <= 6.0f) {
-        return 1.0f - smoothstep(4.5f, 6.0f, seqTime);
-    }
-    return 0.0f;
+    return g_openingFlareIntensity;
 }
 
 #endif // COMMON_H

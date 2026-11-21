@@ -169,11 +169,10 @@ static void renderOpeningSolarFlare(float intensity) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE); // Additive optical blending
 
-    // Flare stays anchored in top-right during initial shot (0.0s - 4.5s)
-    // As camera turns away toward Mars (4.5s - 6.0s), flare naturally exits out of the frame
-    float turnProgress = (seqTime > 4.5f) ? clampf((seqTime - 4.5f) / 1.5f, 0.0f, 1.0f) : 0.0f;
-    float winX = (float)windowWidth * (0.98f + 0.35f * turnProgress);
-    float winY = (float)windowHeight * (0.92f + 0.15f * turnProgress);
+    // Flare source coordinates are projected directly from 3D world space
+    // Moves and rotates strictly driven by the camera's rotational matrix
+    float winX = g_openingFlareScreenX;
+    float winY = g_openingFlareScreenY;
 
     float cx = (float)windowWidth * 0.5f;
     float cy = (float)windowHeight * 0.5f;

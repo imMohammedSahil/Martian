@@ -85,6 +85,10 @@ GLfloat lightSunAmbient[4]  = { 0.25f, 0.25f, 0.25f, 1.0f };
 GLfloat lightSunDiffuse[4]  = { 2.10f, 1.95f, 1.80f, 1.0f };
 GLfloat lightSunSpecular[4] = { 0.55f, 0.52f, 0.48f, 1.0f };
 
+float g_openingFlareIntensity = 0.0f;
+float g_openingFlareScreenX   = 0.0f;
+float g_openingFlareScreenY   = 0.0f;
+
 // ============================================================================
 // MAIN RENDER LOOP
 // ============================================================================
@@ -105,6 +109,38 @@ void display() {
     // Secondary Warm Martian Planet-Bounce Fill Light
     GLfloat lightMarsPos[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
     glLightfv(GL_LIGHT1, GL_POSITION, lightMarsPos);
+
+    // Physical Camera-Projected Solar Flare Source in Cosmic Sky
+    // Its visibility and screen position are driven purely by camera rotation
+    if (seqTime < 14.0f) {
+        GLdouble model[16], proj[16];
+        GLint view[4];
+        glGetDoublev(GL_MODELVIEW_MATRIX, model);
+        glGetDoublev(GL_PROJECTION_MATRIX, proj);
+        glGetIntegerv(GL_VIEWPORT, view);
+
+        GLdouble wx, wy, wz;
+        gluProject(74.5, 36.0, 74.5, model, proj, view, &wx, &wy, &wz);
+
+        if (wz >= 0.0 && wz <= 1.0) {
+            g_openingFlareScreenX = (float)wx;
+            g_openingFlareScreenY = (float)wy;
+
+            // Natural camera rotation falloff: drops as camera rotates source off-screen
+            float offX = std::max(0.0f, (float)wx - (float)windowWidth);
+            float offY = std::max(0.0f, (float)wy - (float)windowHeight);
+            float offDist = sqrtf(offX * offX + offY * offY);
+            float maxReach = (float)windowWidth * 0.42f;
+            float rotFade = 1.0f - smoothstep(0.0f, maxReach, offDist);
+
+            float intro = smoothstep(0.0f, 0.6f, seqTime);
+            g_openingFlareIntensity = intro * rotFade;
+        } else {
+            g_openingFlareIntensity = 0.0f;
+        }
+    } else {
+        g_openingFlareIntensity = 0.0f;
+    }
 
     float flareX = 0.0f, flareY = 0.0f, flareZ = 0.0f;
     bool flareInFront = false;
