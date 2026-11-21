@@ -220,6 +220,77 @@ static void renderAtmosphericLimb(float radius, float r, float g, float b, float
     glEnable(GL_CULL_FACE);
 }
 
+static void worldToJupiterLocal(float wx, float wy, float wz, float& lx, float& ly, float& lz) {
+    // 1. Inverse tilt: -3.13 deg around Z
+    float angle = -3.13f * (float)M_PI / 180.0f;
+    float cosA = cosf(angle);
+    float sinA = sinf(angle);
+    float x1 = wx * cosA - wy * sinA;
+    float y1 = wx * sinA + wy * cosA;
+    float z1 = wz;
+
+    // 2. Inverse spin: -jupiterSpinAngle around Y
+    float spin = -jupiterSpinAngle * (float)M_PI / 180.0f;
+    float cosS = cosf(spin);
+    float sinS = sinf(spin);
+    lx = x1 * cosS + z1 * sinS;
+    ly = y1;
+    lz = -x1 * sinS + z1 * cosS;
+    normalize3(lx, ly, lz);
+}
+
+static void renderJupiterGlobeWithShadow(float radius, int slices, int stacks, float lx, float ly, float lz) {
+    glEnable(GL_COLOR_MATERIAL);
+    glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+
+    for (int i = 0; i < stacks; ++i) {
+        float lat0 = (float)M_PI * (-0.5f + (float)i / stacks);
+        float lat1 = (float)M_PI * (-0.5f + (float)(i + 1) / stacks);
+        float y0   = radius * sinf(lat0);
+        float yr0  = radius * cosf(lat0);
+        float y1   = radius * sinf(lat1);
+        float yr1  = radius * cosf(lat1);
+        float v0   = 1.0f - (float)i / stacks;
+        float v1   = 1.0f - (float)(i + 1) / stacks;
+
+        glBegin(GL_QUAD_STRIP);
+        for (int j = 0; j <= slices; ++j) {
+            float lon    = 2.0f * (float)M_PI * (float)j / slices;
+            float cosLon = cosf(lon);
+            float sinLon = sinf(lon);
+            float u      = (float)j / slices;
+
+            // Vertex 0
+            float nx0 = cosLon * cosf(lat0);
+            float ny0 = sinf(lat0);
+            float nz0 = sinLon * cosf(lat0);
+            float dot0 = nx0 * lx + ny0 * ly + nz0 * lz;
+            // Deep space void: zero illumination when facing away from sun, sharp natural terminator
+            float shade0 = clampf((dot0 - 0.01f) / 0.15f, 0.0f, 1.0f);
+
+            glNormal3f(nx0, ny0, nz0);
+            glColor4f(shade0, shade0, shade0, 1.0f);
+            glTexCoord2f(u, v0);
+            glVertex3f(cosLon * yr0, y0, sinLon * yr0);
+
+            // Vertex 1
+            float nx1 = cosLon * cosf(lat1);
+            float ny1 = sinf(lat1);
+            float nz1 = sinLon * cosf(lat1);
+            float dot1 = nx1 * lx + ny1 * ly + nz1 * lz;
+            float shade1 = clampf((dot1 - 0.01f) / 0.15f, 0.0f, 1.0f);
+
+            glNormal3f(nx1, ny1, nz1);
+            glColor4f(shade1, shade1, shade1, 1.0f);
+            glTexCoord2f(u, v1);
+            glVertex3f(cosLon * yr1, y1, sinLon * yr1);
+        }
+        glEnd();
+    }
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    glDisable(GL_COLOR_MATERIAL);
+}
+
 static void worldToSaturnLocal(float wx, float wy, float wz, float& lx, float& ly, float& lz) {
     // 1. Inverse tilt: -26.73 deg around axis (1.0, 0.0, 0.35)
     float ax = 1.0f, ay = 0.0f, az = 0.35f;
@@ -460,10 +531,11 @@ void renderBackgroundPlanets() {
     glEnable(GL_CULL_FACE);
     glPopMatrix();
 
-    // 2. JUPITER (Rich banded cloud textures preserved, crisp specular gleam without blowout)
+    // 2. JUPITER (Rich banded cloud textures, pure pitch-black space shadow on backside)
     glPushMatrix();
     glTranslatef(22.0f, 3.6f, 5.2f);
     glDisable(GL_CULL_FACE);
+    glDisable(GL_LIGHT1); // Disable Martian planetary bounce fill so backside merges seamlessly with space
     glRotatef(3.13f, 0.0f, 0.0f, 1.0f);
     glRotatef(jupiterSpinAngle, 0.0f, 1.0f, 0.0f);
 
@@ -472,8 +544,8 @@ void renderBackgroundPlanets() {
         glBindTexture(GL_TEXTURE_2D, jupiterTextureID);
         glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     }
-    GLfloat jupDiffuse[]  = { 1.18f + 0.15f * flare, 1.05f + 0.12f * flare, 0.90f + 0.10f * flare, 1.0f };
-    GLfloat jupAmbient[]  = { 0.04f, 0.035f, 0.03f, 1.0f };
+    GLfloat jupDiffuse[]  = { 1.25f + 0.15f * flare, 1.10f + 0.12f * flare, 0.95f + 0.10f * flare, 1.0f };
+    GLfloat jupAmbient[]  = { 0.0f, 0.0f, 0.0f, 1.0f };
     GLfloat jupSpecular[] = { 0.22f + 0.25f * flare, 0.18f + 0.20f * flare, 0.14f + 0.16f * flare, 1.0f };
     GLfloat jupShine[]    = { 16.0f + 20.0f * flare };
     glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, jupDiffuse);
@@ -481,14 +553,16 @@ void renderBackgroundPlanets() {
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, jupSpecular);
     glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, jupShine);
 
-    renderTexturedSphere(0.44f, 128, 64);
+    float jupSunLx = 0.0f, jupSunLy = 0.0f, jupSunLz = 1.0f;
+    worldToJupiterLocal(SUN_DIR_X, SUN_DIR_Y, SUN_DIR_Z, jupSunLx, jupSunLy, jupSunLz);
+
+    renderJupiterGlobeWithShadow(0.44f, 144, 72, jupSunLx, jupSunLy, jupSunLz);
 
     if (jupiterTextureID) {
         glDisable(GL_TEXTURE_2D);
     }
-    // Atmospheric limb (subtle, leaves nightside terminator deeply shadowed)
-    renderAtmosphericLimb(0.44f * 1.018f, 0.22f, 0.15f, 0.08f, 0.08f + 0.05f * flare);
 
+    glEnable(GL_LIGHT1);
     glEnable(GL_CULL_FACE);
     glPopMatrix();
 
