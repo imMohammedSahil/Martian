@@ -434,11 +434,11 @@ static void renderSaturnRings(float innerR, float outerR, int segments, float lx
     glDisable(GL_CULL_FACE);
     glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
 
-    GLfloat ringDiffuse[]  = { 1.60f + 0.20f * flare, 1.50f + 0.18f * flare, 1.35f + 0.15f * flare, 1.0f };
-    GLfloat ringAmbient[]  = { 0.48f + 0.10f * flare, 0.44f + 0.08f * flare, 0.38f + 0.06f * flare, 1.0f };
-    GLfloat ringEmission[] = { 0.05f, 0.04f, 0.03f, 1.0f };
-    GLfloat ringSpecular[] = { 0.30f + 0.25f * flare, 0.26f + 0.22f * flare, 0.20f + 0.18f * flare, 1.0f };
-    GLfloat ringShine[]    = { 24.0f + 16.0f * flare };
+    GLfloat ringDiffuse[]  = { 2.15f + 0.25f * flare, 2.00f + 0.22f * flare, 1.75f + 0.18f * flare, 1.0f };
+    GLfloat ringAmbient[]  = { 0.62f + 0.12f * flare, 0.56f + 0.10f * flare, 0.48f + 0.08f * flare, 1.0f };
+    GLfloat ringEmission[] = { 0.14f, 0.12f, 0.10f, 1.0f };
+    GLfloat ringSpecular[] = { 0.45f + 0.30f * flare, 0.40f + 0.25f * flare, 0.32f + 0.20f * flare, 1.0f };
+    GLfloat ringShine[]    = { 28.0f + 16.0f * flare };
     glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, ringDiffuse);
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ringAmbient);
     glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, ringEmission);
@@ -448,40 +448,48 @@ static void renderSaturnRings(float innerR, float outerR, int segments, float lx
     glEnable(GL_COLOR_MATERIAL);
     glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
 
-    glBegin(GL_QUAD_STRIP);
-    glNormal3f(0.0f, 1.0f, 0.0f);
-    for (int i = 0; i <= segments; ++i) {
-        float angle = (float)i / (float)segments * 2.0f * (float)M_PI;
-        float cosA = cosf(angle);
-        float sinA = sinf(angle);
+    const int radialBands = 6;
+    for (int b = 0; b < radialBands; ++b) {
+        float r0 = innerR + (outerR - innerR) * ((float)b / radialBands);
+        float r1 = innerR + (outerR - innerR) * ((float)(b + 1) / radialBands);
+        float u0 = (float)b / radialBands;
+        float u1 = (float)(b + 1) / radialBands;
 
-        float px0 = innerR * cosA;
-        float pz0 = innerR * sinA;
-        float shade0 = 1.0f;
-        float tProj0 = -(px0 * lx + pz0 * lz);
-        if (tProj0 > 0.0f) {
-            float perpSq0 = (px0 * px0 + pz0 * pz0) - (tProj0 * tProj0);
-            if (perpSq0 < 0.465f * 0.465f) shade0 = 0.24f; // Softened globe shadow on ring
+        glBegin(GL_QUAD_STRIP);
+        glNormal3f(0.0f, 1.0f, 0.0f);
+        for (int i = 0; i <= segments; ++i) {
+            float angle = (float)i / (float)segments * 2.0f * (float)M_PI;
+            float cosA = cosf(angle);
+            float sinA = sinf(angle);
+
+            float px0 = r0 * cosA;
+            float pz0 = r0 * sinA;
+            float shade0 = 1.0f;
+            float tProj0 = -(px0 * lx + pz0 * lz);
+            if (tProj0 > 0.0f) {
+                float perpSq0 = (px0 * px0 + pz0 * pz0) - (tProj0 * tProj0);
+                if (perpSq0 < 0.465f * 0.465f) shade0 = 0.25f; // Softened globe shadow on ring
+            }
+
+            float px1 = r1 * cosA;
+            float pz1 = r1 * sinA;
+            float shade1 = 1.0f;
+            float tProj1 = -(px1 * lx + pz1 * lz);
+            if (tProj1 > 0.0f) {
+                float perpSq1 = (px1 * px1 + pz1 * pz1) - (tProj1 * tProj1);
+                if (perpSq1 < 0.465f * 0.465f) shade1 = 0.25f;
+            }
+
+            glColor4f(shade0, shade0, shade0, 1.0f);
+            glTexCoord2f(u0, 0.5f);
+            glVertex3f(px0, 0.0f, pz0);
+
+            glColor4f(shade1, shade1, shade1, 1.0f);
+            glTexCoord2f(u1, 0.5f);
+            glVertex3f(px1, 0.0f, pz1);
         }
-
-        float px1 = outerR * cosA;
-        float pz1 = outerR * sinA;
-        float shade1 = 1.0f;
-        float tProj1 = -(px1 * lx + pz1 * lz);
-        if (tProj1 > 0.0f) {
-            float perpSq1 = (px1 * px1 + pz1 * pz1) - (tProj1 * tProj1);
-            if (perpSq1 < 0.465f * 0.465f) shade1 = 0.24f;
-        }
-
-        glColor4f(shade0, shade0, shade0, 1.0f);
-        glTexCoord2f(0.0f, 0.5f);
-        glVertex3f(px0, 0.0f, pz0);
-
-        glColor4f(shade1, shade1, shade1, 1.0f);
-        glTexCoord2f(1.0f, 0.5f);
-        glVertex3f(px1, 0.0f, pz1);
+        glEnd();
     }
-    glEnd();
 
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
     glDisable(GL_COLOR_MATERIAL);
