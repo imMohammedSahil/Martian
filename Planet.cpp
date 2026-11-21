@@ -347,39 +347,12 @@ static void renderSaturnGlobeWithShadow(float radius, int slices, int stacks, fl
             float py0 = y0;
             float pz0 = sinLon * yr0;
 
-            float shadow0 = 1.0f;
-            if (fabsf(ly) > 1e-4f) {
-                float t = -py0 / ly;
-                if (t > 0.005f) {
-                    float ix = px0 + t * lx;
-                    float iz = pz0 + t * lz;
-                    float r = sqrtf(ix * ix + iz * iz);
-                    if (r >= innerR && r <= outerR) {
-                        float uR = (r - innerR) / (outerR - innerR);
-                        float op = 0.70f;
-                        if (uR >= 0.56f && uR <= 0.64f) op = 0.12f; // Cassini division gap
-                        else if (uR < 0.22f) op = 0.35f;            // C ring
-                        else if (uR >= 0.22f && uR < 0.56f) op = 0.86f; // B ring (dense crisp shadow)
-                        else op = 0.68f;                            // A ring
-                        shadow0 = 1.0f - op;
-                    }
-                }
-            }
-            // Ambient Occlusion: equatorial contact crease darkening
-            float ao0 = 1.0f;
-            float dEq0 = fabsf(py0) / radius;
-            if (dEq0 < 0.28f) {
-                ao0 *= (0.55f + 0.45f * (dEq0 / 0.28f));
-            }
-
-            // Planetary day/night terminator shadow
+            // Natural planetary day/night solar terminator (clean & smooth, no harsh shadow lines)
             float nx0 = cosLon * cosf(lat0);
             float ny0 = sinf(lat0);
             float nz0 = sinLon * cosf(lat0);
             float dot0 = nx0 * lx + ny0 * ly + nz0 * lz;
-            float term0 = 0.06f + 0.94f * clampf((dot0 + 0.04f) / 0.22f, 0.0f, 1.0f);
-
-            float shade0 = shadow0 * ao0 * term0;
+            float shade0 = 0.08f + 0.92f * clampf((dot0 + 0.04f) / 0.22f, 0.0f, 1.0f);
 
             glNormal3f(nx0, ny0, nz0);
             glColor4f(shade0, shade0, shade0, 1.0f);
@@ -391,37 +364,11 @@ static void renderSaturnGlobeWithShadow(float radius, int slices, int stacks, fl
             float py1 = y1;
             float pz1 = sinLon * yr1;
 
-            float shadow1 = 1.0f;
-            if (fabsf(ly) > 1e-4f) {
-                float t = -py1 / ly;
-                if (t > 0.005f) {
-                    float ix = px1 + t * lx;
-                    float iz = pz1 + t * lz;
-                    float r = sqrtf(ix * ix + iz * iz);
-                    if (r >= innerR && r <= outerR) {
-                        float uR = (r - innerR) / (outerR - innerR);
-                        float op = 0.70f;
-                        if (uR >= 0.56f && uR <= 0.64f) op = 0.12f;
-                        else if (uR < 0.22f) op = 0.35f;
-                        else if (uR >= 0.22f && uR < 0.56f) op = 0.86f;
-                        else op = 0.68f;
-                        shadow1 = 1.0f - op;
-                    }
-                }
-            }
-            float ao1 = 1.0f;
-            float dEq1 = fabsf(py1) / radius;
-            if (dEq1 < 0.28f) {
-                ao1 *= (0.55f + 0.45f * (dEq1 / 0.28f));
-            }
-
             float nx1 = cosLon * cosf(lat1);
             float ny1 = sinf(lat1);
             float nz1 = sinLon * cosf(lat1);
             float dot1 = nx1 * lx + ny1 * ly + nz1 * lz;
-            float term1 = 0.06f + 0.94f * clampf((dot1 + 0.04f) / 0.22f, 0.0f, 1.0f);
-
-            float shade1 = shadow1 * ao1 * term1;
+            float shade1 = 0.08f + 0.92f * clampf((dot1 + 0.04f) / 0.22f, 0.0f, 1.0f);
 
             glNormal3f(cosLon * cosf(lat1), sinf(lat1), sinLon * cosf(lat1));
             glColor4f(shade1, shade1, shade1, 1.0f);
