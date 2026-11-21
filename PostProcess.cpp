@@ -171,8 +171,8 @@ static void renderOpeningSolarFlare(float intensity) {
 
     // Flare source is positioned just off-screen at the TOP RIGHT
     float tNorm = clampf(seqTime / 4.8f, 0.0f, 1.0f);
-    float winX = (float)windowWidth * (0.96f + 0.06f * tNorm);
-    float winY = (float)windowHeight * (0.90f - 0.04f * tNorm);
+    float winX = (float)windowWidth * (0.97f + 0.05f * tNorm);
+    float winY = (float)windowHeight * (0.92f - 0.04f * tNorm);
 
     float cx = (float)windowWidth * 0.5f;
     float cy = (float)windowHeight * 0.5f;
@@ -182,72 +182,91 @@ static void renderOpeningSolarFlare(float intensity) {
     float barH = (windowHeight - ((float)windowWidth / 2.39f)) * 0.5f;
     if (barH < windowHeight * 0.135f) barH = windowHeight * 0.135f;
 
-    // 1. Fullscreen Subtle Glare Veil (soft atmospheric wash from top-right glare)
+    // 1. Fullscreen Subtle Veiling Glare (anamorphic contrast reduction from intense off-axis light)
     glBegin(GL_QUADS);
-        glColor4f(0.06f, 0.09f, 0.14f, 0.18f * intensity);
+        glColor4f(0.04f, 0.07f, 0.12f, 0.16f * intensity);
         glVertex2f(0.0f, barH);
         glVertex2f((float)windowWidth, barH);
         glVertex2f((float)windowWidth, (float)windowHeight - barH);
         glVertex2f(0.0f, (float)windowHeight - barH);
     glEnd();
 
-    // 2. Sweeping Horizontal Anamorphic Cyan Beam from top-right
-    float beamH = 3.8f * (0.8f + 0.3f * intensity);
-    float beamAlpha = 0.55f * intensity;
+    // 2. Panavision Horizontal Anamorphic Blue & Cyan Flare Bleed (100% widescreen span)
+    float beamH = 5.2f * (0.8f + 0.3f * intensity);
+    float beamAlpha = 0.52f * intensity;
     glBegin(GL_QUADS);
-        glColor4f(0.35f, 0.72f, 1.00f, beamAlpha);
+        glColor4f(0.24f, 0.60f, 0.98f, beamAlpha);
         glVertex2f(0.0f, winY - beamH);
         glVertex2f((float)windowWidth, winY - beamH);
         glVertex2f((float)windowWidth, winY + beamH);
         glVertex2f(0.0f, winY + beamH);
     glEnd();
 
-    // 3. Razor-Sharp Core Anamorphic Streak
-    float coreH = 1.2f * (0.8f + 0.2f * intensity);
-    float coreAlpha = 0.85f * intensity;
+    // Razor-Sharp Pure White Core Anamorphic Filament
+    float coreH = 1.0f * (0.8f + 0.2f * intensity);
+    float coreAlpha = 0.88f * intensity;
     glBegin(GL_QUADS);
-        glColor4f(1.00f, 0.98f, 0.90f, coreAlpha);
+        glColor4f(0.96f, 0.98f, 1.00f, coreAlpha);
         glVertex2f(0.0f, winY - coreH);
         glVertex2f((float)windowWidth, winY - coreH);
         glVertex2f((float)windowWidth, winY + coreH);
         glVertex2f(0.0f, winY + coreH);
     glEnd();
 
-    // 4. Soft Off-Screen Coronal Flare Glow entering from top-right corner (no visible sun sphere)
-    const int segments = 36;
-    float bloomR = (float)windowWidth * 0.55f * (0.8f + 0.35f * intensity);
+    // Secondary Warm Amber Internal Coating Reflection Streak (subtle Panavision artifact)
+    float amberH = 2.2f * (0.8f + 0.2f * intensity);
+    float amberY = winY - 3.5f;
+    glBegin(GL_QUADS);
+        glColor4f(0.95f, 0.65f, 0.30f, 0.24f * intensity);
+        glVertex2f(0.0f, amberY - amberH);
+        glVertex2f((float)windowWidth, amberY - amberH);
+        glVertex2f((float)windowWidth, amberY + amberH);
+        glVertex2f(0.0f, amberY + amberH);
+    glEnd();
+
+    // 3. Multi-Layer Organic Light Leak (Smooth radial falloff from top-right corner, ZERO triangular spokes)
+    const int fanSegments = 40;
+
+    // Layer A: Wide atmospheric ambient bloom (faint deep-space wash)
+    float rWide = (float)windowWidth * 0.85f * (0.8f + 0.3f * intensity);
     glBegin(GL_TRIANGLE_FAN);
-        glColor4f(1.00f, 0.97f, 0.90f, 0.42f * intensity);
+        glColor4f(0.20f, 0.45f, 0.85f, 0.22f * intensity);
         glVertex2f(winX, winY);
-        glColor4f(0.25f, 0.55f, 0.95f, 0.0f);
-        for (int i = 0; i <= segments; ++i) {
-            float ang = 2.0f * (float)M_PI * (float)i / segments;
-            glVertex2f(winX + bloomR * cosf(ang), winY + bloomR * sinf(ang));
+        glColor4f(0.05f, 0.15f, 0.35f, 0.0f);
+        for (int i = 0; i <= fanSegments; ++i) {
+            float ang = 2.0f * (float)M_PI * (float)i / fanSegments;
+            glVertex2f(winX + rWide * cosf(ang), winY + rWide * sinf(ang));
         }
     glEnd();
 
-    // 5. Delicate Anamorphic Light Shafts streaming down-left into the void
-    const int numRays = 6;
-    float rayLength = (float)windowWidth * 0.95f;
-    for (int i = 0; i < numRays; ++i) {
-        float angle = (float)M_PI * (1.14f + 0.11f * (float)i); // Aiming down-left into the scene
-        float cosA = cosf(angle);
-        float sinA = sinf(angle);
-        float rayW = 20.0f + 12.0f * (float)i;
+    // Layer B: Mid-range golden coronal scatter (warm solar daylight bleed)
+    float rMid = (float)windowWidth * 0.48f * (0.8f + 0.35f * intensity);
+    glBegin(GL_TRIANGLE_FAN);
+        glColor4f(0.95f, 0.78f, 0.50f, 0.38f * intensity);
+        glVertex2f(winX, winY);
+        glColor4f(0.18f, 0.42f, 0.80f, 0.0f);
+        for (int i = 0; i <= fanSegments; ++i) {
+            float ang = 2.0f * (float)M_PI * (float)i / fanSegments;
+            glVertex2f(winX + rMid * cosf(ang), winY + rMid * sinf(ang));
+        }
+    glEnd();
 
-        glBegin(GL_TRIANGLES);
-            glColor4f(1.00f, 0.96f, 0.88f, 0.16f * intensity);
-            glVertex2f(winX, winY);
-            glColor4f(0.25f, 0.55f, 0.90f, 0.0f);
-            glVertex2f(winX + cosA * rayLength - sinA * rayW, winY + sinA * rayLength + cosA * rayW);
-            glVertex2f(winX + cosA * rayLength + sinA * rayW, winY + sinA * rayLength - cosA * rayW);
-        glEnd();
-    }
+    // Layer C: Intense proximal lens illumination entering frame edge
+    float rCore = (float)windowWidth * 0.24f * (0.8f + 0.4f * intensity);
+    glBegin(GL_TRIANGLE_FAN);
+        glColor4f(1.00f, 0.98f, 0.92f, 0.55f * intensity);
+        glVertex2f(winX, winY);
+        glColor4f(0.85f, 0.60f, 0.25f, 0.0f);
+        for (int i = 0; i <= fanSegments; ++i) {
+            float ang = 2.0f * (float)M_PI * (float)i / fanSegments;
+            glVertex2f(winX + rCore * cosf(ang), winY + rCore * sinf(ang));
+        }
+    glEnd();
 
-    // 6. Subtle Optical Lens Ghosts tracking along diagonal optical axis (down-left)
-    const float ghostOffsets[] = { -0.22f, -0.55f, 0.28f, 0.65f, 0.95f };
-    const float ghostSizes[]   = {  18.0f,  32.0f, 14.0f, 26.0f, 16.0f };
-    const float ghostAlphas[]  = {  0.18f,  0.12f, 0.16f, 0.10f, 0.08f };
+    // 4. Smooth Circular/Elliptical Bokeh Lens Ghosts (along diagonal optical axis down-left)
+    const float ghostOffsets[] = { -0.20f, -0.48f, 0.25f, 0.58f, 0.92f };
+    const float ghostSizes[]   = {  24.0f,  42.0f, 18.0f, 34.0f, 22.0f };
+    const float ghostAlphas[]  = {  0.15f,  0.10f, 0.14f, 0.09f, 0.06f };
 
     for (int g = 0; g < 5; ++g) {
         float gx = cx + dx * ghostOffsets[g];
@@ -255,17 +274,19 @@ static void renderOpeningSolarFlare(float intensity) {
         float gr = ghostSizes[g] * (0.8f + 0.3f * intensity);
         float ga = ghostAlphas[g] * intensity;
 
+        // Smooth circular iris discs with soft edge falloff
         glBegin(GL_TRIANGLE_FAN);
             if (g % 2 == 0) {
-                glColor4f(0.30f, 0.70f, 1.00f, ga);
+                glColor4f(0.25f, 0.65f, 0.95f, ga);
             } else {
-                glColor4f(1.00f, 0.75f, 0.40f, ga);
+                glColor4f(0.98f, 0.72f, 0.35f, ga);
             }
             glVertex2f(gx, gy);
-            glColor4f(0.15f, 0.35f, 0.75f, 0.0f);
-            for (int i = 0; i <= 6; ++i) {
-                float ang = (float)M_PI / 3.0f * (float)i;
-                glVertex2f(gx + gr * cosf(ang), gy + gr * sinf(ang));
+            glColor4f(0.10f, 0.30f, 0.65f, 0.0f);
+            for (int i = 0; i <= 24; ++i) {
+                float ang = 2.0f * (float)M_PI * (float)i / 24.0f;
+                // Subtle 1.25x vertical anamorphic elongation
+                glVertex2f(gx + gr * cosf(ang), gy + gr * 1.22f * sinf(ang));
             }
         glEnd();
     }
