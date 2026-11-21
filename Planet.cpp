@@ -480,19 +480,28 @@ static void renderSaturnRings(float innerR, float outerR, int segments, float lx
             float px0 = r0 * cosA;
             float pz0 = r0 * sinA;
             float shade0 = 1.0f;
-            float tProj0 = -(px0 * lx + pz0 * lz);
-            if (tProj0 > 0.0f) {
-                float perpSq0 = (px0 * px0 + pz0 * pz0) - (tProj0 * tProj0);
-                if (perpSq0 < 0.465f * 0.465f) shade0 = 0.25f; // Softened globe shadow on ring
+            // Ray-sphere intersection: ray from ring point (px0, 0, pz0) along L towards sun hits Saturn globe (radius 0.42)
+            float b0 = 2.0f * (px0 * lx + pz0 * lz);
+            float c0 = (px0 * px0 + pz0 * pz0) - 0.425f * 0.425f;
+            float disc0 = b0 * b0 - 4.0f * c0;
+            if (disc0 >= 0.0f) {
+                float t2_0 = (-b0 + sqrtf(disc0)) * 0.5f;
+                if (t2_0 > 0.01f) {
+                    shade0 = 0.08f; // Deep, crisp planetary globe shadow cast on rings
+                }
             }
 
             float px1 = r1 * cosA;
             float pz1 = r1 * sinA;
             float shade1 = 1.0f;
-            float tProj1 = -(px1 * lx + pz1 * lz);
-            if (tProj1 > 0.0f) {
-                float perpSq1 = (px1 * px1 + pz1 * pz1) - (tProj1 * tProj1);
-                if (perpSq1 < 0.465f * 0.465f) shade1 = 0.25f;
+            float b1 = 2.0f * (px1 * lx + pz1 * lz);
+            float c1 = (px1 * px1 + pz1 * pz1) - 0.425f * 0.425f;
+            float disc1 = b1 * b1 - 4.0f * c1;
+            if (disc1 >= 0.0f) {
+                float t2_1 = (-b1 + sqrtf(disc1)) * 0.5f;
+                if (t2_1 > 0.01f) {
+                    shade1 = 0.08f; // Deep, crisp planetary globe shadow cast on rings
+                }
             }
 
             glColor4f(shade0, shade0, shade0, 1.0f);
@@ -620,6 +629,9 @@ void renderBackgroundPlanets() {
 
     float satSunLx = 0.0f, satSunLy = 0.0f, satSunLz = 1.0f;
     worldToSaturnLocal(SUN_DIR_X, SUN_DIR_Y, SUN_DIR_Z, satSunLx, satSunLy, satSunLz);
+    // Low solar elevation angle relative to equatorial ring plane so globe shadow extends across the rings
+    satSunLy = 0.16f;
+    normalize3(satSunLx, satSunLy, satSunLz);
 
     renderSaturnGlobeWithShadow(0.42f, 144, 72, 0.54f, 1.28f, satSunLx, satSunLy, satSunLz);
 
