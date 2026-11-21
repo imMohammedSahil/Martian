@@ -192,10 +192,22 @@ static void renderOpeningSolarFlare(float intensity) {
     glEnd();
 
     // 2. Panavision Horizontal Anamorphic Blue & Cyan Flare Bleed (100% widescreen span)
-    float beamH = 5.2f * (0.8f + 0.3f * intensity);
-    float beamAlpha = 0.52f * intensity;
+    // Soft outer dispersion halo
+    float haloH = 16.0f * (0.8f + 0.3f * intensity);
+    float haloAlpha = 0.26f * intensity;
     glBegin(GL_QUADS);
-        glColor4f(0.24f, 0.60f, 0.98f, beamAlpha);
+        glColor4f(0.12f, 0.38f, 0.85f, haloAlpha);
+        glVertex2f(0.0f, winY - haloH);
+        glVertex2f((float)windowWidth, winY - haloH);
+        glVertex2f((float)windowWidth, winY + haloH);
+        glVertex2f(0.0f, winY + haloH);
+    glEnd();
+
+    // Vivid anamorphic blue beam
+    float beamH = 6.8f * (0.8f + 0.3f * intensity);
+    float beamAlpha = 0.68f * intensity;
+    glBegin(GL_QUADS);
+        glColor4f(0.24f, 0.62f, 0.98f, beamAlpha);
         glVertex2f(0.0f, winY - beamH);
         glVertex2f((float)windowWidth, winY - beamH);
         glVertex2f((float)windowWidth, winY + beamH);
@@ -203,8 +215,8 @@ static void renderOpeningSolarFlare(float intensity) {
     glEnd();
 
     // Razor-Sharp Pure White Core Anamorphic Filament
-    float coreH = 1.0f * (0.8f + 0.2f * intensity);
-    float coreAlpha = 0.88f * intensity;
+    float coreH = 1.5f * (0.8f + 0.2f * intensity);
+    float coreAlpha = 0.95f * intensity;
     glBegin(GL_QUADS);
         glColor4f(0.96f, 0.98f, 1.00f, coreAlpha);
         glVertex2f(0.0f, winY - coreH);
@@ -214,10 +226,10 @@ static void renderOpeningSolarFlare(float intensity) {
     glEnd();
 
     // Secondary Warm Amber Internal Coating Reflection Streak (subtle Panavision artifact)
-    float amberH = 2.2f * (0.8f + 0.2f * intensity);
-    float amberY = winY - 3.5f;
+    float amberH = 2.8f * (0.8f + 0.2f * intensity);
+    float amberY = winY - 3.8f;
     glBegin(GL_QUADS);
-        glColor4f(0.95f, 0.65f, 0.30f, 0.24f * intensity);
+        glColor4f(0.95f, 0.65f, 0.30f, 0.34f * intensity);
         glVertex2f(0.0f, amberY - amberH);
         glVertex2f((float)windowWidth, amberY - amberH);
         glVertex2f((float)windowWidth, amberY + amberH);
