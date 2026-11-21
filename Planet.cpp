@@ -14,7 +14,7 @@ bool   hasTexture          = false;
 float  marsSpinAngle    = 315.0f;
 float  phobosAngle      = 0.8f;
 float  uranusSpinAngle   = 45.0f;
-float  jupiterSpinAngle  = 120.0f;
+float  jupiterSpinAngle  = 338.0f;
 float  saturnSpinAngle   = 200.0f;
 
 #ifndef GL_TEXTURE_MAX_ANISOTROPY_EXT
@@ -524,11 +524,12 @@ void renderBackgroundPlanets() {
         glEnable(GL_TEXTURE_2D);
         glBindTexture(GL_TEXTURE_2D, jupiterTextureID);
         glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+        glTexParameterf(GL_TEXTURE_2D, 0x8501 /* GL_TEXTURE_LOD_BIAS */, -1.0f);
     }
-    GLfloat jupDiffuse[]  = { 1.25f + 0.15f * flare, 1.10f + 0.12f * flare, 0.95f + 0.10f * flare, 1.0f };
+    GLfloat jupDiffuse[]  = { 1.35f + 0.15f * flare, 1.25f + 0.12f * flare, 1.15f + 0.10f * flare, 1.0f };
     GLfloat jupAmbient[]  = { 0.08f, 0.07f, 0.06f, 1.0f };
-    GLfloat jupSpecular[] = { 0.22f + 0.25f * flare, 0.18f + 0.20f * flare, 0.14f + 0.16f * flare, 1.0f };
-    GLfloat jupShine[]    = { 16.0f + 20.0f * flare };
+    GLfloat jupSpecular[] = { 0.0f, 0.0f, 0.0f, 1.0f }; // Zero plastic specular wash for crystal clear cloud bands
+    GLfloat jupShine[]    = { 1.0f };
     glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, jupDiffuse);
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, jupAmbient);
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, jupSpecular);
@@ -542,8 +543,7 @@ void renderBackgroundPlanets() {
     if (jupiterTextureID) {
         glDisable(GL_TEXTURE_2D);
     }
-    // Delicate atmospheric rim
-    renderAtmosphericLimb(0.44f * 1.015f, 0.20f, 0.15f, 0.10f, 0.06f);
+    // No hazy milky sphere obscuring Jupiter's cloud deck - 100% razor sharp surface clarity
 
     glEnable(GL_LIGHT1);
     glEnable(GL_CULL_FACE);
