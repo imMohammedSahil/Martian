@@ -163,6 +163,124 @@ static void renderAnamorphicFlare2D(float winX, float winY, float visibility) {
     glDisable(GL_BLEND);
 }
 
+static void renderOpeningSolarFlare(float intensity) {
+    if (intensity <= 0.005f) return;
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE); // Additive optical blending
+
+    // Flare origin sweeps subtly in upper frame with camera pan
+    float tNorm = clampf(seqTime / 4.8f, 0.0f, 1.0f);
+    float winX = (float)windowWidth * (0.22f + 0.10f * tNorm);
+    float winY = (float)windowHeight * (0.76f - 0.06f * tNorm);
+
+    float cx = (float)windowWidth * 0.5f;
+    float cy = (float)windowHeight * 0.5f;
+    float dx = winX - cx;
+    float dy = winY - cy;
+
+    // 1. Fullscreen Subtle Glare Veil (illuminates the deep space void during flare)
+    float barH = (windowHeight - ((float)windowWidth / 2.39f)) * 0.5f;
+    if (barH < windowHeight * 0.135f) barH = windowHeight * 0.135f;
+
+    glBegin(GL_QUADS);
+        glColor4f(0.06f, 0.10f, 0.16f, 0.18f * intensity);
+        glVertex2f(0.0f, barH);
+        glVertex2f((float)windowWidth, barH);
+        glVertex2f((float)windowWidth, (float)windowHeight - barH);
+        glVertex2f(0.0f, (float)windowHeight - barH);
+    glEnd();
+
+    // 2. Sweeping Anamorphic Cyan Beam across widescreen
+    float beamH = 4.2f * (0.8f + 0.4f * intensity);
+    float beamAlpha = 0.68f * intensity;
+    glBegin(GL_QUADS);
+        glColor4f(0.35f, 0.72f, 1.00f, beamAlpha);
+        glVertex2f(0.0f, winY - beamH);
+        glVertex2f((float)windowWidth, winY - beamH);
+        glVertex2f((float)windowWidth, winY + beamH);
+        glVertex2f(0.0f, winY + beamH);
+    glEnd();
+
+    // 3. Razor-Sharp Intense Golden-White Core Anamorphic Streak
+    float coreH = 1.4f * (0.8f + 0.3f * intensity);
+    float coreAlpha = 0.95f * intensity;
+    glBegin(GL_QUADS);
+        glColor4f(1.00f, 0.98f, 0.90f, coreAlpha);
+        glVertex2f(0.0f, winY - coreH);
+        glVertex2f((float)windowWidth, winY - coreH);
+        glVertex2f((float)windowWidth, winY + coreH);
+        glVertex2f(0.0f, winY + coreH);
+    glEnd();
+
+    // 4. Brilliant Solar Coronal Halo & Core Bloom
+    const int segments = 36;
+    float bloomR = 76.0f * (0.8f + 0.5f * intensity);
+    glBegin(GL_TRIANGLE_FAN);
+        glColor4f(1.00f, 0.99f, 0.94f, 0.95f * intensity);
+        glVertex2f(winX, winY);
+        glColor4f(0.40f, 0.75f, 1.00f, 0.0f);
+        for (int i = 0; i <= segments; ++i) {
+            float ang = 2.0f * (float)M_PI * (float)i / segments;
+            glVertex2f(winX + bloomR * cosf(ang), winY + bloomR * sinf(ang));
+        }
+    glEnd();
+
+    // 5. Starburst Glare Spikes radiating from solar flare center
+    const int numSpikes = 6;
+    float spikeLength = 260.0f * (0.7f + 0.5f * intensity);
+    float spikeWidth  = 3.2f;
+    for (int i = 0; i < numSpikes; ++i) {
+        float baseAngle = (float)M_PI * (float)i / (float)numSpikes + 0.26f;
+        float cosA = cosf(baseAngle);
+        float sinA = sinf(baseAngle);
+        float perpX = -sinA * spikeWidth;
+        float perpY =  cosA * spikeWidth;
+
+        glBegin(GL_TRIANGLES);
+            glColor4f(1.00f, 0.96f, 0.85f, 0.65f * intensity);
+            glVertex2f(winX - perpX, winY - perpY);
+            glVertex2f(winX + perpX, winY + perpY);
+            glColor4f(0.35f, 0.70f, 1.00f, 0.0f);
+            glVertex2f(winX + cosA * spikeLength, winY + sinA * spikeLength);
+
+            glColor4f(1.00f, 0.96f, 0.85f, 0.65f * intensity);
+            glVertex2f(winX - perpX, winY - perpY);
+            glVertex2f(winX + perpX, winY + perpY);
+            glColor4f(0.35f, 0.70f, 1.00f, 0.0f);
+            glVertex2f(winX - cosA * spikeLength, winY - sinA * spikeLength);
+        glEnd();
+    }
+
+    // 6. Optical Lens Ghosts along the optical axis
+    const float ghostOffsets[] = { -0.28f, -0.62f, 0.35f, 0.75f, 1.10f };
+    const float ghostSizes[]   = {  22.0f,  38.0f, 16.0f, 32.0f, 18.0f };
+    const float ghostAlphas[]  = {  0.25f,  0.16f, 0.22f, 0.14f, 0.10f };
+
+    for (int g = 0; g < 5; ++g) {
+        float gx = cx + dx * ghostOffsets[g];
+        float gy = cy + dy * ghostOffsets[g];
+        float gr = ghostSizes[g] * (0.8f + 0.3f * intensity);
+        float ga = ghostAlphas[g] * intensity;
+
+        glBegin(GL_TRIANGLE_FAN);
+            if (g % 2 == 0) {
+                glColor4f(0.30f, 0.72f, 1.00f, ga);
+            } else {
+                glColor4f(1.00f, 0.70f, 0.35f, ga);
+            }
+            glVertex2f(gx, gy);
+            glColor4f(0.20f, 0.40f, 0.80f, 0.0f);
+            for (int i = 0; i <= 6; ++i) {
+                float ang = (float)M_PI / 3.0f * (float)i;
+                glVertex2f(gx + gr * cosf(ang), gy + gr * sinf(ang));
+            }
+        glEnd();
+    }
+
+    glDisable(GL_BLEND);
+}
+
 void renderCinemaPost(float flareX, float flareY, bool flareInFront, float flareVisibility) {
     glDisable(GL_LIGHTING);
     glDisable(GL_DEPTH_TEST);
@@ -178,7 +296,13 @@ void renderCinemaPost(float flareX, float flareY, bool flareInFront, float flare
     glPushMatrix();
     glLoadIdentity();
 
-    // 1. Anamorphic Lens Flare
+    // 1. Opening Scene 1 Solar Flare & Glare Event (0.0s - 5.0s)
+    float openingFlare = getOpeningFlareIntensity();
+    if (openingFlare > 0.005f) {
+        renderOpeningSolarFlare(openingFlare);
+    }
+
+    // 2. Anamorphic Lens Flare (for Mars orbit sun reveal)
     if (flareInFront) {
         renderAnamorphicFlare2D(flareX, flareY, flareVisibility);
     }
