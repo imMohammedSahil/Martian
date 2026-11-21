@@ -28,7 +28,7 @@
 // ============================================================================
 const int   WINDOW_INIT_WIDTH   = 1280;
 const int   WINDOW_INIT_HEIGHT  = 720;
-const float MARS_RADIUS         = 2.20f;
+const float MARS_RADIUS         = 2.28f;
 const int   MARS_SLICES         = 112;
 const int   MARS_STACKS         = 72;
 const int   NUM_STARS           = 4200;

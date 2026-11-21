@@ -19,7 +19,7 @@ void updateScene2(float dt) {
 
     // Endurance stays in low Mars orbit
     endPosX = 0.0f;
-    endPosY = -0.60f;
+    endPosY = -0.28f;
     endPosZ = 2.45f;
     endTanX = 0.0f; endTanY = 0.0f; endTanZ = 1.0f;
 
@@ -32,7 +32,7 @@ void updateScene2(float dt) {
         float smoothU = smoothstep(0.0f, 1.0f, u);
 
         rangerPosX = lerpf(0.0f, -0.15f, smoothU);
-        rangerPosY = lerpf(-0.60f, -0.88f, smoothU); // drops down out from hub
+        rangerPosY = lerpf(-0.28f, -0.56f, smoothU); // drops down out from hub
         rangerPosZ = lerpf(2.45f, 2.18f, smoothU);  // emerges towards backside
 
         // Heading away and slightly downward
@@ -127,11 +127,11 @@ void computeCameraScene2(float& eyeX, float& eyeY, float& eyeZ,
         // Looking at the Endurance as Ranger drops out behind it
         float u = (t - 35.0f) / 4.0f;
         eyeX = lerpf(0.0f, 0.05f, u);
-        eyeY = lerpf(-0.60f, -0.55f, u);
+        eyeY = lerpf(-0.28f, -0.23f, u);
         eyeZ = lerpf(2.92f, 2.96f, u);
 
         targetX = 0.0f;
-        targetY = -0.60f;
+        targetY = -0.28f;
         targetZ = 2.45f;
     }
     else if (t < 46.0f) {
