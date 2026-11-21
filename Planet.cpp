@@ -472,9 +472,9 @@ void renderBackgroundPlanets() {
         glBindTexture(GL_TEXTURE_2D, jupiterTextureID);
         glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     }
-    GLfloat jupDiffuse[]  = { 1.35f + 0.20f * flare, 1.25f + 0.18f * flare, 1.10f + 0.15f * flare, 1.0f };
-    GLfloat jupAmbient[]  = { 0.30f, 0.26f, 0.22f, 1.0f };
-    GLfloat jupSpecular[] = { 0.25f + 0.32f * flare, 0.22f + 0.28f * flare, 0.18f + 0.22f * flare, 1.0f };
+    GLfloat jupDiffuse[]  = { 1.18f + 0.15f * flare, 1.05f + 0.12f * flare, 0.90f + 0.10f * flare, 1.0f };
+    GLfloat jupAmbient[]  = { 0.04f, 0.035f, 0.03f, 1.0f };
+    GLfloat jupSpecular[] = { 0.22f + 0.25f * flare, 0.18f + 0.20f * flare, 0.14f + 0.16f * flare, 1.0f };
     GLfloat jupShine[]    = { 16.0f + 20.0f * flare };
     glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, jupDiffuse);
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, jupAmbient);
@@ -486,8 +486,8 @@ void renderBackgroundPlanets() {
     if (jupiterTextureID) {
         glDisable(GL_TEXTURE_2D);
     }
-    // Atmospheric limb
-    renderAtmosphericLimb(0.44f * 1.018f, 0.32f, 0.24f, 0.14f, 0.18f + 0.08f * flare);
+    // Atmospheric limb (subtle, leaves nightside terminator deeply shadowed)
+    renderAtmosphericLimb(0.44f * 1.018f, 0.22f, 0.15f, 0.08f, 0.08f + 0.05f * flare);
 
     glEnable(GL_CULL_FACE);
     glPopMatrix();
