@@ -449,13 +449,13 @@ void renderBackgroundPlanets() {
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, uranusSpecular);
     glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, uranusShine);
 
-    renderTexturedSphere(0.22f, 56, 32);
+    renderTexturedSphere(0.15f, 56, 32);
 
     if (uranusTextureID) {
         glDisable(GL_TEXTURE_2D);
     }
     // Atmospheric limb
-    renderAtmosphericLimb(0.22f * 1.025f, 0.15f, 0.35f, 0.55f, 0.20f + 0.10f * flare);
+    renderAtmosphericLimb(0.15f * 1.025f, 0.15f, 0.35f, 0.55f, 0.20f + 0.10f * flare);
 
     glEnable(GL_CULL_FACE);
     glPopMatrix();
