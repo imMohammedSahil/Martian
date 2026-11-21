@@ -169,31 +169,31 @@ static void renderOpeningSolarFlare(float intensity) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE); // Additive optical blending
 
-    // Flare origin sweeps subtly in upper frame with camera pan
+    // Flare source is positioned just off-screen at the TOP RIGHT
     float tNorm = clampf(seqTime / 4.8f, 0.0f, 1.0f);
-    float winX = (float)windowWidth * (0.22f + 0.10f * tNorm);
-    float winY = (float)windowHeight * (0.76f - 0.06f * tNorm);
+    float winX = (float)windowWidth * (0.96f + 0.06f * tNorm);
+    float winY = (float)windowHeight * (0.90f - 0.04f * tNorm);
 
     float cx = (float)windowWidth * 0.5f;
     float cy = (float)windowHeight * 0.5f;
     float dx = winX - cx;
     float dy = winY - cy;
 
-    // 1. Fullscreen Subtle Glare Veil (illuminates the deep space void during flare)
     float barH = (windowHeight - ((float)windowWidth / 2.39f)) * 0.5f;
     if (barH < windowHeight * 0.135f) barH = windowHeight * 0.135f;
 
+    // 1. Fullscreen Subtle Glare Veil (soft atmospheric wash from top-right glare)
     glBegin(GL_QUADS);
-        glColor4f(0.06f, 0.10f, 0.16f, 0.18f * intensity);
+        glColor4f(0.06f, 0.09f, 0.14f, 0.18f * intensity);
         glVertex2f(0.0f, barH);
         glVertex2f((float)windowWidth, barH);
         glVertex2f((float)windowWidth, (float)windowHeight - barH);
         glVertex2f(0.0f, (float)windowHeight - barH);
     glEnd();
 
-    // 2. Sweeping Anamorphic Cyan Beam across widescreen
-    float beamH = 4.2f * (0.8f + 0.4f * intensity);
-    float beamAlpha = 0.68f * intensity;
+    // 2. Sweeping Horizontal Anamorphic Cyan Beam from top-right
+    float beamH = 3.8f * (0.8f + 0.3f * intensity);
+    float beamAlpha = 0.55f * intensity;
     glBegin(GL_QUADS);
         glColor4f(0.35f, 0.72f, 1.00f, beamAlpha);
         glVertex2f(0.0f, winY - beamH);
@@ -202,9 +202,9 @@ static void renderOpeningSolarFlare(float intensity) {
         glVertex2f(0.0f, winY + beamH);
     glEnd();
 
-    // 3. Razor-Sharp Intense Golden-White Core Anamorphic Streak
-    float coreH = 1.4f * (0.8f + 0.3f * intensity);
-    float coreAlpha = 0.95f * intensity;
+    // 3. Razor-Sharp Core Anamorphic Streak
+    float coreH = 1.2f * (0.8f + 0.2f * intensity);
+    float coreAlpha = 0.85f * intensity;
     glBegin(GL_QUADS);
         glColor4f(1.00f, 0.98f, 0.90f, coreAlpha);
         glVertex2f(0.0f, winY - coreH);
@@ -213,49 +213,41 @@ static void renderOpeningSolarFlare(float intensity) {
         glVertex2f(0.0f, winY + coreH);
     glEnd();
 
-    // 4. Brilliant Solar Coronal Halo & Core Bloom
+    // 4. Soft Off-Screen Coronal Flare Glow entering from top-right corner (no visible sun sphere)
     const int segments = 36;
-    float bloomR = 76.0f * (0.8f + 0.5f * intensity);
+    float bloomR = (float)windowWidth * 0.55f * (0.8f + 0.35f * intensity);
     glBegin(GL_TRIANGLE_FAN);
-        glColor4f(1.00f, 0.99f, 0.94f, 0.95f * intensity);
+        glColor4f(1.00f, 0.97f, 0.90f, 0.42f * intensity);
         glVertex2f(winX, winY);
-        glColor4f(0.40f, 0.75f, 1.00f, 0.0f);
+        glColor4f(0.25f, 0.55f, 0.95f, 0.0f);
         for (int i = 0; i <= segments; ++i) {
             float ang = 2.0f * (float)M_PI * (float)i / segments;
             glVertex2f(winX + bloomR * cosf(ang), winY + bloomR * sinf(ang));
         }
     glEnd();
 
-    // 5. Starburst Glare Spikes radiating from solar flare center
-    const int numSpikes = 6;
-    float spikeLength = 260.0f * (0.7f + 0.5f * intensity);
-    float spikeWidth  = 3.2f;
-    for (int i = 0; i < numSpikes; ++i) {
-        float baseAngle = (float)M_PI * (float)i / (float)numSpikes + 0.26f;
-        float cosA = cosf(baseAngle);
-        float sinA = sinf(baseAngle);
-        float perpX = -sinA * spikeWidth;
-        float perpY =  cosA * spikeWidth;
+    // 5. Delicate Anamorphic Light Shafts streaming down-left into the void
+    const int numRays = 6;
+    float rayLength = (float)windowWidth * 0.95f;
+    for (int i = 0; i < numRays; ++i) {
+        float angle = (float)M_PI * (1.14f + 0.11f * (float)i); // Aiming down-left into the scene
+        float cosA = cosf(angle);
+        float sinA = sinf(angle);
+        float rayW = 20.0f + 12.0f * (float)i;
 
         glBegin(GL_TRIANGLES);
-            glColor4f(1.00f, 0.96f, 0.85f, 0.65f * intensity);
-            glVertex2f(winX - perpX, winY - perpY);
-            glVertex2f(winX + perpX, winY + perpY);
-            glColor4f(0.35f, 0.70f, 1.00f, 0.0f);
-            glVertex2f(winX + cosA * spikeLength, winY + sinA * spikeLength);
-
-            glColor4f(1.00f, 0.96f, 0.85f, 0.65f * intensity);
-            glVertex2f(winX - perpX, winY - perpY);
-            glVertex2f(winX + perpX, winY + perpY);
-            glColor4f(0.35f, 0.70f, 1.00f, 0.0f);
-            glVertex2f(winX - cosA * spikeLength, winY - sinA * spikeLength);
+            glColor4f(1.00f, 0.96f, 0.88f, 0.16f * intensity);
+            glVertex2f(winX, winY);
+            glColor4f(0.25f, 0.55f, 0.90f, 0.0f);
+            glVertex2f(winX + cosA * rayLength - sinA * rayW, winY + sinA * rayLength + cosA * rayW);
+            glVertex2f(winX + cosA * rayLength + sinA * rayW, winY + sinA * rayLength - cosA * rayW);
         glEnd();
     }
 
-    // 6. Optical Lens Ghosts along the optical axis
-    const float ghostOffsets[] = { -0.28f, -0.62f, 0.35f, 0.75f, 1.10f };
-    const float ghostSizes[]   = {  22.0f,  38.0f, 16.0f, 32.0f, 18.0f };
-    const float ghostAlphas[]  = {  0.25f,  0.16f, 0.22f, 0.14f, 0.10f };
+    // 6. Subtle Optical Lens Ghosts tracking along diagonal optical axis (down-left)
+    const float ghostOffsets[] = { -0.22f, -0.55f, 0.28f, 0.65f, 0.95f };
+    const float ghostSizes[]   = {  18.0f,  32.0f, 14.0f, 26.0f, 16.0f };
+    const float ghostAlphas[]  = {  0.18f,  0.12f, 0.16f, 0.10f, 0.08f };
 
     for (int g = 0; g < 5; ++g) {
         float gx = cx + dx * ghostOffsets[g];
@@ -265,12 +257,12 @@ static void renderOpeningSolarFlare(float intensity) {
 
         glBegin(GL_TRIANGLE_FAN);
             if (g % 2 == 0) {
-                glColor4f(0.30f, 0.72f, 1.00f, ga);
+                glColor4f(0.30f, 0.70f, 1.00f, ga);
             } else {
-                glColor4f(1.00f, 0.70f, 0.35f, ga);
+                glColor4f(1.00f, 0.75f, 0.40f, ga);
             }
             glVertex2f(gx, gy);
-            glColor4f(0.20f, 0.40f, 0.80f, 0.0f);
+            glColor4f(0.15f, 0.35f, 0.75f, 0.0f);
             for (int i = 0; i <= 6; ++i) {
                 float ang = (float)M_PI / 3.0f * (float)i;
                 glVertex2f(gx + gr * cosf(ang), gy + gr * sinf(ang));
