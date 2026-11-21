@@ -212,7 +212,133 @@ static void renderAtmosphericLimb(float radius, float r, float g, float b, float
     glEnable(GL_CULL_FACE);
 }
 
-static void renderSaturnRings(float innerR, float outerR, int segments) {
+static void worldToSaturnLocal(float wx, float wy, float wz, float& lx, float& ly, float& lz) {
+    // 1. Inverse tilt: -26.73 deg around axis (1.0, 0.0, 0.35)
+    float ax = 1.0f, ay = 0.0f, az = 0.35f;
+    normalize3(ax, ay, az);
+    float angle = -26.73f * (float)M_PI / 180.0f;
+    float cosA = cosf(angle);
+    float sinA = sinf(angle);
+
+    float dot = ax * wx + ay * wy + az * wz;
+    float cx = ay * wz - az * wy;
+    float cy = az * wx - ax * wz;
+    float cz = ax * wy - ay * wx;
+
+    float x1 = wx * cosA + cx * sinA + ax * dot * (1.0f - cosA);
+    float y1 = wy * cosA + cy * sinA + ay * dot * (1.0f - cosA);
+    float z1 = wz * cosA + cz * sinA + az * dot * (1.0f - cosA);
+
+    // 2. Inverse spin: -saturnSpinAngle around (0, 1, 0)
+    float spin = -saturnSpinAngle * (float)M_PI / 180.0f;
+    float cosS = cosf(spin);
+    float sinS = sinf(spin);
+
+    lx = x1 * cosS + z1 * sinS;
+    ly = y1;
+    lz = -x1 * sinS + z1 * cosS;
+    normalize3(lx, ly, lz);
+}
+
+static void renderSaturnGlobeWithShadow(float radius, int slices, int stacks, float innerR, float outerR, float lx, float ly, float lz) {
+    glEnable(GL_COLOR_MATERIAL);
+    glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+
+    for (int i = 0; i < stacks; ++i) {
+        float lat0 = (float)M_PI * (-0.5f + (float)i / stacks);
+        float lat1 = (float)M_PI * (-0.5f + (float)(i + 1) / stacks);
+        float y0   = radius * sinf(lat0);
+        float yr0  = radius * cosf(lat0);
+        float y1   = radius * sinf(lat1);
+        float yr1  = radius * cosf(lat1);
+        float v0   = 1.0f - (float)i / stacks;
+        float v1   = 1.0f - (float)(i + 1) / stacks;
+
+        glBegin(GL_QUAD_STRIP);
+        for (int j = 0; j <= slices; ++j) {
+            float lon    = 2.0f * (float)M_PI * (float)j / slices;
+            float cosLon = cosf(lon);
+            float sinLon = sinf(lon);
+            float u      = (float)j / slices;
+
+            // Vertex 0
+            float px0 = cosLon * yr0;
+            float py0 = y0;
+            float pz0 = sinLon * yr0;
+
+            float shadow0 = 1.0f;
+            if (fabsf(ly) > 1e-4f) {
+                float t = -py0 / ly;
+                if (t > 0.005f) {
+                    float ix = px0 + t * lx;
+                    float iz = pz0 + t * lz;
+                    float r = sqrtf(ix * ix + iz * iz);
+                    if (r >= innerR && r <= outerR) {
+                        float uR = (r - innerR) / (outerR - innerR);
+                        float op = 0.88f;
+                        if (uR >= 0.56f && uR <= 0.64f) op = 0.22f; // Cassini division gap
+                        else if (uR < 0.22f) op = 0.42f;            // C ring
+                        else if (uR >= 0.22f && uR < 0.56f) op = 0.94f; // B ring (dense shadow)
+                        else op = 0.78f;                            // A ring
+                        shadow0 = 1.0f - op;
+                    }
+                }
+            }
+            // Ambient Occlusion: equatorial crease darkening & polar attenuation
+            float ao0 = 1.0f;
+            float dEq0 = fabsf(py0) / radius;
+            if (dEq0 < 0.28f) {
+                ao0 *= (0.48f + 0.52f * (dEq0 / 0.28f));
+            }
+            float shade0 = shadow0 * ao0;
+
+            glNormal3f(cosLon * cosf(lat0), sinf(lat0), sinLon * cosf(lat0));
+            glColor4f(shade0, shade0, shade0, 1.0f);
+            glTexCoord2f(u, v0);
+            glVertex3f(px0, py0, pz0);
+
+            // Vertex 1
+            float px1 = cosLon * yr1;
+            float py1 = y1;
+            float pz1 = sinLon * yr1;
+
+            float shadow1 = 1.0f;
+            if (fabsf(ly) > 1e-4f) {
+                float t = -py1 / ly;
+                if (t > 0.005f) {
+                    float ix = px1 + t * lx;
+                    float iz = pz1 + t * lz;
+                    float r = sqrtf(ix * ix + iz * iz);
+                    if (r >= innerR && r <= outerR) {
+                        float uR = (r - innerR) / (outerR - innerR);
+                        float op = 0.88f;
+                        if (uR >= 0.56f && uR <= 0.64f) op = 0.22f;
+                        else if (uR < 0.22f) op = 0.42f;
+                        else if (uR >= 0.22f && uR < 0.56f) op = 0.94f;
+                        else op = 0.78f;
+                        shadow1 = 1.0f - op;
+                    }
+                }
+            }
+            float ao1 = 1.0f;
+            float dEq1 = fabsf(py1) / radius;
+            if (dEq1 < 0.28f) {
+                ao1 *= (0.48f + 0.52f * (dEq1 / 0.28f));
+            }
+            float shade1 = shadow1 * ao1;
+
+            glNormal3f(cosLon * cosf(lat1), sinf(lat1), sinLon * cosf(lat1));
+            glColor4f(shade1, shade1, shade1, 1.0f);
+            glTexCoord2f(u, v1);
+            glVertex3f(px1, py1, pz1);
+        }
+        glEnd();
+    }
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    glDisable(GL_COLOR_MATERIAL);
+}
+
+static void renderSaturnRings(float innerR, float outerR, int segments, float lx, float ly, float lz) {
     float flare = getOpeningFlareIntensity();
 
     if (saturnRingTextureID) {
@@ -227,16 +353,19 @@ static void renderSaturnRings(float innerR, float outerR, int segments) {
     glDisable(GL_CULL_FACE);
     glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
 
-    GLfloat ringDiffuse[]  = { 1.80f + 0.25f * flare, 1.70f + 0.22f * flare, 1.50f + 0.18f * flare, 1.0f };
-    GLfloat ringAmbient[]  = { 0.65f + 0.12f * flare, 0.60f + 0.10f * flare, 0.52f + 0.08f * flare, 1.0f };
-    GLfloat ringEmission[] = { 0.50f + 0.25f * flare, 0.45f + 0.22f * flare, 0.38f + 0.18f * flare, 1.0f };
-    GLfloat ringSpecular[] = { 0.35f + 0.35f * flare, 0.30f + 0.30f * flare, 0.24f + 0.25f * flare, 1.0f };
+    GLfloat ringDiffuse[]  = { 1.60f + 0.20f * flare, 1.50f + 0.18f * flare, 1.35f + 0.15f * flare, 1.0f };
+    GLfloat ringAmbient[]  = { 0.40f + 0.10f * flare, 0.36f + 0.08f * flare, 0.30f + 0.06f * flare, 1.0f };
+    GLfloat ringEmission[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+    GLfloat ringSpecular[] = { 0.30f + 0.25f * flare, 0.26f + 0.22f * flare, 0.20f + 0.18f * flare, 1.0f };
     GLfloat ringShine[]    = { 24.0f + 16.0f * flare };
     glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, ringDiffuse);
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, ringAmbient);
     glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, ringEmission);
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, ringSpecular);
     glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, ringShine);
+
+    glEnable(GL_COLOR_MATERIAL);
+    glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
 
     glBegin(GL_QUAD_STRIP);
     glNormal3f(0.0f, 1.0f, 0.0f);
@@ -245,13 +374,36 @@ static void renderSaturnRings(float innerR, float outerR, int segments) {
         float cosA = cosf(angle);
         float sinA = sinf(angle);
 
-        glTexCoord2f(0.0f, 0.5f);
-        glVertex3f(innerR * cosA, 0.0f, innerR * sinA);
+        float px0 = innerR * cosA;
+        float pz0 = innerR * sinA;
+        float shade0 = 1.0f;
+        float tProj0 = -(px0 * lx + pz0 * lz);
+        if (tProj0 > 0.0f) {
+            float perpSq0 = (px0 * px0 + pz0 * pz0) - (tProj0 * tProj0);
+            if (perpSq0 < 0.465f * 0.465f) shade0 = 0.08f; // Globe shadow on ring
+        }
 
+        float px1 = outerR * cosA;
+        float pz1 = outerR * sinA;
+        float shade1 = 1.0f;
+        float tProj1 = -(px1 * lx + pz1 * lz);
+        if (tProj1 > 0.0f) {
+            float perpSq1 = (px1 * px1 + pz1 * pz1) - (tProj1 * tProj1);
+            if (perpSq1 < 0.465f * 0.465f) shade1 = 0.08f;
+        }
+
+        glColor4f(shade0, shade0, shade0, 1.0f);
+        glTexCoord2f(0.0f, 0.5f);
+        glVertex3f(px0, 0.0f, pz0);
+
+        glColor4f(shade1, shade1, shade1, 1.0f);
         glTexCoord2f(1.0f, 0.5f);
-        glVertex3f(outerR * cosA, 0.0f, outerR * sinA);
+        glVertex3f(px1, 0.0f, pz1);
     }
     glEnd();
+
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    glDisable(GL_COLOR_MATERIAL);
 
     GLfloat zeroEmission[] = { 0.0f, 0.0f, 0.0f, 1.0f };
     glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, zeroEmission);
@@ -332,9 +484,9 @@ void renderBackgroundPlanets() {
     glEnable(GL_CULL_FACE);
     glPopMatrix();
 
-    // 3. SATURN & RINGS
+    // 3. SATURN & RINGS (Pristine ring shadow projection & equatorial contact ambient occlusion)
     glPushMatrix();
-    glTranslatef(14.2f, -4.5f, -11.0f);
+    glTranslatef(18.0f, -1.8f, 18.5f);
     glDisable(GL_CULL_FACE);
 
     // Dynamic tilt angling rings toward camera
@@ -355,16 +507,19 @@ void renderBackgroundPlanets() {
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, satSpecular);
     glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, satShine);
 
-    renderTexturedSphere(0.42f, 96, 56);
+    float satSunLx = 0.0f, satSunLy = 0.0f, satSunLz = 1.0f;
+    worldToSaturnLocal(SUN_DIR_X, SUN_DIR_Y, SUN_DIR_Z, satSunLx, satSunLy, satSunLz);
+
+    renderSaturnGlobeWithShadow(0.46f, 96, 56, 0.58f, 1.38f, satSunLx, satSunLy, satSunLz);
 
     if (saturnTextureID) {
         glDisable(GL_TEXTURE_2D);
     }
     // Atmospheric limb
-    renderAtmosphericLimb(0.42f * 1.018f, 0.38f, 0.30f, 0.16f, 0.20f + 0.08f * flare);
+    renderAtmosphericLimb(0.46f * 1.018f, 0.38f, 0.30f, 0.16f, 0.20f + 0.08f * flare);
 
     // Saturn's Rings (200 segments for master-grade curvature)
-    renderSaturnRings(0.54f, 1.28f, 200);
+    renderSaturnRings(0.58f, 1.38f, 200, satSunLx, satSunLy, satSunLz);
 
     glEnable(GL_CULL_FACE);
     glPopMatrix();
