@@ -27,3 +27,6 @@ release_staging/
 # Temporary / user reference media
 WhatsApp Image*
 *.jpeg
+Screenshot*
+*.png_ref*
+reference_archive/

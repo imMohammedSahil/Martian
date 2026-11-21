@@ -1,0 +1,35 @@
+name: "Cinematic Sequence Calibration"
+description: Propose adjustments to camera trajectory, timeline pacing, or audio cut points.
+title: "[Sequence]: "
+labels: ["cinematics", "timing"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for frame-accurate timing adjustments or camera keyframe proposals.
+  - type: dropdown
+    id: target_scene
+    attributes:
+      label: Target Scene
+      options:
+        - "Scene 1: Orbit & Planetary Alignment"
+        - "Scene 2: Separation & RCS Burn"
+        - "Scene 3: Hypersonic Entry & Parachute Ejection"
+        - "Scene 4: Martian Dune Horizon"
+    validations:
+      required: true
+  - type: input
+    id: timestamp
+    attributes:
+      label: Timeline Timestamp
+      description: Exact second or interval (e.g. 57.38s cloud reveal boom).
+      placeholder: e.g., 44.0s - 48.5s
+    validations:
+      required: true
+  - type: textarea
+    id: calibration
+    attributes:
+      label: Proposed Calibration
+      description: Specify exact matrix transforms, FOV interpolation, or easing function modifications.
+    validations:
+      required: true

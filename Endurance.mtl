@@ -8,8 +8,8 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.500000
 d 1.000000
 illum 3
-map_Kd Endurance from SketchLab/source/tEXTURE/A-MasterColour.jpg
-map_Ns Endurance from SketchLab/source/tEXTURE/Grain.png
+map_Kd Endurance/source/tEXTURE/A-MasterColour.jpg
+map_Ns Endurance/source/tEXTURE/Grain.png
 
 newmtl Glass1
 Ns 360.000000
@@ -48,8 +48,8 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.500000
 d 1.000000
 illum 3
-map_Kd Endurance from SketchLab/source/tEXTURE/A-MasterColour.jpg
-map_Ns Endurance from SketchLab/source/tEXTURE/Grain1.png
+map_Kd Endurance/source/tEXTURE/A-MasterColour.jpg
+map_Ns Endurance/source/tEXTURE/Grain1.png
 
 newmtl Non_Metal
 Ka 1.000000 1.000000 1.000000
@@ -58,8 +58,8 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.500000
 d 1.000000
 illum 2
-map_Kd Endurance from SketchLab/source/tEXTURE/A-MasterColour.jpg
-map_Ns Endurance from SketchLab/source/tEXTURE/Grain1.png
+map_Kd Endurance/source/tEXTURE/A-MasterColour.jpg
+map_Ns Endurance/source/tEXTURE/Grain1.png
 
 newmtl RollingShuttle
 Ka 0.500000 0.500000 0.500000
@@ -69,7 +69,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.500000
 d 1.000000
 illum 3
-map_Ns Endurance from SketchLab/source/tEXTURE/Grain1.png
+map_Ns Endurance/source/tEXTURE/Grain1.png
 
 newmtl RollingShuttle1
 Ka 1.000000 1.000000 1.000000
@@ -79,7 +79,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.500000
 d 1.000000
 illum 2
-map_Ns Endurance from SketchLab/source/tEXTURE/Grain1.png
+map_Ns Endurance/source/tEXTURE/Grain1.png
 
 newmtl Tiles
 Ka 0.100000 0.100000 0.100000
@@ -89,7 +89,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.500000
 d 1.000000
 illum 3
-map_Ns Endurance from SketchLab/source/tEXTURE/Grain1.png
+map_Ns Endurance/source/tEXTURE/Grain1.png
 
 newmtl Tiles1
 Ka 0.100000 0.100000 0.100000
@@ -99,7 +99,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.500000
 d 1.000000
 illum 3
-map_Ns Endurance from SketchLab/source/tEXTURE/Grain1.png
+map_Ns Endurance/source/tEXTURE/Grain1.png
 
 newmtl Tiles2
 Ka 0.500000 0.500000 0.500000
@@ -108,8 +108,8 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.500000
 d 1.000000
 illum 3
-map_Kd Endurance from SketchLab/source/tEXTURE/A-MasterColour.jpg
-map_Ns Endurance from SketchLab/source/tEXTURE/ShipTiles2_Bump.jpg
+map_Kd Endurance/source/tEXTURE/A-MasterColour.jpg
+map_Ns Endurance/source/tEXTURE/ShipTiles2_Bump.jpg
 
 newmtl Tiles3
 Ka 0.100000 0.100000 0.100000
@@ -119,4 +119,4 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.500000
 d 1.000000
 illum 3
-map_Ns Endurance from SketchLab/source/tEXTURE/Grain1.png
+map_Ns Endurance/source/tEXTURE/Grain1.png

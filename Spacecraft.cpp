@@ -151,7 +151,7 @@ static void loadEnduranceModel() {
         "bin/Release/endurance_diffuse.jpg",
         "bin/Debug/endurance_diffuse.jpg",
         "C:/Holidays/Martian/endurance_diffuse.jpg",
-        "C:/Holidays/Martian/Endurance from SketchLab/textures/A-MasterColour.jpeg"
+        "C:/Holidays/Martian/Endurance/textures/A-MasterColour.jpeg"
     };
     unsigned char* texData = NULL;
     int tw = 0, th = 0, tch = 0;

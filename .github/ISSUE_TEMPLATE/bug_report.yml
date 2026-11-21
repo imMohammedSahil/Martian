@@ -1,0 +1,69 @@
+name: "Bug Report"
+description: Report an OpenGL rendering anomaly, audio drift, or crash.
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Provide detailed reproduction steps and hardware specifications for diagnosis.
+  - type: input
+    id: summary
+    attributes:
+      label: Bug Summary
+      description: Concise summary of the issue.
+      placeholder: e.g., GL_FRAMEBUFFER_EXT allocation fails on Intel Iris Xe graphics
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: How to trigger the behavior.
+      placeholder: |
+        1. Launch Martian.exe
+        2. Wait until Scene 3 transition (44.0s)
+        3. Observe visual or audio anomaly
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: Expected sequence progression or rendering output.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: Observed defect, console error, or crash log.
+    validations:
+      required: true
+  - type: dropdown
+    id: scene
+    attributes:
+      label: Affected Subsystem or Scene
+      options:
+        - "Scene 1: Orbit & Planetary Alignment (0.0s - 24.0s)"
+        - "Scene 2: Separation & RCS Thrust (24.0s - 44.0s)"
+        - "Scene 3: Atmospheric Entry & Gale Crater (44.0s - 66.0s)"
+        - "Scene 4: The Dune Shot & Crew Silhouette (66.0s - 84.3s)"
+        - "AudioEngine / WinMM MCI Playback"
+        - "PostProcess / Solar Lens Flare"
+        - "VideoExporter / FBO Frame Capture"
+        - "FreeGLUT Window / Win32 DPI Handling"
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Hardware & Platform
+      description: OS version, GPU model, and display resolution.
+      placeholder: |
+        - OS: Windows 11 64-bit (Build 22631)
+        - GPU: NVIDIA RTX 4070 / AMD Radeon 6800XT / Intel UHD
+        - Driver Version: 551.86
+        - Display: 2560x1440 @ 144Hz (G-Sync Enabled)
+    validations:
+      required: true

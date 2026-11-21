@@ -1,0 +1,42 @@
+name: "Feature Request"
+description: Propose an optical shader, geometry simulation, or engine capability.
+title: "[Feature]: "
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Propose visual, architectural, or tooling improvements for Martian.
+  - type: input
+    id: title
+    attributes:
+      label: Feature Title
+      placeholder: e.g., Add GLSL depth-of-field post-processing pass
+    validations:
+      required: true
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Technical Motivation
+      description: Explain the visual or algorithmic necessity.
+    validations:
+      required: true
+  - type: textarea
+    id: implementation
+    attributes:
+      label: Proposed Implementation Details
+      description: Detail OpenGL functions, shader uniforms, or pipeline modifications.
+    validations:
+      required: true
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - "Post-Processing (GLSL / Optical Buffers)"
+        - "Particle System (Thrusters / Atmospheric Sparks)"
+        - "Terrain & Heightmap Rendering"
+        - "Audio Synthesis / Spatial Engine"
+        - "FFmpeg Pipe / Exporter"
+    validations:
+      required: true

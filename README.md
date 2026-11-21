@@ -468,7 +468,7 @@ Total per vertex: 44 bytes
 
 | Asset Name | Original Format | Runtime Representation | Memory Footprint | Description |
 | :--- | :--- | :--- | :--- | :--- |
-| `endurance.bin` | OBJ (Sketchfab) | GPU Display List | 31.7 MB | 12-pod rotating ring ship (721,200 vertices) |
+| `endurance.bin` | Pre-baked 3D Mesh | GPU Display List | 31.7 MB | 12-pod rotating ring ship (721,200 vertices) |
 | `gale_crater.bin` | STL (NASA MOLA) | GPU Display List | 52.8 MB | High-res Martian elevation surface model |
 | `ranger.bin` | OBJ | GPU Display List | 262 KB | Aerodynamic lifting-body lander |
 | `astronaut_pose1..4.bin` | GLB (Rigged) | GPU Display List | 3.3 MB each | Posed astronaut crew character meshes |

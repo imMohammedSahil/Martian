@@ -22,7 +22,7 @@ Scene 1 is a continuous, single-take 35-second shot (zero abrupt cuts) choreogra
 ---
 
 ## 3. High-Fidelity 3D Assets & Pipeline
-- **Authentic Endurance 3D Model:** Downloaded from Sketchfab (`devPilot` CC-BY) into `Endurance from SketchLab/`. Converted and pre-baked into [`endurance.bin`](file:///c:/Holidays/Martian/endurance.bin) (721,200 vertex loops, 240,400 triangles, normals, UVs, and material colors).
+- **Authentic Endurance 3D Model:** Downloaded (`devPilot` CC-BY) into `Endurance/`. Converted and pre-baked into [`endurance.bin`](file:///c:/Holidays/Martian/endurance.bin) (721,200 vertex loops, 240,400 triangles, normals, UVs, and material colors).
 - **Master Texture:** [`endurance_diffuse.jpg`](file:///c:/Holidays/Martian/endurance_diffuse.jpg) (mapped to all module pods, solar panels, command hub, and composite tiles).
 - **Title Card:** [`martian_title.png`](file:///c:/Holidays/Martian/martian_title.png) (2560x640 4K texture with deep black Century Gothic Bold typography and soft ambient backlight rim).
 - **Performance:** Pre-baked binary mesh loads into a GPU display list in <15ms with rock-solid 60 FPS playback.

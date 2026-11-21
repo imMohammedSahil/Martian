@@ -5,22 +5,22 @@
 
 ---
 
-## 🎬 Master Reference Imagery
+## Master Reference Imagery
 
-1. **The Interstellar Scale Shot (Reference: `Screenshot 2026-11-12 221754.png`)**
+1. **The Interstellar Scale Shot**
    - *Visual Language:* Gigantic celestial body occupying the background with an impossibly tiny, speck-sized spacecraft centered in the frame. Conveys overwhelming cosmic scale and human vulnerability.
    
-2. **The Dune Silhouette Shot (Reference: `Screenshot 2026-11-12 222604.png`)**
+2. **The Dune Silhouette Shot**
    - *Visual Language:* Group of crew members viewed from behind in deep interior darkness/shadow, standing in front of an opening flooding in with blinding light.
 
 ---
 
-## 📜 Scene Breakdown (Step-by-Step Production Roadmap)
+## Scene Breakdown (Step-by-Step Production Roadmap)
 
 ### **Scene 1: The Cosmic Void & Slow Mars Reveal**
 - **Visuals:** Starts in pure, pitch-black space—realistic cosmic darkness.
 - **Action:** Mars slowly, majestically emerges into the field of view (slow cinematic camera drift inspired by *Gravity* & *Interstellar*).
-- **The Scale Shot:** Once Mars is fully framed, we see the gigantic planet with the spacecraft as a tiny dot floating in front of it (matching `Screenshot 2026-11-12 221754.png`).
+- **The Scale Shot:** Once Mars is fully framed, we see the gigantic planet with the spacecraft as a tiny dot floating in front of it.
 - **Title Reveal:** Title card `M A R T I A N` appears on screen with clean typography.
 - **Audio/Atmosphere:** Deep sub-bass resonance, subtle ambient space hum.
 
@@ -54,13 +54,13 @@
 
 ### **Scene 5: The 4 Astronauts & The Dune Shot**
 - **Visuals:** Cut to inside the spacecraft. Atmospheric, dark cabin interior.
-- **The Dune Reference Shot:** A crew of 4 astronauts standing together in silhouette, viewed from behind as the main hatch/ramp lowers into the blinding Martian exterior daylight (matching `Screenshot 2026-11-12 222604.png`).
+- **The Dune Reference Shot:** A crew of 4 astronauts standing together in silhouette, viewed from behind as the main hatch/ramp lowers into the blinding Martian exterior daylight.
 - **Finale:** Cut to black.
 - **Final Title Card:** `M A R T I A N` appears on screen.
 
 ---
 
-## 🛠️ Step-by-Step Build Order
+## Step-by-Step Build Order
 As requested, we will develop and refine **one scene at a time** to ensure maximum visual fidelity and accuracy before advancing to the next:
 
 1. **[Step 1 / Scene 1]**: Void, slow Mars entrance, Interstellar micro-spacecraft scale shot, and initial title reveal.

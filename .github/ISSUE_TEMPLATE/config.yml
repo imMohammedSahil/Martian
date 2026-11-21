@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Pre-compiled Windows Release
+    url: https://github.com/imMohammedSahil/Martian/releases
+    about: Download standalone Martian_v1.0.zip binary to run without local compilation.
+  - name: Security Vulnerability Reporting
+    url: https://github.com/imMohammedSahil/Martian/security/policy
+    about: Privately report security or execution vulnerabilities.
