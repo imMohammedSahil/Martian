@@ -356,24 +356,32 @@ static void renderSaturnGlobeWithShadow(float radius, int slices, int stacks, fl
                     float r = sqrtf(ix * ix + iz * iz);
                     if (r >= innerR && r <= outerR) {
                         float uR = (r - innerR) / (outerR - innerR);
-                        float op = 0.65f;
-                        if (uR >= 0.56f && uR <= 0.64f) op = 0.15f; // Cassini division gap
-                        else if (uR < 0.22f) op = 0.28f;            // C ring
-                        else if (uR >= 0.22f && uR < 0.56f) op = 0.72f; // B ring
-                        else op = 0.58f;                            // A ring
+                        float op = 0.70f;
+                        if (uR >= 0.56f && uR <= 0.64f) op = 0.12f; // Cassini division gap
+                        else if (uR < 0.22f) op = 0.35f;            // C ring
+                        else if (uR >= 0.22f && uR < 0.56f) op = 0.86f; // B ring (dense crisp shadow)
+                        else op = 0.68f;                            // A ring
                         shadow0 = 1.0f - op;
                     }
                 }
             }
-            // Ambient Occlusion: equatorial crease darkening & polar attenuation (soft, natural)
+            // Ambient Occlusion: equatorial contact crease darkening
             float ao0 = 1.0f;
             float dEq0 = fabsf(py0) / radius;
             if (dEq0 < 0.28f) {
-                ao0 *= (0.64f + 0.36f * (dEq0 / 0.28f));
+                ao0 *= (0.55f + 0.45f * (dEq0 / 0.28f));
             }
-            float shade0 = shadow0 * ao0;
 
-            glNormal3f(cosLon * cosf(lat0), sinf(lat0), sinLon * cosf(lat0));
+            // Planetary day/night terminator shadow
+            float nx0 = cosLon * cosf(lat0);
+            float ny0 = sinf(lat0);
+            float nz0 = sinLon * cosf(lat0);
+            float dot0 = nx0 * lx + ny0 * ly + nz0 * lz;
+            float term0 = 0.06f + 0.94f * clampf((dot0 + 0.04f) / 0.22f, 0.0f, 1.0f);
+
+            float shade0 = shadow0 * ao0 * term0;
+
+            glNormal3f(nx0, ny0, nz0);
             glColor4f(shade0, shade0, shade0, 1.0f);
             glTexCoord2f(u, v0);
             glVertex3f(px0, py0, pz0);
@@ -392,11 +400,11 @@ static void renderSaturnGlobeWithShadow(float radius, int slices, int stacks, fl
                     float r = sqrtf(ix * ix + iz * iz);
                     if (r >= innerR && r <= outerR) {
                         float uR = (r - innerR) / (outerR - innerR);
-                        float op = 0.65f;
-                        if (uR >= 0.56f && uR <= 0.64f) op = 0.15f;
-                        else if (uR < 0.22f) op = 0.28f;
-                        else if (uR >= 0.22f && uR < 0.56f) op = 0.72f;
-                        else op = 0.58f;
+                        float op = 0.70f;
+                        if (uR >= 0.56f && uR <= 0.64f) op = 0.12f;
+                        else if (uR < 0.22f) op = 0.35f;
+                        else if (uR >= 0.22f && uR < 0.56f) op = 0.86f;
+                        else op = 0.68f;
                         shadow1 = 1.0f - op;
                     }
                 }
@@ -404,9 +412,16 @@ static void renderSaturnGlobeWithShadow(float radius, int slices, int stacks, fl
             float ao1 = 1.0f;
             float dEq1 = fabsf(py1) / radius;
             if (dEq1 < 0.28f) {
-                ao1 *= (0.64f + 0.36f * (dEq1 / 0.28f));
+                ao1 *= (0.55f + 0.45f * (dEq1 / 0.28f));
             }
-            float shade1 = shadow1 * ao1;
+
+            float nx1 = cosLon * cosf(lat1);
+            float ny1 = sinf(lat1);
+            float nz1 = sinLon * cosf(lat1);
+            float dot1 = nx1 * lx + ny1 * ly + nz1 * lz;
+            float term1 = 0.06f + 0.94f * clampf((dot1 + 0.04f) / 0.22f, 0.0f, 1.0f);
+
+            float shade1 = shadow1 * ao1 * term1;
 
             glNormal3f(cosLon * cosf(lat1), sinf(lat1), sinLon * cosf(lat1));
             glColor4f(shade1, shade1, shade1, 1.0f);
@@ -587,13 +602,15 @@ void renderBackgroundPlanets() {
     glRotatef(26.73f, 1.0f, 0.0f, 0.35f);
     glRotatef(saturnSpinAngle, 0.0f, 1.0f, 0.0f);
 
+    glDisable(GL_LIGHT1); // Disable Martian bounce fill light so Saturn's nightside shadow stays clean and deep
+
     if (saturnTextureID) {
         glEnable(GL_TEXTURE_2D);
         glBindTexture(GL_TEXTURE_2D, saturnTextureID);
         glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     }
-    GLfloat satDiffuse[]  = { 0.85f + 0.10f * flare, 0.78f + 0.08f * flare, 0.65f + 0.06f * flare, 1.0f };
-    GLfloat satAmbient[]  = { 0.12f, 0.10f, 0.08f, 1.0f };
+    GLfloat satDiffuse[]  = { 0.90f + 0.10f * flare, 0.82f + 0.08f * flare, 0.70f + 0.06f * flare, 1.0f };
+    GLfloat satAmbient[]  = { 0.05f, 0.045f, 0.035f, 1.0f };
     GLfloat satSpecular[] = { 0.15f + 0.18f * flare, 0.13f + 0.15f * flare, 0.09f + 0.12f * flare, 1.0f };
     GLfloat satShine[]    = { 18.0f + 20.0f * flare };
     glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, satDiffuse);
@@ -615,6 +632,7 @@ void renderBackgroundPlanets() {
     // Saturn's Rings (300 segments for master-grade curvature)
     renderSaturnRings(0.54f, 1.28f, 300, satSunLx, satSunLy, satSunLz);
 
+    glEnable(GL_LIGHT1);
     glEnable(GL_CULL_FACE);
     glPopMatrix();
 }
