@@ -184,69 +184,20 @@ static void renderOpeningSolarFlare(float intensity) {
 
     // 1. Fullscreen Subtle Veiling Glare (anamorphic contrast reduction from intense off-axis light)
     glBegin(GL_QUADS);
-        glColor4f(0.04f, 0.07f, 0.12f, 0.16f * intensity);
+        glColor4f(0.05f, 0.08f, 0.14f, 0.20f * intensity);
         glVertex2f(0.0f, barH);
         glVertex2f((float)windowWidth, barH);
         glVertex2f((float)windowWidth, (float)windowHeight - barH);
         glVertex2f(0.0f, (float)windowHeight - barH);
     glEnd();
 
-    // 2. Panavision Horizontal Anamorphic Blue & Cyan Flare Bleed (100% widescreen span)
-    // The streak enters camera sensor across the upper region of the active widescreen picture
-    float maxStreakY = (float)windowHeight - barH - 42.0f;
-    float streakY = std::min(maxStreakY, winY);
+    // 2. Multi-Layer Organic Sun Glare & Light Leak from Top-Right (No artificial horizontal laser line)
+    const int fanSegments = 48;
 
-    // Soft outer dispersion halo
-    float haloH = 22.0f * (0.8f + 0.3f * intensity);
-    float haloAlpha = 0.35f * intensity;
-    glBegin(GL_QUADS);
-        glColor4f(0.15f, 0.42f, 0.90f, haloAlpha);
-        glVertex2f(0.0f, streakY - haloH);
-        glVertex2f((float)windowWidth, streakY - haloH);
-        glVertex2f((float)windowWidth, streakY + haloH);
-        glVertex2f(0.0f, streakY + haloH);
-    glEnd();
-
-    // Vivid anamorphic blue beam
-    float beamH = 8.5f * (0.8f + 0.3f * intensity);
-    float beamAlpha = 0.85f * intensity;
-    glBegin(GL_QUADS);
-        glColor4f(0.28f, 0.68f, 1.00f, beamAlpha);
-        glVertex2f(0.0f, streakY - beamH);
-        glVertex2f((float)windowWidth, streakY - beamH);
-        glVertex2f((float)windowWidth, streakY + beamH);
-        glVertex2f(0.0f, streakY + beamH);
-    glEnd();
-
-    // Razor-Sharp Pure White Core Anamorphic Filament
-    float coreH = 2.0f * (0.8f + 0.2f * intensity);
-    float coreAlpha = 1.0f * intensity;
-    glBegin(GL_QUADS);
-        glColor4f(0.98f, 0.99f, 1.00f, coreAlpha);
-        glVertex2f(0.0f, streakY - coreH);
-        glVertex2f((float)windowWidth, streakY - coreH);
-        glVertex2f((float)windowWidth, streakY + coreH);
-        glVertex2f(0.0f, streakY + coreH);
-    glEnd();
-
-    // Secondary Warm Amber Internal Coating Reflection Streak (subtle Panavision artifact)
-    float amberH = 3.6f * (0.8f + 0.2f * intensity);
-    float amberY = streakY - 5.0f;
-    glBegin(GL_QUADS);
-        glColor4f(0.95f, 0.68f, 0.32f, 0.45f * intensity);
-        glVertex2f(0.0f, amberY - amberH);
-        glVertex2f((float)windowWidth, amberY - amberH);
-        glVertex2f((float)windowWidth, amberY + amberH);
-        glVertex2f(0.0f, amberY + amberH);
-    glEnd();
-
-    // 3. Multi-Layer Organic Light Leak (Smooth radial falloff from top-right corner, ZERO triangular spokes)
-    const int fanSegments = 40;
-
-    // Layer A: Wide atmospheric ambient bloom (faint deep-space wash)
-    float rWide = (float)windowWidth * 0.85f * (0.8f + 0.3f * intensity);
+    // Layer A: Wide atmospheric ambient bloom (deep-space wash)
+    float rWide = (float)windowWidth * 0.92f * (0.8f + 0.3f * intensity);
     glBegin(GL_TRIANGLE_FAN);
-        glColor4f(0.20f, 0.45f, 0.85f, 0.22f * intensity);
+        glColor4f(0.24f, 0.50f, 0.90f, 0.30f * intensity);
         glVertex2f(winX, winY);
         glColor4f(0.05f, 0.15f, 0.35f, 0.0f);
         for (int i = 0; i <= fanSegments; ++i) {
@@ -256,9 +207,9 @@ static void renderOpeningSolarFlare(float intensity) {
     glEnd();
 
     // Layer B: Mid-range golden coronal scatter (warm solar daylight bleed)
-    float rMid = (float)windowWidth * 0.48f * (0.8f + 0.35f * intensity);
+    float rMid = (float)windowWidth * 0.52f * (0.8f + 0.35f * intensity);
     glBegin(GL_TRIANGLE_FAN);
-        glColor4f(0.95f, 0.78f, 0.50f, 0.38f * intensity);
+        glColor4f(0.98f, 0.82f, 0.54f, 0.48f * intensity);
         glVertex2f(winX, winY);
         glColor4f(0.18f, 0.42f, 0.80f, 0.0f);
         for (int i = 0; i <= fanSegments; ++i) {
@@ -268,11 +219,16 @@ static void renderOpeningSolarFlare(float intensity) {
     glEnd();
 
     // Layer C: Intense proximal lens illumination entering frame edge
-    float rCore = (float)windowWidth * 0.24f * (0.8f + 0.4f * intensity);
+    float rCore = (float)windowWidth * 0.28f * (0.8f + 0.4f * intensity);
     glBegin(GL_TRIANGLE_FAN);
-        glColor4f(1.00f, 0.98f, 0.92f, 0.55f * intensity);
+        glColor4f(1.00f, 0.98f, 0.94f, 0.70f * intensity);
         glVertex2f(winX, winY);
-        glColor4f(0.85f, 0.60f, 0.25f, 0.0f);
+        glColor4f(0.88f, 0.65f, 0.28f, 0.0f);
+        for (int i = 0; i <= fanSegments; ++i) {
+            float ang = 2.0f * (float)M_PI * (float)i / fanSegments;
+            glVertex2f(winX + rCore * cosf(ang), winY + rCore * sinf(ang));
+        }
+    glEnd();
         for (int i = 0; i <= fanSegments; ++i) {
             float ang = 2.0f * (float)M_PI * (float)i / fanSegments;
             glVertex2f(winX + rCore * cosf(ang), winY + rCore * sinf(ang));
