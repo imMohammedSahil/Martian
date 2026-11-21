@@ -33,6 +33,8 @@ static GLuint loadTextureFromFile(const char* filename, bool isRGBA, bool repeat
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 16.0f);
+    // Negative LOD bias ensures crisp high-frequency cloud bands and storm structures
+    glTexParameterf(GL_TEXTURE_2D, 0x8501 /* GL_TEXTURE_LOD_BIAS */, -0.65f);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, repeatS ? GL_REPEAT : GL_CLAMP);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
     GLenum format = isRGBA ? GL_RGBA : GL_RGB;
@@ -124,16 +126,22 @@ void loadPlanetTextures() {
         if (!uranusTextureID) uranusTextureID = loadTextureFromFile("textures/uranus_surface_2k.jpg", false, true);
     }
     if (!jupiterTextureID) {
-        jupiterTextureID    = loadTextureFromFile("jupiter_surface_2k.jpg", false, true);
+        jupiterTextureID    = loadTextureFromFile("jupiter_surface_8k.jpg", false, true);
+        if (!jupiterTextureID) jupiterTextureID = loadTextureFromFile("jupiter_surface_2k.jpg", false, true);
+        if (!jupiterTextureID) jupiterTextureID = loadTextureFromFile("textures/jupiter_surface_8k.jpg", false, true);
         if (!jupiterTextureID) jupiterTextureID = loadTextureFromFile("textures/jupiter_surface_2k.jpg", false, true);
     }
     if (!saturnTextureID) {
-        saturnTextureID     = loadTextureFromFile("saturn_surface_4k.jpg", false, true);
+        saturnTextureID     = loadTextureFromFile("saturn_surface_8k.jpg", false, true);
+        if (!saturnTextureID) saturnTextureID = loadTextureFromFile("saturn_surface_4k.jpg", false, true);
         if (!saturnTextureID) saturnTextureID = loadTextureFromFile("saturn_surface_2k.jpg", false, true);
+        if (!saturnTextureID) saturnTextureID = loadTextureFromFile("textures/saturn_surface_8k.jpg", false, true);
         if (!saturnTextureID) saturnTextureID = loadTextureFromFile("textures/saturn_surface_4k.jpg", false, true);
     }
     if (!saturnRingTextureID) {
-        saturnRingTextureID = loadTextureFromFile("saturn_ring_alpha.png", true, false);
+        saturnRingTextureID = loadTextureFromFile("saturn_ring_8k_alpha.png", true, false);
+        if (!saturnRingTextureID) saturnRingTextureID = loadTextureFromFile("saturn_ring_alpha.png", true, false);
+        if (!saturnRingTextureID) saturnRingTextureID = loadTextureFromFile("textures/saturn_ring_8k_alpha.png", true, false);
         if (!saturnRingTextureID) saturnRingTextureID = loadTextureFromFile("textures/saturn_ring_alpha.png", true, false);
     }
 }
@@ -473,7 +481,7 @@ void renderBackgroundPlanets() {
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, jupSpecular);
     glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, jupShine);
 
-    renderTexturedSphere(0.44f, 72, 40);
+    renderTexturedSphere(0.44f, 128, 64);
 
     if (jupiterTextureID) {
         glDisable(GL_TEXTURE_2D);
@@ -510,7 +518,7 @@ void renderBackgroundPlanets() {
     float satSunLx = 0.0f, satSunLy = 0.0f, satSunLz = 1.0f;
     worldToSaturnLocal(SUN_DIR_X, SUN_DIR_Y, SUN_DIR_Z, satSunLx, satSunLy, satSunLz);
 
-    renderSaturnGlobeWithShadow(0.46f, 96, 56, 0.58f, 1.38f, satSunLx, satSunLy, satSunLz);
+    renderSaturnGlobeWithShadow(0.46f, 144, 72, 0.58f, 1.38f, satSunLx, satSunLy, satSunLz);
 
     if (saturnTextureID) {
         glDisable(GL_TEXTURE_2D);
@@ -518,8 +526,8 @@ void renderBackgroundPlanets() {
     // Atmospheric limb
     renderAtmosphericLimb(0.46f * 1.018f, 0.38f, 0.30f, 0.16f, 0.20f + 0.08f * flare);
 
-    // Saturn's Rings (200 segments for master-grade curvature)
-    renderSaturnRings(0.58f, 1.38f, 200, satSunLx, satSunLy, satSunLz);
+    // Saturn's Rings (300 segments for master-grade curvature)
+    renderSaturnRings(0.58f, 1.38f, 300, satSunLx, satSunLy, satSunLz);
 
     glEnable(GL_CULL_FACE);
     glPopMatrix();
