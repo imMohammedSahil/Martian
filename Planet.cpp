@@ -265,8 +265,9 @@ static void renderJupiterGlobeWithShadow(float radius, int slices, int stacks, f
             float ny0 = sinf(lat0);
             float nz0 = sinLon * cosf(lat0);
             float dot0 = nx0 * lx + ny0 * ly + nz0 * lz;
-            // Deep space void: zero illumination when facing away from sun, sharp natural terminator
-            float shade0 = clampf((dot0 - 0.01f) / 0.15f, 0.0f, 1.0f);
+            // Soft deep-space terminator with subtle ambient floor
+            float t0 = clampf((dot0 + 0.05f) / 0.22f, 0.0f, 1.0f);
+            float shade0 = 0.08f + 0.92f * t0;
 
             glNormal3f(nx0, ny0, nz0);
             glColor4f(shade0, shade0, shade0, 1.0f);
@@ -278,7 +279,8 @@ static void renderJupiterGlobeWithShadow(float radius, int slices, int stacks, f
             float ny1 = sinf(lat1);
             float nz1 = sinLon * cosf(lat1);
             float dot1 = nx1 * lx + ny1 * ly + nz1 * lz;
-            float shade1 = clampf((dot1 - 0.01f) / 0.15f, 0.0f, 1.0f);
+            float t1 = clampf((dot1 + 0.05f) / 0.22f, 0.0f, 1.0f);
+            float shade1 = 0.08f + 0.92f * t1;
 
             glNormal3f(nx1, ny1, nz1);
             glColor4f(shade1, shade1, shade1, 1.0f);
@@ -545,7 +547,7 @@ void renderBackgroundPlanets() {
         glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     }
     GLfloat jupDiffuse[]  = { 1.25f + 0.15f * flare, 1.10f + 0.12f * flare, 0.95f + 0.10f * flare, 1.0f };
-    GLfloat jupAmbient[]  = { 0.0f, 0.0f, 0.0f, 1.0f };
+    GLfloat jupAmbient[]  = { 0.08f, 0.07f, 0.06f, 1.0f };
     GLfloat jupSpecular[] = { 0.22f + 0.25f * flare, 0.18f + 0.20f * flare, 0.14f + 0.16f * flare, 1.0f };
     GLfloat jupShine[]    = { 16.0f + 20.0f * flare };
     glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, jupDiffuse);
@@ -561,6 +563,8 @@ void renderBackgroundPlanets() {
     if (jupiterTextureID) {
         glDisable(GL_TEXTURE_2D);
     }
+    // Delicate atmospheric rim
+    renderAtmosphericLimb(0.44f * 1.015f, 0.20f, 0.15f, 0.10f, 0.06f);
 
     glEnable(GL_LIGHT1);
     glEnable(GL_CULL_FACE);
