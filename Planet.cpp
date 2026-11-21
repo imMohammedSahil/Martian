@@ -356,20 +356,20 @@ static void renderSaturnGlobeWithShadow(float radius, int slices, int stacks, fl
                     float r = sqrtf(ix * ix + iz * iz);
                     if (r >= innerR && r <= outerR) {
                         float uR = (r - innerR) / (outerR - innerR);
-                        float op = 0.88f;
-                        if (uR >= 0.56f && uR <= 0.64f) op = 0.22f; // Cassini division gap
-                        else if (uR < 0.22f) op = 0.42f;            // C ring
-                        else if (uR >= 0.22f && uR < 0.56f) op = 0.94f; // B ring (dense shadow)
-                        else op = 0.78f;                            // A ring
+                        float op = 0.65f;
+                        if (uR >= 0.56f && uR <= 0.64f) op = 0.15f; // Cassini division gap
+                        else if (uR < 0.22f) op = 0.28f;            // C ring
+                        else if (uR >= 0.22f && uR < 0.56f) op = 0.72f; // B ring
+                        else op = 0.58f;                            // A ring
                         shadow0 = 1.0f - op;
                     }
                 }
             }
-            // Ambient Occlusion: equatorial crease darkening & polar attenuation
+            // Ambient Occlusion: equatorial crease darkening & polar attenuation (soft, natural)
             float ao0 = 1.0f;
             float dEq0 = fabsf(py0) / radius;
             if (dEq0 < 0.28f) {
-                ao0 *= (0.48f + 0.52f * (dEq0 / 0.28f));
+                ao0 *= (0.64f + 0.36f * (dEq0 / 0.28f));
             }
             float shade0 = shadow0 * ao0;
 
@@ -392,11 +392,11 @@ static void renderSaturnGlobeWithShadow(float radius, int slices, int stacks, fl
                     float r = sqrtf(ix * ix + iz * iz);
                     if (r >= innerR && r <= outerR) {
                         float uR = (r - innerR) / (outerR - innerR);
-                        float op = 0.88f;
-                        if (uR >= 0.56f && uR <= 0.64f) op = 0.22f;
-                        else if (uR < 0.22f) op = 0.42f;
-                        else if (uR >= 0.22f && uR < 0.56f) op = 0.94f;
-                        else op = 0.78f;
+                        float op = 0.65f;
+                        if (uR >= 0.56f && uR <= 0.64f) op = 0.15f;
+                        else if (uR < 0.22f) op = 0.28f;
+                        else if (uR >= 0.22f && uR < 0.56f) op = 0.72f;
+                        else op = 0.58f;
                         shadow1 = 1.0f - op;
                     }
                 }
@@ -404,7 +404,7 @@ static void renderSaturnGlobeWithShadow(float radius, int slices, int stacks, fl
             float ao1 = 1.0f;
             float dEq1 = fabsf(py1) / radius;
             if (dEq1 < 0.28f) {
-                ao1 *= (0.48f + 0.52f * (dEq1 / 0.28f));
+                ao1 *= (0.64f + 0.36f * (dEq1 / 0.28f));
             }
             float shade1 = shadow1 * ao1;
 
@@ -435,8 +435,8 @@ static void renderSaturnRings(float innerR, float outerR, int segments, float lx
     glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
 
     GLfloat ringDiffuse[]  = { 1.60f + 0.20f * flare, 1.50f + 0.18f * flare, 1.35f + 0.15f * flare, 1.0f };
-    GLfloat ringAmbient[]  = { 0.40f + 0.10f * flare, 0.36f + 0.08f * flare, 0.30f + 0.06f * flare, 1.0f };
-    GLfloat ringEmission[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+    GLfloat ringAmbient[]  = { 0.48f + 0.10f * flare, 0.44f + 0.08f * flare, 0.38f + 0.06f * flare, 1.0f };
+    GLfloat ringEmission[] = { 0.05f, 0.04f, 0.03f, 1.0f };
     GLfloat ringSpecular[] = { 0.30f + 0.25f * flare, 0.26f + 0.22f * flare, 0.20f + 0.18f * flare, 1.0f };
     GLfloat ringShine[]    = { 24.0f + 16.0f * flare };
     glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, ringDiffuse);
@@ -461,7 +461,7 @@ static void renderSaturnRings(float innerR, float outerR, int segments, float lx
         float tProj0 = -(px0 * lx + pz0 * lz);
         if (tProj0 > 0.0f) {
             float perpSq0 = (px0 * px0 + pz0 * pz0) - (tProj0 * tProj0);
-            if (perpSq0 < 0.465f * 0.465f) shade0 = 0.08f; // Globe shadow on ring
+            if (perpSq0 < 0.465f * 0.465f) shade0 = 0.24f; // Softened globe shadow on ring
         }
 
         float px1 = outerR * cosA;
@@ -470,7 +470,7 @@ static void renderSaturnRings(float innerR, float outerR, int segments, float lx
         float tProj1 = -(px1 * lx + pz1 * lz);
         if (tProj1 > 0.0f) {
             float perpSq1 = (px1 * px1 + pz1 * pz1) - (tProj1 * tProj1);
-            if (perpSq1 < 0.465f * 0.465f) shade1 = 0.08f;
+            if (perpSq1 < 0.465f * 0.465f) shade1 = 0.24f;
         }
 
         glColor4f(shade0, shade0, shade0, 1.0f);
