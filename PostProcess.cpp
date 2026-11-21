@@ -192,44 +192,48 @@ static void renderOpeningSolarFlare(float intensity) {
     glEnd();
 
     // 2. Panavision Horizontal Anamorphic Blue & Cyan Flare Bleed (100% widescreen span)
+    // The streak enters camera sensor across the upper region of the active widescreen picture
+    float maxStreakY = (float)windowHeight - barH - 42.0f;
+    float streakY = std::min(maxStreakY, winY);
+
     // Soft outer dispersion halo
-    float haloH = 16.0f * (0.8f + 0.3f * intensity);
-    float haloAlpha = 0.26f * intensity;
+    float haloH = 22.0f * (0.8f + 0.3f * intensity);
+    float haloAlpha = 0.35f * intensity;
     glBegin(GL_QUADS);
-        glColor4f(0.12f, 0.38f, 0.85f, haloAlpha);
-        glVertex2f(0.0f, winY - haloH);
-        glVertex2f((float)windowWidth, winY - haloH);
-        glVertex2f((float)windowWidth, winY + haloH);
-        glVertex2f(0.0f, winY + haloH);
+        glColor4f(0.15f, 0.42f, 0.90f, haloAlpha);
+        glVertex2f(0.0f, streakY - haloH);
+        glVertex2f((float)windowWidth, streakY - haloH);
+        glVertex2f((float)windowWidth, streakY + haloH);
+        glVertex2f(0.0f, streakY + haloH);
     glEnd();
 
     // Vivid anamorphic blue beam
-    float beamH = 6.8f * (0.8f + 0.3f * intensity);
-    float beamAlpha = 0.68f * intensity;
+    float beamH = 8.5f * (0.8f + 0.3f * intensity);
+    float beamAlpha = 0.85f * intensity;
     glBegin(GL_QUADS);
-        glColor4f(0.24f, 0.62f, 0.98f, beamAlpha);
-        glVertex2f(0.0f, winY - beamH);
-        glVertex2f((float)windowWidth, winY - beamH);
-        glVertex2f((float)windowWidth, winY + beamH);
-        glVertex2f(0.0f, winY + beamH);
+        glColor4f(0.28f, 0.68f, 1.00f, beamAlpha);
+        glVertex2f(0.0f, streakY - beamH);
+        glVertex2f((float)windowWidth, streakY - beamH);
+        glVertex2f((float)windowWidth, streakY + beamH);
+        glVertex2f(0.0f, streakY + beamH);
     glEnd();
 
     // Razor-Sharp Pure White Core Anamorphic Filament
-    float coreH = 1.5f * (0.8f + 0.2f * intensity);
-    float coreAlpha = 0.95f * intensity;
+    float coreH = 2.0f * (0.8f + 0.2f * intensity);
+    float coreAlpha = 1.0f * intensity;
     glBegin(GL_QUADS);
-        glColor4f(0.96f, 0.98f, 1.00f, coreAlpha);
-        glVertex2f(0.0f, winY - coreH);
-        glVertex2f((float)windowWidth, winY - coreH);
-        glVertex2f((float)windowWidth, winY + coreH);
-        glVertex2f(0.0f, winY + coreH);
+        glColor4f(0.98f, 0.99f, 1.00f, coreAlpha);
+        glVertex2f(0.0f, streakY - coreH);
+        glVertex2f((float)windowWidth, streakY - coreH);
+        glVertex2f((float)windowWidth, streakY + coreH);
+        glVertex2f(0.0f, streakY + coreH);
     glEnd();
 
     // Secondary Warm Amber Internal Coating Reflection Streak (subtle Panavision artifact)
-    float amberH = 2.8f * (0.8f + 0.2f * intensity);
-    float amberY = winY - 3.8f;
+    float amberH = 3.6f * (0.8f + 0.2f * intensity);
+    float amberY = streakY - 5.0f;
     glBegin(GL_QUADS);
-        glColor4f(0.95f, 0.65f, 0.30f, 0.34f * intensity);
+        glColor4f(0.95f, 0.68f, 0.32f, 0.45f * intensity);
         glVertex2f(0.0f, amberY - amberH);
         glVertex2f((float)windowWidth, amberY - amberH);
         glVertex2f((float)windowWidth, amberY + amberH);
