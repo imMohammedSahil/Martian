@@ -463,6 +463,7 @@ static void renderSaturnRings(float innerR, float outerR, int segments, float lx
     glEnable(GL_COLOR_MATERIAL);
     glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
 
+    float globeR = innerR * (0.42f / 0.54f);
     const int radialBands = 6;
     for (int b = 0; b < radialBands; ++b) {
         float r0 = innerR + (outerR - innerR) * ((float)b / radialBands);
@@ -480,9 +481,9 @@ static void renderSaturnRings(float innerR, float outerR, int segments, float lx
             float px0 = r0 * cosA;
             float pz0 = r0 * sinA;
             float shade0 = 1.0f;
-            // Ray-sphere intersection: ray from ring point (px0, 0, pz0) along L towards sun hits Saturn globe (radius 0.42)
+            // Ray-sphere intersection: ray from ring point (px0, 0, pz0) along L towards sun hits Saturn globe
             float b0 = 2.0f * (px0 * lx + pz0 * lz);
-            float c0 = (px0 * px0 + pz0 * pz0) - 0.425f * 0.425f;
+            float c0 = (px0 * px0 + pz0 * pz0) - globeR * globeR;
             float disc0 = b0 * b0 - 4.0f * c0;
             if (disc0 >= 0.0f) {
                 float t2_0 = (-b0 + sqrtf(disc0)) * 0.5f;
@@ -495,7 +496,7 @@ static void renderSaturnRings(float innerR, float outerR, int segments, float lx
             float pz1 = r1 * sinA;
             float shade1 = 1.0f;
             float b1 = 2.0f * (px1 * lx + pz1 * lz);
-            float c1 = (px1 * px1 + pz1 * pz1) - 0.425f * 0.425f;
+            float c1 = (px1 * px1 + pz1 * pz1) - globeR * globeR;
             float disc1 = b1 * b1 - 4.0f * c1;
             if (disc1 >= 0.0f) {
                 float t2_1 = (-b1 + sqrtf(disc1)) * 0.5f;
@@ -633,16 +634,16 @@ void renderBackgroundPlanets() {
     satSunLy = 0.16f;
     normalize3(satSunLx, satSunLy, satSunLz);
 
-    renderSaturnGlobeWithShadow(0.42f, 144, 72, 0.54f, 1.28f, satSunLx, satSunLy, satSunLz);
+    renderSaturnGlobeWithShadow(0.30f, 144, 72, 0.38f, 0.90f, satSunLx, satSunLy, satSunLz);
 
     if (saturnTextureID) {
         glDisable(GL_TEXTURE_2D);
     }
     // Atmospheric limb (toned down)
-    renderAtmosphericLimb(0.42f * 1.015f, 0.28f, 0.22f, 0.12f, 0.09f + 0.04f * flare);
+    renderAtmosphericLimb(0.30f * 1.015f, 0.28f, 0.22f, 0.12f, 0.09f + 0.04f * flare);
 
     // Saturn's Rings (300 segments for master-grade curvature)
-    renderSaturnRings(0.54f, 1.28f, 300, satSunLx, satSunLy, satSunLz);
+    renderSaturnRings(0.38f, 0.90f, 300, satSunLx, satSunLy, satSunLz);
 
     glEnable(GL_LIGHT1);
     glEnable(GL_CULL_FACE);
