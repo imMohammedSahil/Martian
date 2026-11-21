@@ -492,9 +492,9 @@ void renderBackgroundPlanets() {
     glEnable(GL_CULL_FACE);
     glPopMatrix();
 
-    // 3. SATURN & RINGS (Pristine ring shadow projection & equatorial contact ambient occlusion)
+    // 3. SATURN & RINGS
     glPushMatrix();
-    glTranslatef(18.0f, -1.8f, 18.5f);
+    glTranslatef(14.2f, -4.5f, -11.0f);
     glDisable(GL_CULL_FACE);
 
     // Dynamic tilt angling rings toward camera
@@ -518,16 +518,16 @@ void renderBackgroundPlanets() {
     float satSunLx = 0.0f, satSunLy = 0.0f, satSunLz = 1.0f;
     worldToSaturnLocal(SUN_DIR_X, SUN_DIR_Y, SUN_DIR_Z, satSunLx, satSunLy, satSunLz);
 
-    renderSaturnGlobeWithShadow(0.46f, 144, 72, 0.58f, 1.38f, satSunLx, satSunLy, satSunLz);
+    renderSaturnGlobeWithShadow(0.42f, 144, 72, 0.54f, 1.28f, satSunLx, satSunLy, satSunLz);
 
     if (saturnTextureID) {
         glDisable(GL_TEXTURE_2D);
     }
     // Atmospheric limb
-    renderAtmosphericLimb(0.46f * 1.018f, 0.38f, 0.30f, 0.16f, 0.20f + 0.08f * flare);
+    renderAtmosphericLimb(0.42f * 1.018f, 0.38f, 0.30f, 0.16f, 0.20f + 0.08f * flare);
 
     // Saturn's Rings (300 segments for master-grade curvature)
-    renderSaturnRings(0.58f, 1.38f, 300, satSunLx, satSunLy, satSunLz);
+    renderSaturnRings(0.54f, 1.28f, 300, satSunLx, satSunLy, satSunLz);
 
     glEnable(GL_CULL_FACE);
     glPopMatrix();
