@@ -188,37 +188,15 @@ void updateAudioEngine(float seqTime, bool isPaused) {
             return;
         }
 
-        // Frame-accurate synchronization and scrub/jump detection
-        if (!g_isPlaying) {
+        // User scrub / jump detection (> 0.40s deviation) or initial start
+        if (fabsf(seqTime - g_lastSyncSeqTime) > 0.40f || !g_isPlaying) {
             int ms = (int)(seqTime * 1000.0f);
             char playCmd[128];
             snprintf(playCmd, sizeof(playCmd), "play soundtrack from %d", ms);
             mciSendStringA(playCmd, NULL, 0, NULL);
             g_isPlaying = true;
-            g_lastSyncSeqTime = seqTime;
-        } else if (fabsf(seqTime - g_lastSyncSeqTime) > 0.35f) {
-            // User scrub / jump (keys 1-4, B, F, arrows)
-            int ms = (int)(seqTime * 1000.0f);
-            char playCmd[128];
-            snprintf(playCmd, sizeof(playCmd), "play soundtrack from %d", ms);
-            mciSendStringA(playCmd, NULL, 0, NULL);
-            g_lastSyncSeqTime = seqTime;
-        } else {
-            // Periodic hardware drift check against MCI playback position
-            char posBuf[64] = {0};
-            if (mciSendStringA("status soundtrack position", posBuf, sizeof(posBuf), NULL) == 0) {
-                long audioMs = atol(posBuf);
-                float audioSec = (float)audioMs / 1000.0f;
-                float drift = fabsf(audioSec - seqTime);
-                if (drift > 0.12f) { // Correct any hardware latency / clock drift
-                    int ms = (int)(seqTime * 1000.0f);
-                    char playCmd[128];
-                    snprintf(playCmd, sizeof(playCmd), "play soundtrack from %d", ms);
-                    mciSendStringA(playCmd, NULL, 0, NULL);
-                }
-            }
-            g_lastSyncSeqTime = seqTime;
         }
+        g_lastSyncSeqTime = seqTime;
     }
 
     // Mars wind SFX trigger during atmospheric entry (Scene 3: 44.0s - 64.2s)
