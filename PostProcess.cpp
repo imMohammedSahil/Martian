@@ -229,36 +229,54 @@ static void renderOpeningSolarFlare(float intensity) {
             glVertex2f(winX + rCore * cosf(ang), winY + rCore * sinf(ang));
         }
     glEnd();
-        for (int i = 0; i <= fanSegments; ++i) {
-            float ang = 2.0f * (float)M_PI * (float)i / fanSegments;
-            glVertex2f(winX + rCore * cosf(ang), winY + rCore * sinf(ang));
-        }
+
+    // 3. Diagonal Optical Axis Lens Ghosts (Bright, crisp Panavision iris bokeh discs along optical line)
+    // Connecting diagonal light caustics beam through optical center
+    glBegin(GL_LINES);
+        glColor4f(0.35f, 0.65f, 0.95f, 0.18f * intensity);
+        glVertex2f(winX, winY);
+        glColor4f(0.85f, 0.60f, 0.30f, 0.0f);
+        glVertex2f(cx - dx * 0.85f, cy - dy * 0.85f);
     glEnd();
 
-    // 4. Smooth Circular/Elliptical Bokeh Lens Ghosts (along diagonal optical axis down-left)
-    const float ghostOffsets[] = { -0.20f, -0.48f, 0.25f, 0.58f, 0.92f };
-    const float ghostSizes[]   = {  24.0f,  42.0f, 18.0f, 34.0f, 22.0f };
-    const float ghostAlphas[]  = {  0.15f,  0.10f, 0.14f, 0.09f, 0.06f };
+    const float ghostOffsets[] = { -0.22f, -0.52f, 0.24f, 0.58f, 0.82f };
+    const float ghostSizes[]   = {  38.0f,  56.0f, 28.0f, 46.0f, 32.0f };
+    const float ghostAlphas[]  = {  0.42f,  0.34f, 0.40f, 0.36f, 0.25f };
 
     for (int g = 0; g < 5; ++g) {
         float gx = cx + dx * ghostOffsets[g];
         float gy = cy + dy * ghostOffsets[g];
-        float gr = ghostSizes[g] * (0.8f + 0.3f * intensity);
+        float gr = ghostSizes[g] * (0.85f + 0.3f * intensity);
         float ga = ghostAlphas[g] * intensity;
 
-        // Smooth circular iris discs with soft edge falloff
+        // Outer soft iris disc
         glBegin(GL_TRIANGLE_FAN);
             if (g % 2 == 0) {
-                glColor4f(0.25f, 0.65f, 0.95f, ga);
+                glColor4f(0.30f, 0.72f, 1.00f, ga);
             } else {
-                glColor4f(0.98f, 0.72f, 0.35f, ga);
+                glColor4f(1.00f, 0.76f, 0.38f, ga);
             }
             glVertex2f(gx, gy);
-            glColor4f(0.10f, 0.30f, 0.65f, 0.0f);
+            if (g % 2 == 0) {
+                glColor4f(0.12f, 0.35f, 0.75f, 0.0f);
+            } else {
+                glColor4f(0.70f, 0.40f, 0.15f, 0.0f);
+            }
+            for (int i = 0; i <= 32; ++i) {
+                float ang = 2.0f * (float)M_PI * (float)i / 32.0f;
+                // Anamorphic vertical elongation
+                glVertex2f(gx + gr * cosf(ang), gy + gr * 1.25f * sinf(ang));
+            }
+        glEnd();
+
+        // Luminous inner core highlight for crisp visibility
+        glBegin(GL_TRIANGLE_FAN);
+            glColor4f(1.0f, 1.0f, 1.0f, ga * 0.65f);
+            glVertex2f(gx, gy);
+            glColor4f(0.5f, 0.8f, 1.0f, 0.0f);
             for (int i = 0; i <= 24; ++i) {
                 float ang = 2.0f * (float)M_PI * (float)i / 24.0f;
-                // Subtle 1.25x vertical anamorphic elongation
-                glVertex2f(gx + gr * cosf(ang), gy + gr * 1.22f * sinf(ang));
+                glVertex2f(gx + gr * 0.38f * cosf(ang), gy + gr * 0.38f * 1.25f * sinf(ang));
             }
         glEnd();
     }
