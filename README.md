@@ -1,6 +1,8 @@
-# MARTIAN: Cinematic Space Sequence Engine
+<p align="center">
+  <img src="docs/martian_banner.jpg" alt="MARTIAN Banner" width="100%" />
+</p>
 
-![MARTIAN Banner](docs/martian_banner.jpg)
+# MARTIAN: Cinematic Space Sequence Engine
 
 A high-performance, native C++ / OpenGL real-time cinematic visualizer and animation sequence recreating the Interstellar and Gravity-grade journey from deep cosmic orbit to hypersonic entry and touchdown on the Martian surface.
 
